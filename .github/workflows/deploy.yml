@@ -106,6 +106,31 @@ jobs:
           # -v помогает понять, отвергнут ли ключ
           ssh -v target "echo подключение есть; docker --version || echo 'docker не установлен'; free -m | head -2" 2>&1 | tail -25
 
+      # Идемпотентно: ставим то, чего не хватает. Полагаться на ручной bootstrap нельзя
+      - name: Подготовить сервер
+        timeout-minutes: 15
+        run: |
+          ssh target 'set -e
+            export DEBIAN_FRONTEND=noninteractive
+            if ! command -v rsync > /dev/null; then
+              apt-get update -qq && apt-get install -y -qq rsync
+            fi
+            if ! command -v docker > /dev/null; then
+              curl -fsSL https://get.docker.com | sh
+              systemctl enable --now docker
+            fi
+            if ! swapon --show | grep -q .; then
+              fallocate -l 2G /swapfile || dd if=/dev/zero of=/swapfile bs=1M count=2048
+              chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
+              grep -q "^/swapfile" /etc/fstab || echo "/swapfile none swap sw 0 0" >> /etc/fstab
+              printf "vm.swappiness=10\nvm.vfs_cache_pressure=50\n" > /etc/sysctl.d/99-swap.conf
+              sysctl --system > /dev/null
+            fi
+            mkdir -p /opt/kjar
+            echo "rsync: $(rsync --version | head -1)"
+            docker --version
+            free -m | head -2'
+
       - name: Скопировать проект
         timeout-minutes: 10
         run: |
