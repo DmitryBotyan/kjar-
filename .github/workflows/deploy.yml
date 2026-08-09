@@ -39,14 +39,27 @@ jobs:
           [ -n "${{ secrets.ENV_PRODUCTION }}" ] || missing="$missing ENV_PRODUCTION"
           if [ -n "$missing" ]; then echo "Не заданы секреты:$missing"; exit 1; fi
 
-      - name: Записать ключ
+      # Вся выкладка одним скриптом: весь вывод копится в один лог,
+      # который затем возвращается в репозиторий и доступен для разбора
+      - name: Выкатить
+        id: deploy
+        continue-on-error: true
         env:
+          ENV_PRODUCTION: ${{ secrets.ENV_PRODUCTION }}
           KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
+          exec > >(tee -a /tmp/deploy.log) 2>&1
+          set -x
+          COMPOSE="docker compose --env-file .env.production -f docker/docker-compose.prod.yml"
+
+          echo "=== 0. ключ ==="
           mkdir -p ~/.ssh
           printf '%s\n' "$KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keygen -y -f ~/.ssh/id_ed25519 > /dev/null
+          echo "размер ключа: $(wc -c < ~/.ssh/id_ed25519) байт, строк: $(wc -l < ~/.ssh/id_ed25519)"
+          echo "первая строка: $(head -1 ~/.ssh/id_ed25519)"
+          echo "последняя строка: $(tail -1 ~/.ssh/id_ed25519)"
+          ssh-keygen -y -f ~/.ssh/id_ed25519 || echo "КЛЮЧ НЕ ЧИТАЕТСЯ"
           {
             echo "Host target"
             echo "  HostName ${SSH_HOST}"
@@ -58,8 +71,6 @@ jobs:
             echo "  UserKnownHostsFile /dev/null"
             echo "  ConnectTimeout 20"
             echo "  BatchMode yes"
-            echo "  PasswordAuthentication no"
-            echo "  NumberOfPasswordPrompts 0"
             echo "  ServerAliveInterval 20"
             echo "  ServerAliveCountMax 30"
             echo "  ControlMaster auto"
@@ -67,18 +78,6 @@ jobs:
             echo "  ControlPersist 20m"
           } > ~/.ssh/config
           chmod 600 ~/.ssh/config
-
-      # Вся выкладка одним скриптом: весь вывод копится в один лог,
-      # который затем возвращается в репозиторий и доступен для разбора
-      - name: Выкатить
-        id: deploy
-        continue-on-error: true
-        env:
-          ENV_PRODUCTION: ${{ secrets.ENV_PRODUCTION }}
-        run: |
-          set -x
-          exec > >(tee -a /tmp/deploy.log) 2>&1
-          COMPOSE="docker compose --env-file .env.production -f docker/docker-compose.prod.yml"
 
           echo "=== 1. состояние сервера ==="
           ssh target 'whoami; uname -a; command -v docker || echo "docker НЕТ"; command -v tar; df -h / | tail -1; free -m | head -2'
