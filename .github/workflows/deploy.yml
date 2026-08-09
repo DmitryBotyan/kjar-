@@ -67,6 +67,11 @@ jobs:
             echo "  NumberOfPasswordPrompts 0"
             echo "  ServerAliveInterval 20"
             echo "  ServerAliveCountMax 30"
+            # Одно соединение на весь прогон: fail2ban и лимиты sshd
+            # не считают каждую команду новой попыткой входа
+            echo "  ControlMaster auto"
+            echo "  ControlPath ~/.ssh/cm-%r@%h:%p"
+            echo "  ControlPersist 15m"
           } > ~/.ssh/config
           chmod 600 ~/.ssh/config
 
@@ -89,6 +94,12 @@ jobs:
         env:
           SSHPASS: ${{ secrets.SSH_PASSWORD }}
         run: |
+          # Если ключ уже принят, парольный вход не трогаем: лишние попытки
+          # с паролем провоцируют бан со стороны fail2ban
+          if ssh -o BatchMode=yes -o ConnectTimeout=15 target 'exit' 2>/dev/null; then
+            echo "ключ уже работает, парольный вход не нужен"
+            exit 0
+          fi
           # Контекст secrets недоступен в условии if у шага, поэтому проверяем здесь
           if [ -z "${SSHPASS}" ]; then
             echo "секрет SSH_PASSWORD не задан, шаг пропущен"
@@ -113,6 +124,10 @@ jobs:
       - name: Подготовить сервер
         timeout-minutes: 20
         run: |
+          if ssh target 'command -v docker > /dev/null && command -v rsync > /dev/null'; then
+            echo "docker и rsync уже стоят, подготовка не нужна"
+            exit 0
+          fi
           ssh target 'cat > /root/bootstrap.sh' < scripts/remote-bootstrap.sh
           ssh target 'chmod +x /root/bootstrap.sh && rm -f /root/bootstrap.done && \
             setsid nohup bash -c "/root/bootstrap.sh > /root/bootstrap.log 2>&1; echo \$? > /root/bootstrap.done" > /dev/null 2>&1 < /dev/null &' || true
