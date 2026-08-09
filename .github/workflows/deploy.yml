@@ -70,9 +70,20 @@ jobs:
 
       # Если ключа на сервере ещё нет, кладём его по паролю. Шаг идемпотентный
       # и нужен ровно один раз: дальше всё идёт по ключу.
+      - name: Проверить, доходит ли сеть до сервера
+        timeout-minutes: 2
+        run: |
+          echo "порт ${SSH_PORT:-22}:"
+          nc -zv -w 10 "${SSH_HOST}" "${SSH_PORT:-22}" || echo "TCP не установился"
+          echo "баннер SSH (ждём 10 секунд):"
+          timeout 10 bash -c "cat < /dev/tcp/${SSH_HOST}/${SSH_PORT:-22}" | head -c 60 || echo "баннера нет"
+          echo "порт 80:"
+          nc -zv -w 10 "${SSH_HOST}" 80 || true
+
       - name: Положить ключ на сервер по паролю
         # Не критично: если ключ уже добавлен руками, деплой продолжится
         continue-on-error: true
+        timeout-minutes: 3
         env:
           SSHPASS: ${{ secrets.SSH_PASSWORD }}
         run: |
@@ -90,11 +101,13 @@ jobs:
             'mkdir -p ~/.ssh && chmod 700 ~/.ssh && touch ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys && cat >> ~/.ssh/authorized_keys && sort -u -o ~/.ssh/authorized_keys ~/.ssh/authorized_keys && echo готово' < /tmp/deploy_key.pub
 
       - name: Проверить связь с сервером
+        timeout-minutes: 3
         run: |
           # -v помогает понять, отвергнут ли ключ
           ssh -v target "echo подключение есть; docker --version || echo 'docker не установлен'; free -m | head -2" 2>&1 | tail -25
 
       - name: Скопировать проект
+        timeout-minutes: 10
         run: |
           ssh target "mkdir -p ${REMOTE_DIR}"
           rsync -az --delete \
@@ -106,6 +119,7 @@ jobs:
             ./ target:${REMOTE_DIR}/
 
       - name: Положить боевые переменные
+        timeout-minutes: 3
         env:
           ENV_PRODUCTION: ${{ secrets.ENV_PRODUCTION }}
         run: |
@@ -113,18 +127,22 @@ jobs:
           ssh target "grep -c '=' ${REMOTE_DIR}/.env.production | xargs -I{} echo 'переменных записано: {}'"
 
       - name: Собрать образы
+        timeout-minutes: 25
         run: ssh target "cd ${REMOTE_DIR} && ${COMPOSE} build"
 
       - name: Поднять базу и применить миграции
+        timeout-minutes: 10
         run: |
           ssh target "cd ${REMOTE_DIR} && ${COMPOSE} up -d db && \
             timeout 150 bash -c 'until ${COMPOSE} exec -T db pg_isready > /dev/null 2>&1; do sleep 3; done' && \
             ${COMPOSE} --profile tools run --rm migrate"
 
       - name: Запустить приложение
+        timeout-minutes: 10
         run: ssh target "cd ${REMOTE_DIR} && ${COMPOSE} up -d && ${COMPOSE} ps"
 
       - name: Проверить, что сайт отвечает
+        timeout-minutes: 5
         run: |
           ssh target "for i in \$(seq 1 24); do
               code=\$(curl -s -o /dev/null -w '%{http_code}' http://localhost/ || true)
