@@ -119,31 +119,13 @@ jobs:
           # -v помогает понять, отвергнут ли ключ
           ssh -v target "echo подключение есть; docker --version || echo 'docker не установлен'; free -m | head -2" 2>&1 | tail -25
 
-      - name: Подготовить сервер
-        timeout-minutes: 20
-        run: |
-          set -x
-          ssh target 'whoami; id -u; command -v docker || echo "docker нет"; command -v rsync || echo "rsync нет"'
-          if ssh target 'command -v docker > /dev/null && command -v rsync > /dev/null'; then
-            echo "docker и rsync на месте, подготовка не нужна"
-            exit 0
-          fi
-          # Ставим в фоне: установка долгая, а рвущаяся сессия не должна её прерывать
-          ssh target 'cat > ~/bootstrap.sh' < scripts/remote-bootstrap.sh
-          ssh target 'chmod +x ~/bootstrap.sh && rm -f ~/bootstrap.done && \
-            setsid nohup bash -c "~/bootstrap.sh > ~/bootstrap.log 2>&1; echo \$? > ~/bootstrap.done" > /dev/null 2>&1 < /dev/null &' || true
-          for i in $(seq 1 60); do
-            if ssh target 'test -f ~/bootstrap.done' 2>/dev/null; then break; fi
-            sleep 15
-          done
-          ssh target 'tail -20 ~/bootstrap.log' || true
-          code=$(ssh target 'cat ~/bootstrap.done 2>/dev/null || echo 1')
-          echo "код подготовки: $code"
-          [ "$code" = "0" ]
-
       - name: Скопировать проект
-        timeout-minutes: 10
+        timeout-minutes: 15
         run: |
+          echo "состояние сервера:"
+          ssh target 'whoami; command -v docker || echo "docker НЕТ"; command -v rsync || echo "rsync НЕТ"; free -m | head -2' || true
+          # rsync нужен на обеих сторонах; ставим, только если его нет
+          ssh target 'command -v rsync > /dev/null || (export DEBIAN_FRONTEND=noninteractive; apt-get update -qq && apt-get install -y -qq rsync)' || true
           ssh target "mkdir -p ${REMOTE_DIR}"
           rsync -az --delete \
             --exclude node_modules \
