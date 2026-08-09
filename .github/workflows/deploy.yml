@@ -101,6 +101,12 @@ jobs:
           printf '%s\n' "$ENV_PRODUCTION" | ssh target "umask 077 && cat > ${REMOTE_DIR}/.env.production"
           ssh target "grep -c = ${REMOTE_DIR}/.env.production"
 
+          echo "=== 4.5 сеть внутри docker ==="
+          ssh target 'docker run --rm alpine sh -c "nslookup registry.npmjs.org 2>&1 | tail -3"' || echo "контейнер не резолвит имена"
+          # Частая причина: у демона Docker не тот резолвер. Задаём публичные DNS.
+          ssh target 'mkdir -p /etc/docker && printf "{\n  \"dns\": [\"8.8.8.8\", \"77.88.8.8\", \"1.1.1.1\"]\n}\n" > /etc/docker/daemon.json && systemctl restart docker && sleep 5 && echo "DNS докера настроен"'
+          ssh target 'docker run --rm alpine sh -c "wget -qO- --timeout=10 https://registry.npmjs.org/ 2>&1 | head -c 60"' || echo "реестр всё ещё недоступен"
+
           echo "=== 5. сборка образов ==="
           ssh target "cd ${REMOTE_DIR} && rm -f build.done && setsid nohup bash -c '${COMPOSE} build > build.log 2>&1; echo \$? > build.done' > /dev/null 2>&1 < /dev/null &" || true
           for i in $(seq 1 120); do
