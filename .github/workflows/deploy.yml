@@ -147,6 +147,8 @@ jobs:
         run: |
           mkdir -p .deploy-logs
           cp /tmp/deploy.log .deploy-logs/last-deploy.log 2>/dev/null || echo "лог не создан" > .deploy-logs/last-deploy.log
+          echo "" >> .deploy-logs/last-deploy.log
+          echo "прогон: ${{ github.run_id }}" >> .deploy-logs/last-deploy.log
           echo "результат выкладки: ${{ steps.deploy.outcome }}" >> .deploy-logs/last-deploy.log
           git config user.name "github-actions"
           git config user.email "actions@github.com"
