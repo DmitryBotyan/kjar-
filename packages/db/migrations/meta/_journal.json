@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1769105206895,
+      "tag": "0000_freezing_guardian",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1737657600000,
+      "tag": "0001_add_event_fields_to_posts",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1739196000000,
+      "tag": "0002_add_image_to_posts",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1739197000000,
+      "tag": "0003_add_polls_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1739198000000,
+      "tag": "0004_add_comments_table",
+      "breakpoints": true
+    }
+  ]
+}

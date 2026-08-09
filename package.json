@@ -1,0 +1,26 @@
+{
+  "name": "kjar",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "./run-dev.sh",
+    "db:generate": "pnpm --filter @kjar/db generate",
+    "db:migrate": "pnpm --filter @kjar/db migrate",
+    "db:migrate:node": "pnpm --filter @kjar/db migrate:node",
+    "db:migrate:docker": "./scripts/migrate-docker.sh",
+    "db:push": "pnpm --filter @kjar/db push",
+    "db:studio": "pnpm --filter @kjar/db studio",
+    "db:introspect": "pnpm --filter @kjar/db introspect",
+    "db:seed": "SEED_LOCALHOST=1 pnpm --filter @kjar/db seed",
+    "db:seed:docker": "./scripts/seed-docker.sh"
+  },
+  "packageManager": "pnpm@10.20.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

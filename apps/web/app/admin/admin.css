@@ -1,0 +1,57 @@
+/* Админка использует те же токены, что и сайт. Отличие только в плотности. */
+
+body.kjar-admin-body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bark);
+  color: var(--ink);
+  font-family: var(--body);
+}
+
+body.kjar-admin-body .kjar-header,
+body.kjar-admin-body .kjar-footer {
+  display: none !important;
+}
+
+.kjar-admin__login-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--s4) var(--s3);
+}
+
+.kjar-admin__login-card {
+  width: 100%;
+  max-width: 400px;
+  display: grid;
+  gap: var(--s3);
+}
+
+.kjar-admin__login-title {
+  margin: 0;
+  text-align: center;
+  font-family: var(--display);
+  font-size: var(--t-l);
+  font-weight: 500;
+}
+
+.kjar-admin__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  color: var(--ash);
+}
+
+.kjar-admin__header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.kjar-admin__user-info {
+  color: var(--ash);
+  font-size: var(--t-xs);
+}

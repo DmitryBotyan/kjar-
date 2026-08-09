@@ -1,0 +1,60 @@
+# Продакшн-образ. Собирается один раз, из него берутся два таргета: web и api.
+# Сборка: docker compose -f docker/docker-compose.prod.yml build
+
+FROM node:22-alpine AS base
+RUN corepack enable
+WORKDIR /app
+ENV CI=true
+
+# ---------- зависимости ----------
+# node-linker=hoisted обязателен: standalone-сборка Next копирует node_modules как есть,
+# а симлинки pnpm указывают на .pnpm вне копируемого дерева и в образе ломаются
+FROM base AS deps
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/web/package.json apps/web/package.json
+COPY apps/api/package.json apps/api/package.json
+COPY packages/db/package.json packages/db/package.json
+RUN printf "node-linker=hoisted\nshamefully-hoist=true\n" > .npmrc && pnpm install --frozen-lockfile
+
+# ---------- сборка Next ----------
+FROM base AS web-builder
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN pnpm --filter @kjar/web build
+
+# ---------- рантайм Next ----------
+# standalone уже содержит нужные модули, остальное не тащим
+FROM node:22-alpine AS web
+WORKDIR /app
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001
+# outputFileTracingRoot в next.config указывает на корень монорепо,
+# поэтому standalone повторяет структуру: server.js лежит в apps/web
+COPY --from=web-builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
+COPY --from=web-builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=web-builder --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
+USER nextjs
+EXPOSE 3000
+CMD ["node", "apps/web/server.js"]
+
+# ---------- рантайм API ----------
+# @kjar/db отдаёт исходники на TypeScript, поэтому api запускается через tsx:
+# это дешевле, чем городить бандлер ради одного пакета в монорепозитории
+FROM base AS api
+ENV NODE_ENV=production
+COPY --from=deps /app/node_modules ./node_modules
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/api ./apps/api
+COPY packages/db ./packages/db
+# Ссылка на workspace-пакет: в hoisted-раскладке pnpm не создаёт её на этапе deps,
+# потому что исходников пакета там ещё нет
+RUN mkdir -p node_modules/@kjar && ln -sfn /app/packages/db node_modules/@kjar/db
+RUN addgroup -g 1001 -S nodejs && adduser -S api -u 1001 && chown -R api:nodejs /app
+USER api
+WORKDIR /app/apps/api
+EXPOSE 3001
+CMD ["node", "--import", "tsx", "src/index.ts"]

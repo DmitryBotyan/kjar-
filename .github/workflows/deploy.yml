@@ -1,0 +1,96 @@
+name: Деплой KJÁR
+
+# Раннер GitHub ходит на сервер напрямую, поэтому локальные ограничения сети
+# на разработчика не влияют.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Сборка и запуск на сервере
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    env:
+      REMOTE_DIR: /opt/kjar
+      COMPOSE: docker compose --env-file .env.production -f docker/docker-compose.prod.yml
+
+    steps:
+      - name: Забрать код
+        uses: actions/checkout@v4
+
+      - name: Подготовить ключ и known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "${{ secrets.SSH_PORT || 22 }}" -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Проверить связь с сервером
+        run: |
+          ssh -p "${{ secrets.SSH_PORT || 22 }}" \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "echo подключение есть; docker --version || echo 'docker не установлен'"
+
+      - name: Скопировать проект
+        run: |
+          rsync -az --delete \
+            -e "ssh -p ${{ secrets.SSH_PORT || 22 }}" \
+            --exclude node_modules \
+            --exclude .next \
+            --exclude .git \
+            --exclude .env \
+            --exclude '*.tsbuildinfo' \
+            ./ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ env.REMOTE_DIR }}/"
+
+      - name: Положить боевые переменные
+        run: |
+          ssh -p "${{ secrets.SSH_PORT || 22 }}" \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "umask 077 && cat > ${{ env.REMOTE_DIR }}/.env.production" <<'ENVEOF'
+          ${{ secrets.ENV_PRODUCTION }}
+          ENVEOF
+
+      - name: Собрать образы
+        run: |
+          ssh -p "${{ secrets.SSH_PORT || 22 }}" \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "cd ${{ env.REMOTE_DIR }} && ${{ env.COMPOSE }} build"
+
+      - name: Поднять базу и применить миграции
+        run: |
+          ssh -p "${{ secrets.SSH_PORT || 22 }}" \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "cd ${{ env.REMOTE_DIR }} && ${{ env.COMPOSE }} up -d db && \
+             timeout 120 bash -c 'until ${{ env.COMPOSE }} exec -T db pg_isready > /dev/null 2>&1; do sleep 3; done' && \
+             ${{ env.COMPOSE }} --profile tools run --rm migrate"
+
+      - name: Запустить приложение
+        run: |
+          ssh -p "${{ secrets.SSH_PORT || 22 }}" \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "cd ${{ env.REMOTE_DIR }} && ${{ env.COMPOSE }} up -d api web nginx && ${{ env.COMPOSE }} ps"
+
+      - name: Проверить, что сайт отвечает
+        run: |
+          ssh -p "${{ secrets.SSH_PORT || 22 }}" \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "for i in \$(seq 1 20); do
+               code=\$(curl -s -o /dev/null -w '%{http_code}' http://localhost/ || true)
+               if [ \"\$code\" = '200' ]; then echo \"сайт отвечает: \$code\"; exit 0; fi
+               sleep 5
+             done
+             echo 'сайт не ответил 200, смотрим логи'; cd ${{ env.REMOTE_DIR }} && ${{ env.COMPOSE }} logs --tail=40 web api; exit 1"
+
+      - name: Убрать за собой старые образы
+        if: success()
+        run: |
+          ssh -p "${{ secrets.SSH_PORT || 22 }}" \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "docker image prune -f"
