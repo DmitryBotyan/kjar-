@@ -71,10 +71,14 @@ jobs:
       # Если ключа на сервере ещё нет, кладём его по паролю. Шаг идемпотентный
       # и нужен ровно один раз: дальше всё идёт по ключу.
       - name: Положить ключ на сервер по паролю
-        if: ${{ secrets.SSH_PASSWORD != '' }}
         env:
           SSHPASS: ${{ secrets.SSH_PASSWORD }}
         run: |
+          # Контекст secrets недоступен в условии if у шага, поэтому проверяем здесь
+          if [ -z "${SSHPASS}" ]; then
+            echo "секрет SSH_PASSWORD не задан, шаг пропущен"
+            exit 0
+          fi
           sudo apt-get update -qq && sudo apt-get install -y -qq sshpass
           PUB=$(ssh-keygen -y -f ~/.ssh/id_ed25519)
           sshpass -e ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
