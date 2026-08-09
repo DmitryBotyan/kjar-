@@ -1,2 +1,47 @@
-лог не создан
-результат выкладки: skipped
++ COMPOSE='docker compose --env-file .env.production -f docker/docker-compose.prod.yml'
++ echo '=== 0. ключ ==='
+=== 0. ключ ===
++ mkdir -p /home/runner/.ssh
++ printf '%s\n' '  -----BEGIN OPENSSH PRIVATE KEY-----
+  b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+  QyNTUxOQAAACAbt6NllbMZfr1z/VyPvfXnAmuCXxQEO/KBicJiXHoHBQAAAJhylQVocpUF
+  aAAAAAtzc2gtZWQyNTUxOQAAACAbt6NllbMZfr1z/VyPvfXnAmuCXxQEO/KBicJiXHoHBQ
+  AAAEAlAyab13qlO+Wr4trl+8NOyNvFd4qGF/TGBHHF2UVClxu3o2WVsxl+vXP9XI+99ecC
+  a4JfFAQ78oGJwmJcegcFAAAAE2dpdGh1Yi1hY3Rpb25zLWtqYXIBAg==
+  -----END OPENSSH PRIVATE KEY-----'
++ chmod 600 /home/runner/.ssh/id_ed25519
+++ wc -c
+++ wc -l
++ echo 'размер ключа: 425 байт, строк: 7'
+размер ключа: 425 байт, строк: 7
+++ head -1 /home/runner/.ssh/id_ed25519
++ echo 'первая строка:   -----BEGIN OPENSSH PRIVATE KEY-----'
+первая строка:   -----BEGIN OPENSSH PRIVATE KEY-----
+++ tail -1 /home/runner/.ssh/id_ed25519
++ echo 'последняя строка:   -----END OPENSSH PRIVATE KEY-----'
+последняя строка:   -----END OPENSSH PRIVATE KEY-----
++ ssh-keygen -y -f /home/runner/.ssh/id_ed25519
+Load key "/home/runner/.ssh/id_ed25519": error in libcrypto
++ echo 'КЛЮЧ НЕ ЧИТАЕТСЯ'
+КЛЮЧ НЕ ЧИТАЕТСЯ
++ echo 'Host target'
++ echo '  HostName 94.228.112.9'
++ echo '  User root'
++ echo '  Port 22'
++ echo '  IdentityFile ~/.ssh/id_ed25519'
++ echo '  IdentitiesOnly yes'
++ echo '  StrictHostKeyChecking no'
++ echo '  UserKnownHostsFile /dev/null'
++ echo '  ConnectTimeout 20'
++ echo '  BatchMode yes'
++ echo '  ServerAliveInterval 20'
++ echo '  ServerAliveCountMax 30'
++ echo '  ControlMaster auto'
++ echo '  ControlPath ~/.ssh/cm-%r@%h:%p'
++ echo '  ControlPersist 20m'
++ chmod 600 /home/runner/.ssh/config
++ echo '=== 1. состояние сервера ==='
+=== 1. состояние сервера ===
++ ssh target 'whoami; uname -a; command -v docker || echo "docker НЕТ"; command -v tar; df -h / | tail -1; free -m | head -2'
+Connection to 94.228.112.9 port 22 timed out
+результат выкладки: failure
