@@ -9,7 +9,7 @@ on:
 
 concurrency:
   group: deploy-production
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   deploy:
@@ -60,12 +60,18 @@ jobs:
             echo "  StrictHostKeyChecking no"
             echo "  UserKnownHostsFile /dev/null"
             echo "  ConnectTimeout 20"
+            # Без этого ssh при отвергнутом ключе молча ждёт ввода пароля
+            echo "  BatchMode yes"
+            echo "  PasswordAuthentication no"
+            echo "  PubkeyAuthentication yes"
+            echo "  NumberOfPasswordPrompts 0"
           } > ~/.ssh/config
           chmod 600 ~/.ssh/config
 
       - name: Проверить связь с сервером
         run: |
-          ssh target "echo подключение есть; docker --version || echo 'docker не установлен'; free -m | head -2"
+          # -v помогает понять, отвергнут ли ключ
+          ssh -v target "echo подключение есть; docker --version || echo 'docker не установлен'; free -m | head -2" 2>&1 | tail -25
 
       - name: Скопировать проект
         run: |
