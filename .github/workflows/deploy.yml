@@ -81,6 +81,16 @@ jobs:
           } > ~/.ssh/config
           chmod 600 ~/.ssh/config
 
+          echo "=== 0.5 ждём доступность ssh ==="
+          # Сервер на одном ядре может быть занят: даём ему до 5 минут
+          ok=""
+          for i in $(seq 1 20); do
+            if ssh -o ConnectTimeout=15 target 'echo pong' 2>/dev/null; then ok=1; break; fi
+            echo "попытка $i: ssh не отвечает"
+            sleep 15
+          done
+          [ -n "$ok" ] || { echo "ssh недоступен пять минут подряд"; exit 1; }
+
           echo "=== 1. состояние сервера ==="
           ssh target 'whoami; uname -a; command -v docker || echo "docker НЕТ"; command -v tar; df -h / | tail -1; free -m | head -2'
 
