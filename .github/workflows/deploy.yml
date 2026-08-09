@@ -11,15 +11,17 @@ concurrency:
   group: deploy-production
   cancel-in-progress: true
 
+permissions:
+  contents: write
+
 jobs:
   deploy:
     name: Сборка и запуск на сервере
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 50
 
     env:
       REMOTE_DIR: /opt/kjar
-      COMPOSE: docker compose --env-file .env.production -f docker/docker-compose.prod.yml
       SSH_HOST: ${{ secrets.SSH_HOST }}
       SSH_USER: ${{ secrets.SSH_USER }}
       SSH_PORT: ${{ secrets.SSH_PORT }}
@@ -35,11 +37,7 @@ jobs:
           [ -n "${{ secrets.SSH_USER }}" ] || missing="$missing SSH_USER"
           [ -n "${{ secrets.SSH_PRIVATE_KEY }}" ] || missing="$missing SSH_PRIVATE_KEY"
           [ -n "${{ secrets.ENV_PRODUCTION }}" ] || missing="$missing ENV_PRODUCTION"
-          if [ -n "$missing" ]; then
-            echo "Не заданы секреты:$missing"
-            exit 1
-          fi
-          echo "секреты на месте"
+          if [ -n "$missing" ]; then echo "Не заданы секреты:$missing"; exit 1; fi
 
       - name: Записать ключ
         env:
@@ -48,8 +46,7 @@ jobs:
           mkdir -p ~/.ssh
           printf '%s\n' "$KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          # Проверяем, что ключ читается, иначе дальше будет невнятная ошибка
-          ssh-keygen -y -f ~/.ssh/id_ed25519 > /dev/null && echo "ключ корректный"
+          ssh-keygen -y -f ~/.ssh/id_ed25519 > /dev/null
           {
             echo "Host target"
             echo "  HostName ${SSH_HOST}"
@@ -60,131 +57,93 @@ jobs:
             echo "  StrictHostKeyChecking no"
             echo "  UserKnownHostsFile /dev/null"
             echo "  ConnectTimeout 20"
-            # Без этого ssh при отвергнутом ключе молча ждёт ввода пароля
             echo "  BatchMode yes"
             echo "  PasswordAuthentication no"
-            echo "  PubkeyAuthentication yes"
             echo "  NumberOfPasswordPrompts 0"
             echo "  ServerAliveInterval 20"
             echo "  ServerAliveCountMax 30"
-            # Одно соединение на весь прогон: fail2ban и лимиты sshd
-            # не считают каждую команду новой попыткой входа
             echo "  ControlMaster auto"
             echo "  ControlPath ~/.ssh/cm-%r@%h:%p"
-            echo "  ControlPersist 15m"
+            echo "  ControlPersist 20m"
           } > ~/.ssh/config
           chmod 600 ~/.ssh/config
 
-      # Если ключа на сервере ещё нет, кладём его по паролю. Шаг идемпотентный
-      # и нужен ровно один раз: дальше всё идёт по ключу.
-      - name: Проверить, доходит ли сеть до сервера
-        timeout-minutes: 2
-        run: |
-          echo "порт ${SSH_PORT:-22}:"
-          nc -zv -w 10 "${SSH_HOST}" "${SSH_PORT:-22}" || echo "TCP не установился"
-          echo "баннер SSH (ждём 10 секунд):"
-          timeout 10 bash -c "cat < /dev/tcp/${SSH_HOST}/${SSH_PORT:-22}" | head -c 60 || echo "баннера нет"
-          echo "порт 80:"
-          nc -zv -w 10 "${SSH_HOST}" 80 || true
-
-      - name: Положить ключ на сервер по паролю
-        # Не критично: если ключ уже добавлен руками, деплой продолжится
+      # Вся выкладка одним скриптом: весь вывод копится в один лог,
+      # который затем возвращается в репозиторий и доступен для разбора
+      - name: Выкатить
+        id: deploy
         continue-on-error: true
-        timeout-minutes: 3
-        env:
-          SSHPASS: ${{ secrets.SSH_PASSWORD }}
-        run: |
-          # Если ключ уже принят, парольный вход не трогаем: лишние попытки
-          # с паролем провоцируют бан со стороны fail2ban
-          if ssh -o BatchMode=yes -o ConnectTimeout=15 target 'exit' 2>/dev/null; then
-            echo "ключ уже работает, парольный вход не нужен"
-            exit 0
-          fi
-          # Контекст secrets недоступен в условии if у шага, поэтому проверяем здесь
-          if [ -z "${SSHPASS}" ]; then
-            echo "секрет SSH_PASSWORD не задан, шаг пропущен"
-            exit 0
-          fi
-          sudo apt-get update -qq && sudo apt-get install -y -qq sshpass
-          PUB=$(ssh-keygen -y -f ~/.ssh/id_ed25519)
-          printf '%s\n' "$PUB" > /tmp/deploy_key.pub
-          sshpass -e ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-            -o PreferredAuthentications=password -o PubkeyAuthentication=no \
-            -p "${SSH_PORT:-22}" "${SSH_USER}@${SSH_HOST}" \
-            'mkdir -p ~/.ssh && chmod 700 ~/.ssh && touch ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys && cat >> ~/.ssh/authorized_keys && sort -u -o ~/.ssh/authorized_keys ~/.ssh/authorized_keys && echo готово' < /tmp/deploy_key.pub
-
-      - name: Проверить связь с сервером
-        timeout-minutes: 3
-        run: |
-          # -v помогает понять, отвергнут ли ключ
-          ssh -v target "echo подключение есть; docker --version || echo 'docker не установлен'; free -m | head -2" 2>&1 | tail -25
-
-      # Передаём через tar: rsync на сервере может отсутствовать,
-      # а tar и ssh есть в любой системе
-      - name: Скопировать проект
-        timeout-minutes: 15
-        run: |
-          ssh target 'whoami; command -v docker || echo "docker НЕТ"; free -m | head -2' || true
-          ssh target "mkdir -p ${REMOTE_DIR}"
-          tar czf - \
-            --exclude='./node_modules' \
-            --exclude='*/node_modules' \
-            --exclude='./.next' \
-            --exclude='*/.next' \
-            --exclude='./.git' \
-            --exclude='*.tsbuildinfo' \
-            --exclude='./.env' \
-            --exclude='./.env.production' \
-            . | ssh target "tar xzf - -C ${REMOTE_DIR}"
-          echo "перенесено файлов:"
-          ssh target "find ${REMOTE_DIR} -type f -not -path '*/.git/*' | wc -l"
-
-      - name: Положить боевые переменные
-        timeout-minutes: 3
         env:
           ENV_PRODUCTION: ${{ secrets.ENV_PRODUCTION }}
         run: |
-          printf '%s\n' "$ENV_PRODUCTION" | ssh target "umask 077 && cat > ${REMOTE_DIR}/.env.production"
-          ssh target "grep -c '=' ${REMOTE_DIR}/.env.production | xargs -I{} echo 'переменных записано: {}'"
+          set -x
+          exec > >(tee -a /tmp/deploy.log) 2>&1
+          COMPOSE="docker compose --env-file .env.production -f docker/docker-compose.prod.yml"
 
-      - name: Собрать образы
-        timeout-minutes: 30
-        run: |
-          ssh target "cd ${REMOTE_DIR} && rm -f build.done && \
-            setsid nohup bash -c '${COMPOSE} build > build.log 2>&1; echo \$? > build.done' > /dev/null 2>&1 < /dev/null &" || true
-          for i in $(seq 1 100); do
+          echo "=== 1. состояние сервера ==="
+          ssh target 'whoami; uname -a; command -v docker || echo "docker НЕТ"; command -v tar; df -h / | tail -1; free -m | head -2'
+
+          echo "=== 2. каталог ==="
+          ssh target "mkdir -p ${REMOTE_DIR} && ls -la ${REMOTE_DIR} | head -5"
+
+          echo "=== 3. перенос кода ==="
+          tar czf /tmp/kjar.tgz \
+            --exclude='./node_modules' --exclude='*/node_modules' \
+            --exclude='./.next' --exclude='*/.next' \
+            --exclude='./.git' --exclude='*.tsbuildinfo' \
+            --exclude='./.env' --exclude='./.env.production' .
+          ls -lh /tmp/kjar.tgz
+          ssh target "cat > /tmp/kjar.tgz" < /tmp/kjar.tgz
+          ssh target "tar xzf /tmp/kjar.tgz -C ${REMOTE_DIR} && rm -f /tmp/kjar.tgz && find ${REMOTE_DIR} -type f | wc -l"
+
+          echo "=== 4. боевые переменные ==="
+          printf '%s\n' "$ENV_PRODUCTION" | ssh target "umask 077 && cat > ${REMOTE_DIR}/.env.production"
+          ssh target "grep -c = ${REMOTE_DIR}/.env.production"
+
+          echo "=== 5. сборка образов ==="
+          ssh target "cd ${REMOTE_DIR} && rm -f build.done && setsid nohup bash -c '${COMPOSE} build > build.log 2>&1; echo \$? > build.done' > /dev/null 2>&1 < /dev/null &" || true
+          for i in $(seq 1 120); do
             if ssh target "test -f ${REMOTE_DIR}/build.done" 2>/dev/null; then break; fi
             sleep 15
           done
-          echo "--- хвост лога сборки:"
-          ssh target "tail -25 ${REMOTE_DIR}/build.log" || true
-          code=$(ssh target "cat ${REMOTE_DIR}/build.done 2>/dev/null || echo 1")
-          echo "код сборки: $code"
-          [ "$code" = "0" ]
+          ssh target "tail -30 ${REMOTE_DIR}/build.log" || true
+          build_code=$(ssh target "cat ${REMOTE_DIR}/build.done 2>/dev/null || echo 1")
+          echo "код сборки: $build_code"
+          [ "$build_code" = "0" ]
 
-      - name: Поднять базу и применить миграции
-        timeout-minutes: 10
-        run: |
-          ssh target "cd ${REMOTE_DIR} && ${COMPOSE} up -d db && \
-            timeout 150 bash -c 'until ${COMPOSE} exec -T db pg_isready > /dev/null 2>&1; do sleep 3; done' && \
-            ${COMPOSE} --profile tools run --rm migrate"
+          echo "=== 6. база и миграции ==="
+          ssh target "cd ${REMOTE_DIR} && ${COMPOSE} up -d db"
+          ssh target "cd ${REMOTE_DIR} && timeout 180 bash -c 'until ${COMPOSE} exec -T db pg_isready > /dev/null 2>&1; do sleep 3; done'"
+          ssh target "cd ${REMOTE_DIR} && ${COMPOSE} --profile tools run --rm migrate"
 
-      - name: Запустить приложение
-        timeout-minutes: 10
-        run: ssh target "cd ${REMOTE_DIR} && ${COMPOSE} up -d && ${COMPOSE} ps"
+          echo "=== 7. запуск ==="
+          ssh target "cd ${REMOTE_DIR} && ${COMPOSE} up -d && ${COMPOSE} ps"
 
-      - name: Проверить, что сайт отвечает
-        timeout-minutes: 5
-        run: |
+          echo "=== 8. проверка ==="
           ssh target "for i in \$(seq 1 24); do
               code=\$(curl -s -o /dev/null -w '%{http_code}' http://localhost/ || true)
-              if [ \"\$code\" = '200' ]; then echo \"сайт отвечает: \$code\"; exit 0; fi
+              echo \"попытка \$i: \$code\"
+              [ \"\$code\" = '200' ] && exit 0
               sleep 5
             done
-            echo 'сайт не ответил 200, логи ниже'
-            cd ${REMOTE_DIR} && ${COMPOSE} logs --tail=50 web api nginx
+            cd ${REMOTE_DIR} && ${COMPOSE} logs --tail=60 web api nginx
             exit 1"
 
-      - name: Убрать старые образы
-        if: success()
-        run: ssh target "docker image prune -f"
+      # Лог возвращается в репозиторий: иначе разбор ошибок идёт вслепую
+      - name: Сохранить лог деплоя
+        if: always()
+        run: |
+          mkdir -p .deploy-logs
+          cp /tmp/deploy.log .deploy-logs/last-deploy.log 2>/dev/null || echo "лог не создан" > .deploy-logs/last-deploy.log
+          echo "результат выкладки: ${{ steps.deploy.outcome }}" >> .deploy-logs/last-deploy.log
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add -f .deploy-logs/last-deploy.log
+          git commit -m "Лог последнего деплоя [skip ci]" || exit 0
+          git pull --rebase --autostash origin main || true
+          git push origin HEAD:main
+
+      - name: Отразить результат
+        if: always()
+        run: |
+          [ "${{ steps.deploy.outcome }}" = "success" ] || exit 1
