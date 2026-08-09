@@ -119,21 +119,25 @@ jobs:
           # -v помогает понять, отвергнут ли ключ
           ssh -v target "echo подключение есть; docker --version || echo 'docker не установлен'; free -m | head -2" 2>&1 | tail -25
 
+      # Передаём через tar: rsync на сервере может отсутствовать,
+      # а tar и ssh есть в любой системе
       - name: Скопировать проект
         timeout-minutes: 15
         run: |
-          echo "состояние сервера:"
-          ssh target 'whoami; command -v docker || echo "docker НЕТ"; command -v rsync || echo "rsync НЕТ"; free -m | head -2' || true
-          # rsync нужен на обеих сторонах; ставим, только если его нет
-          ssh target 'command -v rsync > /dev/null || (export DEBIAN_FRONTEND=noninteractive; apt-get update -qq && apt-get install -y -qq rsync)' || true
+          ssh target 'whoami; command -v docker || echo "docker НЕТ"; free -m | head -2' || true
           ssh target "mkdir -p ${REMOTE_DIR}"
-          rsync -az --delete \
-            --exclude node_modules \
-            --exclude .next \
-            --exclude .git \
-            --exclude .env \
-            --exclude '*.tsbuildinfo' \
-            ./ target:${REMOTE_DIR}/
+          tar czf - \
+            --exclude='./node_modules' \
+            --exclude='*/node_modules' \
+            --exclude='./.next' \
+            --exclude='*/.next' \
+            --exclude='./.git' \
+            --exclude='*.tsbuildinfo' \
+            --exclude='./.env' \
+            --exclude='./.env.production' \
+            . | ssh target "tar xzf - -C ${REMOTE_DIR}"
+          echo "перенесено файлов:"
+          ssh target "find ${REMOTE_DIR} -type f -not -path '*/.git/*' | wc -l"
 
       - name: Положить боевые переменные
         timeout-minutes: 3
