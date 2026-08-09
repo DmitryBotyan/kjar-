@@ -1,7 +1,7 @@
 name: Деплой KJÁR
 
-# Раннер GitHub ходит на сервер напрямую, поэтому локальные ограничения сети
-# на разработчика не влияют.
+# Раннер GitHub ходит на сервер напрямую, поэтому ограничения сети разработчика
+# на выкладку не влияют.
 on:
   push:
     branches: [main]
@@ -20,77 +20,94 @@ jobs:
     env:
       REMOTE_DIR: /opt/kjar
       COMPOSE: docker compose --env-file .env.production -f docker/docker-compose.prod.yml
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_PORT: ${{ secrets.SSH_PORT }}
 
     steps:
       - name: Забрать код
         uses: actions/checkout@v4
 
-      - name: Подготовить ключ и known_hosts
+      - name: Проверить, что секреты заданы
+        run: |
+          missing=""
+          [ -n "${{ secrets.SSH_HOST }}" ] || missing="$missing SSH_HOST"
+          [ -n "${{ secrets.SSH_USER }}" ] || missing="$missing SSH_USER"
+          [ -n "${{ secrets.SSH_PRIVATE_KEY }}" ] || missing="$missing SSH_PRIVATE_KEY"
+          [ -n "${{ secrets.ENV_PRODUCTION }}" ] || missing="$missing ENV_PRODUCTION"
+          if [ -n "$missing" ]; then
+            echo "Не заданы секреты:$missing"
+            exit 1
+          fi
+          echo "секреты на месте"
+
+      - name: Записать ключ
+        env:
+          KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          printf '%s\n' "$KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -p "${{ secrets.SSH_PORT || 22 }}" -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+          # Проверяем, что ключ читается, иначе дальше будет невнятная ошибка
+          ssh-keygen -y -f ~/.ssh/id_ed25519 > /dev/null && echo "ключ корректный"
+          {
+            echo "Host target"
+            echo "  HostName ${SSH_HOST}"
+            echo "  User ${SSH_USER}"
+            echo "  Port ${SSH_PORT:-22}"
+            echo "  IdentityFile ~/.ssh/id_ed25519"
+            echo "  IdentitiesOnly yes"
+            echo "  StrictHostKeyChecking no"
+            echo "  UserKnownHostsFile /dev/null"
+            echo "  ConnectTimeout 20"
+          } > ~/.ssh/config
+          chmod 600 ~/.ssh/config
 
       - name: Проверить связь с сервером
         run: |
-          ssh -p "${{ secrets.SSH_PORT || 22 }}" \
-            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
-            "echo подключение есть; docker --version || echo 'docker не установлен'"
+          ssh target "echo подключение есть; docker --version || echo 'docker не установлен'; free -m | head -2"
 
       - name: Скопировать проект
         run: |
+          ssh target "mkdir -p ${REMOTE_DIR}"
           rsync -az --delete \
-            -e "ssh -p ${{ secrets.SSH_PORT || 22 }}" \
             --exclude node_modules \
             --exclude .next \
             --exclude .git \
             --exclude .env \
             --exclude '*.tsbuildinfo' \
-            ./ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ env.REMOTE_DIR }}/"
+            ./ target:${REMOTE_DIR}/
 
       - name: Положить боевые переменные
+        env:
+          ENV_PRODUCTION: ${{ secrets.ENV_PRODUCTION }}
         run: |
-          ssh -p "${{ secrets.SSH_PORT || 22 }}" \
-            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
-            "umask 077 && cat > ${{ env.REMOTE_DIR }}/.env.production" <<'ENVEOF'
-          ${{ secrets.ENV_PRODUCTION }}
-          ENVEOF
+          printf '%s\n' "$ENV_PRODUCTION" | ssh target "umask 077 && cat > ${REMOTE_DIR}/.env.production"
+          ssh target "grep -c '=' ${REMOTE_DIR}/.env.production | xargs -I{} echo 'переменных записано: {}'"
 
       - name: Собрать образы
-        run: |
-          ssh -p "${{ secrets.SSH_PORT || 22 }}" \
-            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
-            "cd ${{ env.REMOTE_DIR }} && ${{ env.COMPOSE }} build"
+        run: ssh target "cd ${REMOTE_DIR} && ${COMPOSE} build"
 
       - name: Поднять базу и применить миграции
         run: |
-          ssh -p "${{ secrets.SSH_PORT || 22 }}" \
-            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
-            "cd ${{ env.REMOTE_DIR }} && ${{ env.COMPOSE }} up -d db && \
-             timeout 120 bash -c 'until ${{ env.COMPOSE }} exec -T db pg_isready > /dev/null 2>&1; do sleep 3; done' && \
-             ${{ env.COMPOSE }} --profile tools run --rm migrate"
+          ssh target "cd ${REMOTE_DIR} && ${COMPOSE} up -d db && \
+            timeout 150 bash -c 'until ${COMPOSE} exec -T db pg_isready > /dev/null 2>&1; do sleep 3; done' && \
+            ${COMPOSE} --profile tools run --rm migrate"
 
       - name: Запустить приложение
-        run: |
-          ssh -p "${{ secrets.SSH_PORT || 22 }}" \
-            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
-            "cd ${{ env.REMOTE_DIR }} && ${{ env.COMPOSE }} up -d api web nginx && ${{ env.COMPOSE }} ps"
+        run: ssh target "cd ${REMOTE_DIR} && ${COMPOSE} up -d && ${COMPOSE} ps"
 
       - name: Проверить, что сайт отвечает
         run: |
-          ssh -p "${{ secrets.SSH_PORT || 22 }}" \
-            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
-            "for i in \$(seq 1 20); do
-               code=\$(curl -s -o /dev/null -w '%{http_code}' http://localhost/ || true)
-               if [ \"\$code\" = '200' ]; then echo \"сайт отвечает: \$code\"; exit 0; fi
-               sleep 5
-             done
-             echo 'сайт не ответил 200, смотрим логи'; cd ${{ env.REMOTE_DIR }} && ${{ env.COMPOSE }} logs --tail=40 web api; exit 1"
+          ssh target "for i in \$(seq 1 24); do
+              code=\$(curl -s -o /dev/null -w '%{http_code}' http://localhost/ || true)
+              if [ \"\$code\" = '200' ]; then echo \"сайт отвечает: \$code\"; exit 0; fi
+              sleep 5
+            done
+            echo 'сайт не ответил 200, логи ниже'
+            cd ${REMOTE_DIR} && ${COMPOSE} logs --tail=50 web api nginx
+            exit 1"
 
-      - name: Убрать за собой старые образы
+      - name: Убрать старые образы
         if: success()
-        run: |
-          ssh -p "${{ secrets.SSH_PORT || 22 }}" \
-            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
-            "docker image prune -f"
+        run: ssh target "docker image prune -f"
