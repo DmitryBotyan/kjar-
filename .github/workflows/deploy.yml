@@ -54,7 +54,9 @@ jobs:
 
           echo "=== 0. ключ ==="
           mkdir -p ~/.ssh
-          printf '%s\n' "$KEY" > ~/.ssh/id_ed25519
+          # Ключ часто вставляют с отступами или CRLF, из-за чего libcrypto
+          # отказывается его читать. Нормализуем перед записью.
+          printf '%s\n' "$KEY" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e '/^$/d' > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           echo "размер ключа: $(wc -c < ~/.ssh/id_ed25519) байт, строк: $(wc -l < ~/.ssh/id_ed25519)"
           echo "первая строка: $(head -1 ~/.ssh/id_ed25519)"
