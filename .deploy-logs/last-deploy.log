@@ -2,13 +2,13 @@
 + echo '=== 0. ключ ==='
 === 0. ключ ===
 + mkdir -p /home/runner/.ssh
-+ printf '%s\n' '  -----BEGIN OPENSSH PRIVATE KEY-----
-  b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
-  QyNTUxOQAAACAbt6NllbMZfr1z/VyPvfXnAmuCXxQEO/KBicJiXHoHBQAAAJhylQVocpUF
-  aAAAAAtzc2gtZWQyNTUxOQAAACAbt6NllbMZfr1z/VyPvfXnAmuCXxQEO/KBicJiXHoHBQ
-  AAAEAlAyab13qlO+Wr4trl+8NOyNvFd4qGF/TGBHHF2UVClxu3o2WVsxl+vXP9XI+99ecC
-  a4JfFAQ78oGJwmJcegcFAAAAE2dpdGh1Yi1hY3Rpb25zLWtqYXIBAg==
-  -----END OPENSSH PRIVATE KEY-----'
++ printf '%s\n' '-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+QyNTUxOQAAACAbt6NllbMZfr1z/VyPvfXnAmuCXxQEO/KBicJiXHoHBQAAAJhylQVocpUF
+aAAAAAtzc2gtZWQyNTUxOQAAACAbt6NllbMZfr1z/VyPvfXnAmuCXxQEO/KBicJiXHoHBQ
+AAAEAlAyab13qlO+Wr4trl+8NOyNvFd4qGF/TGBHHF2UVClxu3o2WVsxl+vXP9XI+99ecC
+a4JfFAQ78oGJwmJcegcFAAAAE2dpdGh1Yi1hY3Rpb25zLWtqYXIBAg==
+-----END OPENSSH PRIVATE KEY-----'
 + sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e '/^$/d'
 + chmod 600 /home/runner/.ssh/id_ed25519
 ++ wc -c
@@ -39,8 +39,82 @@ ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBu3o2WVsxl+vXP9XI+99ecCa4JfFAQ78oGJwmJcegcF
 + echo '  ControlPath ~/.ssh/cm-%r@%h:%p'
 + echo '  ControlPersist 20m'
 + chmod 600 /home/runner/.ssh/config
++ echo '=== 0.5 ждём доступность ssh ==='
+=== 0.5 ждём доступность ssh ===
++ ok=
+++ seq 1 20
++ for i in $(seq 1 20)
++ ssh -o ConnectTimeout=15 target 'echo pong'
+pong
++ ok=1
++ break
++ '[' -n 1 ']'
 + echo '=== 1. состояние сервера ==='
 === 1. состояние сервера ===
 + ssh target 'whoami; uname -a; command -v docker || echo "docker НЕТ"; command -v tar; df -h / | tail -1; free -m | head -2'
-Connection to 94.228.112.9 port 22 timed out
-результат выкладки: failure
+root
+Linux spb-3-vm-kdt0 7.0.0-29-generic #29-Ubuntu SMP PREEMPT_DYNAMIC Fri Jul 17 20:52:35 UTC 2026 x86_64 GNU/Linux
+/usr/bin/docker
+/usr/bin/tar
+/dev/sda1        24G  5.1G   19G  22% /
+               total        used        free      shared  buff/cache   available
+Mem:            3911         533        2271           3        1345        3377
++ echo '=== 2. каталог ==='
+=== 2. каталог ===
++ ssh target 'mkdir -p /opt/kjar && ls -la /opt/kjar | head -5'
+total 284
+drwxr-xr-x 8 1001 1001   4096 Aug  9 16:05 .
+drwxr-xr-x 4 root root   4096 Aug  9 13:02 ..
+drwxr-xr-x 2 1001 1001   4096 Aug  9 16:05 .deploy-logs
+-rw-r--r-- 1 1001 1001    123 Aug  9 16:05 .dockerignore
++ echo '=== 3. перенос кода ==='
+=== 3. перенос кода ===
++ tar czf /tmp/kjar.tgz --exclude=./node_modules '--exclude=*/node_modules' --exclude=./.next '--exclude=*/.next' --exclude=./.git '--exclude=*.tsbuildinfo' --exclude=./.env --exclude=./.env.production .
++ ls -lh /tmp/kjar.tgz
+-rw-r--r-- 1 runner runner 523K Aug  9 16:19 /tmp/kjar.tgz
++ ssh target 'cat > /tmp/kjar.tgz'
++ ssh target 'tar xzf /tmp/kjar.tgz -C /opt/kjar && rm -f /tmp/kjar.tgz && find /opt/kjar -type f | wc -l'
+145
++ echo '=== 4. боевые переменные ==='
+=== 4. боевые переменные ===
++ printf '%s\n' 'POSTGRES_USER=kjar
+POSTGRES_PASSWORD=cc6803de6d2170320f9f0f8eb37d6a8f
+POSTGRES_DB=kjar
+DATABASE_URL=postgres://kjar:cc6803de6d2170320f9f0f8eb37d6a8f@db:5432/kjar
+
+JWT_SECRET=e1070675c1cd15051f430e6ed854d1f0ec1af5049693b63d68fa4a4cbbcb330e
+JWT_EXPIRES_IN=7d
+BCRYPT_SALT_ROUNDS=12
+
+CORS_ORIGIN=http://94.228.112.9
+NEXT_PUBLIC_SITE_URL=http://94.228.112.9
+
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX=100
+
+S3_ENDPOINT=http://minio:9000
+S3_ACCESS_KEY=a1f5b7ae761d96323335
+S3_SECRET_KEY=a5f8892a55b82a74d7aab4875770054e38f93e6e5fd62101
+S3_BUCKET=kjar
+S3_REGION=us-east-1
+S3_PUBLIC_URL=http://94.228.112.9/s3/kjar'
++ ssh target 'umask 077 && cat > /opt/kjar/.env.production'
++ ssh target 'grep -c = /opt/kjar/.env.production'
+17
++ echo '=== 4.5 сеть внутри docker ==='
+=== 4.5 сеть внутри docker ===
++ ssh target 'docker run --rm alpine sh -c "nslookup registry.npmjs.org 2>&1 | tail -3"'
+Unable to find image 'alpine:latest' locally
+latest: Pulling from library/alpine
+56dceff11b33: Download complete
+f5124fb579e2: Download complete
+Digest: sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b
+Status: Downloaded newer image for alpine:latest
+Name:	registry.npmjs.org
+Address: 104.16.8.34
+
++ ssh target 'mkdir -p /etc/docker && printf "{\n  \"dns\": [\"8.8.8.8\", \"77.88.8.8\", \"1.1.1.1\"]\n}\n" > /etc/docker/daemon.json && systemctl restart docker && sleep 5 && echo "DNS докера настроен"'
+DNS докера настроен
++ ssh target 'docker run --rm alpine sh -c "wget -qO- --timeout=10 https://registry.npmjs.org/ 2>&1 | head -c 60"'
+wget: download timed out
+результат выкладки: cancelled
