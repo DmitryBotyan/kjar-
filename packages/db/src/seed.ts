@@ -89,7 +89,6 @@ async function seed() {
     const [adminUser] = await db
       .insert(users)
       .values({
-        email: "admin@kjar.local",
         username: "admin",
         passwordHash,
         role: "admin"
@@ -99,7 +98,6 @@ async function seed() {
     const [modUser] = await db
       .insert(users)
       .values({
-        email: "mod@kjar.local",
         username: "moderator",
         passwordHash,
         role: "mod"
@@ -109,7 +107,6 @@ async function seed() {
     const [user1] = await db
       .insert(users)
       .values({
-        email: "user1@kjar.local",
         username: "astra_norn",
         passwordHash,
         role: "user"
@@ -119,7 +116,6 @@ async function seed() {
     const [user2] = await db
       .insert(users)
       .values({
-        email: "user2@kjar.local",
         username: "sigrid_vale",
         passwordHash,
         role: "user"
@@ -129,7 +125,6 @@ async function seed() {
     const [user3] = await db
       .insert(users)
       .values({
-        email: "user3@kjar.local",
         username: "lir_kosta",
         passwordHash,
         role: "user"
@@ -970,11 +965,11 @@ async function seed() {
     console.log(`   - Обсуждений: 3`);
     console.log(`   - Сообщений: 6`);
     console.log("\n🔑 Тестовые учетные данные:");
-    console.log(`   - admin@kjar.local / password123 (роль: admin)`);
-    console.log(`   - mod@kjar.local / password123 (роль: mod)`);
-    console.log(`   - user1@kjar.local / password123 (роль: user)`);
-    console.log(`   - user2@kjar.local / password123 (роль: user)`);
-    console.log(`   - user3@kjar.local / password123 (роль: user)`);
+    console.log(`   - admin / password123 (роль: admin)`);
+    console.log(`   - moderator / password123 (роль: mod)`);
+    console.log(`   - astra_norn / password123 (роль: user)`);
+    console.log(`   - sigrid_vale / password123 (роль: user)`);
+    console.log(`   - lir_kosta / password123 (роль: user)`);
 
     process.exit(0);
   } catch (error) {

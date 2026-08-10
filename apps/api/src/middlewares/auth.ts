@@ -8,8 +8,7 @@ import { createError } from "./errorHandler.js";
 export interface AuthRequest extends Request {
   user?: {
     id: number;
-    email: string;
-    username: string | null;
+    username: string;
     role: string;
   };
 }
@@ -19,9 +18,9 @@ if (!JWT_SECRET) {
   throw new Error("JWT_SECRET не установлен в переменных окружения");
 }
 
-export function generateToken(userId: number, email: string, role: string): string {
+export function generateToken(userId: number, username: string, role: string): string {
   return jwt.sign(
-    { userId, email, role },
+    { userId, username, role },
     JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
   );
@@ -52,7 +51,6 @@ export async function authenticate(
     const [user] = await db
       .select({
         id: users.id,
-        email: users.email,
         username: users.username,
         role: users.role
       })
@@ -90,7 +88,6 @@ export function optionalAuth(
       // Асинхронно загружаем пользователя, но не блокируем запрос
       db.select({
         id: users.id,
-        email: users.email,
         username: users.username,
         role: users.role
       })

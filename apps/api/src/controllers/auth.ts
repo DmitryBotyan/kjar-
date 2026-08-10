@@ -12,29 +12,32 @@ import { z } from "zod";
 const SALT_ROUNDS = Number(process.env.BCRYPT_SALT_ROUNDS) || 12;
 
 const registerSchema = z.object({
-  email: z.string().email("Некорректный email"),
-  username: z.string().min(3).max(100).optional(),
+  username: z
+    .string()
+    .min(3, "Логин от 3 символов")
+    .max(100)
+    .regex(/^[a-zA-Z0-9_.-]+$/, "Логин: латиница, цифры, дефис, точка, подчёркивание"),
   password: z.string().min(8, "Пароль должен содержать минимум 8 символов")
 });
 
 const loginSchema = z.object({
-  email: z.string().email("Некорректный email"),
+  username: z.string().min(1, "Логин обязателен"),
   password: z.string().min(1, "Пароль обязателен")
 });
 
 export async function register(req: Request, res: Response) {
   try {
-    const { email, username, password } = registerSchema.parse(req.body);
+    const { username, password } = registerSchema.parse(req.body);
 
     // Проверяем, существует ли пользователь
     const [existingUser] = await db
       .select({ id: users.id })
       .from(users)
-      .where(eq(users.email, email))
+      .where(eq(users.username, username))
       .limit(1);
 
     if (existingUser) {
-      throw createError("Пользователь с таким email уже существует", 409, "USER_EXISTS");
+      throw createError("Пользователь с таким логином уже существует", 409, "USER_EXISTS");
     }
 
     // Хешируем пароль
@@ -44,20 +47,18 @@ export async function register(req: Request, res: Response) {
     const [newUser] = await db
       .insert(users)
       .values({
-        email,
-        username: username || null,
+        username,
         passwordHash,
         role: "user" // По умолчанию роль "user"
       })
       .returning({
         id: users.id,
-        email: users.email,
         username: users.username,
         role: users.role
       });
 
     // Генерируем токен
-    const token = generateToken(newUser.id, newUser.email, newUser.role);
+    const token = generateToken(newUser.id, newUser.username, newUser.role);
 
     res.status(201).json({
       data: {
@@ -80,39 +81,38 @@ export async function register(req: Request, res: Response) {
 
 export async function login(req: Request, res: Response) {
   try {
-    const { email, password } = loginSchema.parse(req.body);
+    const { username, password } = loginSchema.parse(req.body);
 
     // Находим пользователя
     const [user] = await db
       .select({
         id: users.id,
-        email: users.email,
+        username: users.username,
         username: users.username,
         role: users.role,
         passwordHash: users.passwordHash
       })
       .from(users)
-      .where(eq(users.email, email))
+      .where(eq(users.username, username))
       .limit(1);
 
     if (!user) {
-      throw createError("Неверный email или пароль", 401, "INVALID_CREDENTIALS");
+      throw createError("Неверный логин или пароль", 401, "INVALID_CREDENTIALS");
     }
 
     // Проверяем пароль
     const isValidPassword = await bcrypt.compare(password, user.passwordHash);
     if (!isValidPassword) {
-      throw createError("Неверный email или пароль", 401, "INVALID_CREDENTIALS");
+      throw createError("Неверный логин или пароль", 401, "INVALID_CREDENTIALS");
     }
 
     // Генерируем токен
-    const token = generateToken(user.id, user.email, user.role);
+    const token = generateToken(user.id, user.username, user.role);
 
     res.json({
       data: {
         user: {
           id: user.id,
-          email: user.email,
           username: user.username,
           role: user.role
         },
@@ -141,7 +141,6 @@ export async function getMe(req: AuthRequest, res: Response) {
     res.json({
       data: {
         id: req.user.id,
-        email: req.user.email,
         username: req.user.username,
         role: req.user.role
       }

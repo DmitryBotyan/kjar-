@@ -6,8 +6,7 @@ import Link from "next/link";
 
 interface User {
   id: number;
-  email: string;
-  username: string | null;
+  username: string;
   role: string;
 }
 
@@ -62,17 +61,17 @@ export default function AdminPage() {
     setLoginError(null);
 
     const formData = new FormData(e.currentTarget);
-    const email = formData.get("email") as string | null;
+    const username = formData.get("username") as string | null;
     const password = formData.get("password") as string | null;
 
     // Проверяем, что поля заполнены
-    if (!email || !password) {
+    if (!username || !password) {
       setLoginError("Заполните все поля");
       setLoginLoading(false);
       return;
     }
 
-    const requestBody = JSON.stringify({ email, password });
+    const requestBody = JSON.stringify({ username, password });
     
     try {
       const response = await fetch("/api/auth/login", {
@@ -135,22 +134,22 @@ export default function AdminPage() {
 
             <form className="kjar-form-card" onSubmit={handleLogin}>
               <div className="kjar-field">
-                <label className="kjar-label" htmlFor="email">
-                  Email *
+                <label className="kjar-label" htmlFor="username">
+                  Логин
                 </label>
                 <input
                   className="kjar-input"
-                  id="email"
-                  name="email"
-                  type="email"
+                  id="username"
+                  name="username"
+                  type="text"
                   required
-                  autoComplete="email"
+                  autoComplete="username"
                 />
               </div>
 
               <div className="kjar-field">
                 <label className="kjar-label" htmlFor="password">
-                  Пароль *
+                  Пароль
                 </label>
                 <input
                   className="kjar-input"
@@ -184,7 +183,7 @@ export default function AdminPage() {
         <h1 className="kjar-admin__title">Админ-панель</h1>
         <div className="kjar-admin__header-actions">
           <span className="kjar-admin__user-info">
-            {user?.username || user?.email} ({user?.role})
+            {user?.username} ({user?.role})
           </span>
           <button
             onClick={handleLogout}

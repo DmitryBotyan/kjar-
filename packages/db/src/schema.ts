@@ -17,15 +17,15 @@ export const users = pgTable(
   "users",
   {
     id: serial("id").primaryKey(),
-    email: varchar("email", { length: 255 }).notNull().unique(),
-    username: varchar("username", { length: 100 }),
+    // E-mail не храним: вход по логину, персональных данных в базе нет
+    username: varchar("username", { length: 100 }).notNull().unique(),
     passwordHash: text("password_hash").notNull(),
     role: varchar("role", { length: 24 }).notNull().default("user"), // guest, user, mod, admin
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow()
   },
   (table) => ({
-    emailIdx: index("users_email_idx").on(table.email),
+    usernameIdx: index("users_username_idx").on(table.username),
     roleIdx: index("users_role_idx").on(table.role)
   })
 );
