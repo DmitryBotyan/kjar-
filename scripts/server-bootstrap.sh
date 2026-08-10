@@ -9,7 +9,9 @@ APP_DIR="${APP_DIR:-/opt/kjar}"
 echo "==> Обновление пакетов"
 apt-get update -y
 apt-get upgrade -y
-apt-get install -y ca-certificates curl gnupg ufw fail2ban rsync
+# fail2ban намеренно не ставим: он банил раннеры GitHub, и выкладка переставала
+# доходить до сервера. Защита строится иначе — вход только по ключу и ufw.
+apt-get install -y ca-certificates curl gnupg ufw rsync
 
 echo "==> Swap"
 if swapon --show | grep -q swapfile; then
@@ -39,6 +41,23 @@ fi
 docker --version
 docker compose version
 
+echo "==> Зеркало Docker Hub"
+# С российских адресов Docker Hub быстро отдаёт 429 на анонимные загрузки.
+# Зеркало Timeweb снимает лимит; образы из ghcr.io тянутся напрямую и это не
+# затрагивает. На зарубежном сервере блок можно не применять, вреда от него нет.
+mkdir -p /etc/docker
+if [ ! -f /etc/docker/daemon.json ]; then
+  cat > /etc/docker/daemon.json <<'JSON'
+{
+  "registry-mirrors": ["https://dockerhub.timeweb.cloud", "https://mirror.gcr.io"],
+  "log-driver": "json-file",
+  "log-opts": { "max-size": "10m", "max-file": "3" }
+}
+JSON
+  systemctl restart docker
+fi
+docker info 2>/dev/null | grep -A2 "Registry Mirrors" || true
+
 echo "==> Файрвол"
 ufw allow OpenSSH
 ufw allow 80/tcp
@@ -52,8 +71,7 @@ echo "готово: $APP_DIR"
 
 cat <<'NOTE'
 
-Дальше с локальной машины:
-  ./scripts/deploy.sh 94.228.112.9
+Дальше выкладка идёт через GitHub Actions, вручную ничего запускать не нужно.
 
 После первого удачного входа по ключу закройте вход по паролю:
   sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
