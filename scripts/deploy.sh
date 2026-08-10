@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Выкладка KJÁR на сервер. Запускать с локальной машины из корня проекта:
 #   ./scripts/deploy.sh <host> [user] [remote_dir]
-# Пример: ./scripts/deploy.sh 94.228.112.9
+# Пример: ./scripts/deploy.sh 72.56.67.219
 set -euo pipefail
 
-HOST="${1:?Укажите адрес сервера: ./scripts/deploy.sh 94.228.112.9}"
+HOST="${1:?Укажите адрес сервера: ./scripts/deploy.sh 72.56.67.219}"
 USER="${2:-root}"
 REMOTE_DIR="${3:-/opt/kjar}"
 SSH="ssh -o StrictHostKeyChecking=accept-new ${USER}@${HOST}"
