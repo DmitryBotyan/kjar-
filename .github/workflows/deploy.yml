@@ -1,0 +1,164 @@
+name: Деплой KJÁR
+
+# Схема: раннер собирает образы и кладёт в реестр GitHub, затем заходит
+# на сервер по ключу, и сервер забирает готовые образы. На сервере ничего
+# не собирается: там всего 2 ГБ памяти.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_WEB: ghcr.io/${{ github.repository_owner }}/kjar-web
+  IMAGE_API: ghcr.io/${{ github.repository_owner }}/kjar-api
+  REMOTE_DIR: /opt/kjar
+
+jobs:
+  build:
+    name: Собрать образы
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: web
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile.prod
+          target: web
+          push: true
+          tags: ${{ env.IMAGE_WEB }}:latest,${{ env.IMAGE_WEB }}:${{ github.sha }}
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
+
+      - name: api
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile.prod
+          target: api
+          push: true
+          tags: ${{ env.IMAGE_API }}:latest,${{ env.IMAGE_API }}:${{ github.sha }}
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,mode=max,scope=api
+
+  deploy:
+    name: Выкатить на сервер
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Подготовить доступ
+        env:
+          KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          # Ключ часто вставляют с отступами: чистим перед записью
+          printf '%s\n' "$KEY" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e '/^$/d' > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keygen -y -f ~/.ssh/id_ed25519 > /dev/null
+          {
+            echo "Host target"
+            echo "  HostName ${{ secrets.SSH_HOST }}"
+            echo "  User ${{ secrets.SSH_USER }}"
+            echo "  Port ${{ secrets.SSH_PORT || 22 }}"
+            echo "  IdentityFile ~/.ssh/id_ed25519"
+            echo "  IdentitiesOnly yes"
+            echo "  StrictHostKeyChecking no"
+            echo "  UserKnownHostsFile /dev/null"
+            echo "  BatchMode yes"
+            echo "  ConnectTimeout 20"
+            echo "  ServerAliveInterval 20"
+            echo "  ControlMaster auto"
+            echo "  ControlPath ~/.ssh/cm-%r@%h:%p"
+            echo "  ControlPersist 15m"
+          } > ~/.ssh/config
+          chmod 600 ~/.ssh/config
+
+      - name: Выкатить
+        id: run
+        continue-on-error: true
+        env:
+          ENV_PRODUCTION: ${{ secrets.ENV_PRODUCTION }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          exec > >(tee -a /tmp/deploy.log) 2>&1
+          set -x
+          COMPOSE="docker compose --env-file .env.production -f docker/docker-compose.prod.yml"
+
+          echo "=== состояние сервера ==="
+          ssh target 'hostname; docker --version; free -m | head -2; df -h / | tail -1'
+
+          echo "=== код проекта ==="
+          rsync -az --delete \
+            --exclude node_modules --exclude .next --exclude .git \
+            --exclude '*.tsbuildinfo' --exclude .env --exclude .env.production \
+            ./ target:${REMOTE_DIR}/
+          ssh target "find ${REMOTE_DIR} -type f | wc -l"
+
+          echo "=== боевые переменные ==="
+          printf '%s\n' "$ENV_PRODUCTION" | ssh target "umask 077 && cat > ${REMOTE_DIR}/.env.production"
+          ssh target "grep -c = ${REMOTE_DIR}/.env.production"
+
+          echo "=== вход в реестр и получение образов ==="
+          # Временный токен job: постоянный ключ на сервере не хранится
+          echo "$GHCR_TOKEN" | ssh target "docker login ghcr.io -u ${{ github.actor }} --password-stdin"
+          ssh target "cd ${REMOTE_DIR} && ${COMPOSE} pull api web"
+
+          echo "=== база и миграции ==="
+          ssh target "cd ${REMOTE_DIR} && ${COMPOSE} up -d db"
+          ssh target "cd ${REMOTE_DIR} && timeout 180 bash -c 'until ${COMPOSE} exec -T db pg_isready > /dev/null 2>&1; do sleep 3; done'"
+          ssh target "cd ${REMOTE_DIR} && ${COMPOSE} --profile tools run --rm migrate"
+
+          echo "=== запуск ==="
+          ssh target "cd ${REMOTE_DIR} && ${COMPOSE} up -d && ${COMPOSE} ps"
+
+          echo "=== проверка ==="
+          ssh target "for i in \$(seq 1 30); do
+              code=\$(curl -s -o /dev/null -w '%{http_code}' http://localhost/ || true)
+              echo \"попытка \$i: \$code\"
+              [ \"\$code\" = '200' ] && exit 0
+              sleep 5
+            done
+            cd ${REMOTE_DIR} && ${COMPOSE} logs --tail=60 web api nginx
+            exit 1"
+
+          echo "=== чистка ==="
+          ssh target "docker logout ghcr.io; docker image prune -f"
+
+      - name: Сохранить лог
+        if: always()
+        run: |
+          mkdir -p .deploy-logs
+          cp /tmp/deploy.log .deploy-logs/last-deploy.log 2>/dev/null || echo "лог не создан" > .deploy-logs/last-deploy.log
+          printf '\nпрогон: %s\nрезультат: %s\n' "${{ github.run_id }}" "${{ steps.run.outcome }}" >> .deploy-logs/last-deploy.log
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add -f .deploy-logs/last-deploy.log
+          git commit -m "Лог деплоя [skip ci]" || exit 0
+          git pull --rebase --autostash origin main || true
+          git push origin HEAD:main
+
+      - name: Итог
+        if: always()
+        run: '[ "${{ steps.run.outcome }}" = "success" ] || exit 1'
