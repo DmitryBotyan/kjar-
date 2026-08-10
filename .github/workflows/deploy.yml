@@ -124,6 +124,10 @@ jobs:
           echo "=== запуск ==="
           ssh target "cd ${REMOTE_DIR} && ${COMPOSE} up -d && ${COMPOSE} ps"
 
+          # Перечитываем конфиг nginx: после выката web у него новый адрес,
+          # а заодно подхватываются правки самого конфига
+          ssh target "cd ${REMOTE_DIR} && ${COMPOSE} exec -T nginx nginx -s reload"
+
           echo "=== проверка ==="
           ssh target "for i in \$(seq 1 30); do
               code=\$(curl -s -o /dev/null -w '%{http_code}' http://localhost/ || true)
