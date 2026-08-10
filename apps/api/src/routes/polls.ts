@@ -7,10 +7,11 @@ import {
   updatePoll,
   votePoll,
 } from "../controllers/polls.js";
-import { authenticate } from "../middlewares/auth.js";
+import { authenticate, optionalAuth } from "../middlewares/auth.js";
 import { requireMinRole } from "../middlewares/authorize.js";
 import { validateBody } from "../middlewares/validate.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
+import { rateLimit } from "../middlewares/rateLimit.js";
 
 const router = Router();
 
@@ -31,13 +32,14 @@ const updatePollSchema = z.object({
 
 const votePollSchema = z.object({
   optionId: z.number().int().positive(),
+  voterKey: z.string().min(16).max(64).optional(),
 });
 
 // Получить опрос по ID поста
 router.get("/post/:postId", asyncHandler(getPollByPostId));
 
 // Проверить, проголосовал ли пользователь
-router.get("/post/:postId/vote", authenticate, asyncHandler(checkUserVote));
+router.get("/post/:postId/vote", optionalAuth, asyncHandler(checkUserVote));
 
 // Создать опрос (только для модераторов)
 router.post(
@@ -57,10 +59,11 @@ router.put(
   asyncHandler(updatePoll)
 );
 
-// Проголосовать в опросе
+// Проголосовать в опросе: открыто всем, лимит от накрутки
 router.post(
   "/post/:postId/vote",
-  authenticate,
+  rateLimit(30, 60 * 60 * 1000, "poll-vote"),
+  optionalAuth,
   validateBody(votePollSchema),
   asyncHandler(votePoll)
 );

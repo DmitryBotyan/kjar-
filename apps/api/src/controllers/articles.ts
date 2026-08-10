@@ -6,16 +6,7 @@ import { createError } from "../middlewares/errorHandler.js";
 import type { AuthRequest } from "../middlewares/auth.js";
 import { validateQuery, paginationSchema, slugSchema } from "../middlewares/validate.js";
 import { z } from "zod";
-
-// Функция для генерации slug из строки
-function generateSlug(text: string): string {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/[\s_-]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
+import { slugify } from "../utils/slug.js";
 
 const articlesQuerySchema = paginationSchema.extend({
   category: z.string().optional(),
@@ -27,7 +18,8 @@ const articlesQuerySchema = paginationSchema.extend({
 
 export async function getArticles(req: AuthRequest, res: Response) {
   try {
-    const { category, status, era, tag, search, limit, offset } = req.query as z.infer<typeof articlesQuerySchema>;
+    const { category, status, era, tag, search, limit, offset } =
+      req.query as unknown as z.infer<typeof articlesQuerySchema>;
 
     const conditions = [];
 
@@ -119,7 +111,9 @@ export async function getArticles(req: AuthRequest, res: Response) {
       .where(whereClause);
 
     // Получаем категории для статей
-    const categoryIds = [...new Set(results.map((r) => r.categoryId).filter(Boolean))];
+    const categoryIds = [
+      ...new Set(results.map((r) => r.categoryId).filter((id): id is number => id !== null))
+    ];
     const categoriesMap = new Map();
     if (categoryIds.length > 0) {
       const categoriesList = await db
@@ -235,7 +229,7 @@ export async function createArticle(req: AuthRequest, res: Response) {
     };
     
     // Генерируем slug если не указан
-    let slug = data.slug || generateSlug(data.title);
+    let slug = data.slug || slugify(data.title);
     
     // Проверяем уникальность slug
     const existing = await db
@@ -342,7 +336,7 @@ export async function updateArticle(req: AuthRequest, res: Response) {
 
     // Если меняется title и slug не указан, генерируем новый slug
     if (data.title && !data.slug) {
-      newSlug = generateSlug(data.title);
+      newSlug = slugify(data.title);
       if (newSlug !== existing.slug) {
         const check = await db
           .select({ id: articles.id })

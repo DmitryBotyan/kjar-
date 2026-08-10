@@ -112,7 +112,7 @@ export default function AdminCharactersPage() {
         ) : characters.length === 0 ? (
           <div className="kjar-admin__empty">
             <p>Персонажей пока нет</p>
-            <Link href="/admin/characters/new" className="kjar-button kjar-button--primary" style={{ marginTop: "16px" }}>
+            <Link href="/admin/characters/new" className="kjar-button kjar-button--primary">
               Добавить первого персонажа
             </Link>
           </div>
@@ -150,7 +150,6 @@ export default function AdminCharactersPage() {
                         type="button"
                         onClick={() => handleDeleteClick(character)}
                         className="kjar-admin__action-link kjar-admin__action-link--danger"
-                        style={{ background: "none", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline", color: "#d32f2f" }}
                       >
                         Удалить
                       </button>

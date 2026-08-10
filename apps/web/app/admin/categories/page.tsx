@@ -112,7 +112,7 @@ export default function AdminCategoriesPage() {
         ) : categories.length === 0 ? (
           <div className="kjar-admin__empty">
             <p>Категорий пока нет</p>
-            <Link href="/admin/categories/new" className="kjar-button kjar-button--primary" style={{ marginTop: "16px" }}>
+            <Link href="/admin/categories/new" className="kjar-button kjar-button--primary">
               Добавить первую категорию
             </Link>
           </div>
@@ -146,7 +146,6 @@ export default function AdminCategoriesPage() {
                         type="button"
                         onClick={() => handleDeleteClick(category)}
                         className="kjar-admin__action-link kjar-admin__action-link--danger"
-                        style={{ background: "none", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline", color: "#d32f2f" }}
                       >
                         Удалить
                       </button>

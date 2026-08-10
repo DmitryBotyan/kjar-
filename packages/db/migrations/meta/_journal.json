@@ -43,6 +43,20 @@
       "when": 1786366466562,
       "tag": "0005_drop_user_email",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1786366466563,
+      "tag": "0006_add_contact_requests",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1786366466564,
+      "tag": "0007_add_poll_voter_key",
+      "breakpoints": true
     }
   ]
 }

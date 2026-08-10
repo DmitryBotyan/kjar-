@@ -140,7 +140,7 @@ export default function ImageUpload({
               maxWidth: "100%",
               maxHeight: "300px",
               borderRadius: "6px",
-              border: "1px solid #ddd",
+              border: "1px solid var(--line)",
             }}
           />
         </div>
@@ -172,10 +172,7 @@ export default function ImageUpload({
             type="button"
             onClick={handleRemove}
             disabled={disabled || uploading}
-            className="kjar-button kjar-button--ghost"
-            style={{
-              color: "#d32f2f",
-            }}
+            className="kjar-button kjar-button--danger"
           >
             Удалить
           </button>
@@ -183,7 +180,7 @@ export default function ImageUpload({
       </div>
 
       {error && (
-        <div style={{ marginTop: "8px", color: "#d32f2f", fontSize: "14px" }}>
+        <div className="kjar-admin__error">
           {error}
         </div>
       )}

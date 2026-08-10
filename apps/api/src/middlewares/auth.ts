@@ -13,10 +13,11 @@ export interface AuthRequest extends Request {
   };
 }
 
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
+if (!process.env.JWT_SECRET) {
   throw new Error("JWT_SECRET не установлен в переменных окружения");
 }
+
+const JWT_SECRET: string = process.env.JWT_SECRET;
 
 export function generateToken(userId: number, username: string, role: string): string {
   return jwt.sign(

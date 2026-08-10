@@ -4,6 +4,7 @@ import { db } from "../db/index.js";
 import { tags } from "@kjar/db";
 import { createError } from "../middlewares/errorHandler.js";
 import type { AuthRequest } from "../middlewares/auth.js";
+import { slugify } from "../utils/slug.js";
 
 export async function getTags(_req: Request, res: Response) {
   try {
@@ -18,16 +19,6 @@ export async function getTags(_req: Request, res: Response) {
       { originalError: error instanceof Error ? error.message : String(error) }
     );
   }
-}
-
-// Функция для генерации slug из строки
-function generateSlug(text: string): string {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/[\s_-]+/g, "-")
-    .replace(/^-+|-+$/g, "");
 }
 
 export async function createTag(req: AuthRequest, res: Response) {
@@ -46,7 +37,7 @@ export async function createTag(req: AuthRequest, res: Response) {
     };
 
     // Генерируем slug если не указан
-    let slug = data.slug || generateSlug(data.name);
+    let slug = data.slug || slugify(data.name);
 
     // Проверяем уникальность slug
     const existing = await db
@@ -139,7 +130,7 @@ export async function updateTag(req: AuthRequest, res: Response) {
 
     // Если меняется name и slug не указан, генерируем новый slug
     if (data.name && !data.slug) {
-      newSlug = generateSlug(data.name);
+      newSlug = slugify(data.name);
       if (newSlug !== existing.slug) {
         const check = await db
           .select({ id: tags.id })
@@ -173,7 +164,6 @@ export async function updateTag(req: AuthRequest, res: Response) {
       .set({
         ...(data.name && { name: data.name }),
         ...(newSlug !== existing.slug && { slug: newSlug }),
-        updatedAt: new Date(),
       })
       .where(eq(tags.id, existing.id))
       .returning();

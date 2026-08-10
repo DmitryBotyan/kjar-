@@ -17,6 +17,7 @@ export default function AdminPage() {
   const [showLogin, setShowLogin] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loginLoading, setLoginLoading] = useState(false);
+  const [summary, setSummary] = useState<{ newContacts: number; hiddenComments: number } | null>(null);
 
   // Проверяем токен при загрузке
   useEffect(() => {
@@ -104,6 +105,32 @@ export default function AdminPage() {
       setLoginLoading(false);
     }
   };
+
+  // Сводка того, что ждёт разбора: без неё непонятно, куда идти в первую очередь
+  useEffect(() => {
+    if (!user) return;
+
+    const token = localStorage.getItem("authToken");
+    if (!token) return;
+
+    const headers = { Authorization: `Bearer ${token}` };
+
+    Promise.all([
+      fetch("/api/contacts?status=new&limit=1", { headers, cache: "no-store" }),
+      fetch("/api/comments?approved=false&limit=1", { headers, cache: "no-store" })
+    ])
+      .then(async ([contactsResponse, commentsResponse]) => {
+        const contacts = contactsResponse.ok ? await contactsResponse.json() : null;
+        const comments = commentsResponse.ok ? await commentsResponse.json() : null;
+        setSummary({
+          newContacts: Number(contacts?.total || 0),
+          hiddenComments: Number(comments?.total || 0)
+        });
+      })
+      .catch(() => {
+        // Сводка не критична: разделы всё равно открываются
+      });
+  }, [user]);
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
@@ -217,6 +244,15 @@ export default function AdminPage() {
           <Link href="/admin/tags" className="kjar-admin__nav-item">
             Теги
           </Link>
+          <Link href="/admin/threads" className="kjar-admin__nav-item">
+            Обсуждения
+          </Link>
+          <Link href="/admin/comments" className="kjar-admin__nav-item">
+            Комментарии
+          </Link>
+          <Link href="/admin/contacts" className="kjar-admin__nav-item">
+            Обращения
+          </Link>
         </nav>
       </div>
 
@@ -224,6 +260,25 @@ export default function AdminPage() {
         <p className="kjar-admin__welcome">
           Выберите раздел для управления контентом
         </p>
+
+        {summary && (summary.newContacts > 0 || summary.hiddenComments > 0) ? (
+          <ul className="kjar-admin__summary">
+            {summary.newContacts > 0 && (
+              <li>
+                <Link href="/admin/contacts?status=new">
+                  Новых обращений: {summary.newContacts}
+                </Link>
+              </li>
+            )}
+            {summary.hiddenComments > 0 && (
+              <li>
+                <Link href="/admin/comments">
+                  Скрытых комментариев: {summary.hiddenComments}
+                </Link>
+              </li>
+            )}
+          </ul>
+        ) : null}
       </div>
     </div>
   );

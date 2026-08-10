@@ -113,7 +113,7 @@ export default function AdminArticlesPage() {
         ) : articles.length === 0 ? (
           <div className="kjar-admin__empty">
             <p>Статей пока нет</p>
-            <Link href="/admin/articles/new" className="kjar-button kjar-button--primary" style={{ marginTop: "16px" }}>
+            <Link href="/admin/articles/new" className="kjar-button kjar-button--primary">
               Добавить первую статью
             </Link>
           </div>
@@ -149,7 +149,6 @@ export default function AdminArticlesPage() {
                         type="button"
                         onClick={() => handleDeleteClick(article)}
                         className="kjar-admin__action-link kjar-admin__action-link--danger"
-                        style={{ background: "none", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline", color: "#d32f2f" }}
                       >
                         Удалить
                       </button>

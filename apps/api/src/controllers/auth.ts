@@ -1,4 +1,4 @@
-import type { Response } from "express";
+import type { Request, Response } from "express";
 import type { AuthRequest } from "../middlewares/auth.js";
 import bcrypt from "bcryptjs";
 import { db } from "../db/index.js";
@@ -87,7 +87,6 @@ export async function login(req: Request, res: Response) {
     const [user] = await db
       .select({
         id: users.id,
-        username: users.username,
         username: users.username,
         role: users.role,
         passwordHash: users.passwordHash

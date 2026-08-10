@@ -1,3 +1,8 @@
+import { ContactForm } from "./ContactForm";
+
+// Адрес редакции задаётся в окружении: в разных установках он разный
+const CONTACT_EMAIL = process.env.CONTACT_EMAIL || "hello@kjar.ru";
+
 export default function ContactsPage() {
   return (
     <div className="kjar-contacts">
@@ -21,7 +26,7 @@ export default function ContactsPage() {
               <dl className="kjar-contacts__list">
                 <div>
                   <dt>Почта</dt>
-                  <dd>редакция@kjar.example</dd>
+                  <dd>{CONTACT_EMAIL}</dd>
                 </div>
                 <div>
                   <dt>Время ответа</dt>
@@ -54,99 +59,7 @@ export default function ContactsPage() {
           </aside>
 
           <section className="kjar-contacts__form" aria-label="Форма обращения">
-            <form className="kjar-form-card" method="post">
-              <h2 className="kjar-contacts__form-title">Форма обращения</h2>
-
-              <div className="kjar-form-grid">
-                <div className="kjar-field">
-                  <label className="kjar-label" htmlFor="contact-name">
-                    Имя
-                  </label>
-                  <input
-                    className="kjar-input"
-                    id="contact-name"
-                    name="name"
-                    type="text"
-                    placeholder="Как к вам обращаться"
-                    required
-                  />
-                </div>
-
-                <div className="kjar-field">
-                  <label className="kjar-label" htmlFor="contact-email">
-                    Почта
-                  </label>
-                  <input
-                    className="kjar-input"
-                    id="contact-email"
-                    name="email"
-                    type="email"
-                    placeholder="name@example.com"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="kjar-form-grid">
-                <div className="kjar-field">
-                  <label className="kjar-label" htmlFor="contact-topic">
-                    Тема
-                  </label>
-                  <input
-                    className="kjar-input"
-                    id="contact-topic"
-                    name="topic"
-                    type="text"
-                    placeholder="Коротко о сути"
-                    required
-                  />
-                </div>
-
-                <div className="kjar-field">
-                  <label className="kjar-label" htmlFor="contact-type">
-                    Тип обращения
-                  </label>
-                  <select
-                    className="kjar-select"
-                    id="contact-type"
-                    name="type"
-                    defaultValue="question"
-                  >
-                    <option value="question">Вопрос</option>
-                    <option value="role">Заявка на роль</option>
-                    <option value="proposal">Предложение по лору</option>
-                    <option value="support">Поддержка</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="kjar-field">
-                <label className="kjar-label" htmlFor="contact-message">
-                  Сообщение
-                </label>
-                <textarea
-                  className="kjar-textarea"
-                  id="contact-message"
-                  name="message"
-                  rows={7}
-                  placeholder="Опишите детали, приложите ссылки или контекст."
-                  required
-                />
-              </div>
-
-              <div className="kjar-form-actions">
-                <button className="kjar-button kjar-button--primary" type="submit">
-                  Отправить письмо
-                </button>
-                <button className="kjar-button kjar-button--ghost" type="reset">
-                  Очистить
-                </button>
-              </div>
-
-              <p className="kjar-form-note">
-                Ответим на почту в течение 1–3 рабочих дней.
-              </p>
-            </form>
+            <ContactForm />
           </section>
         </div>
       </section>

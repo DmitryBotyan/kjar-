@@ -63,7 +63,7 @@ export async function getPollByPostId(req: Request, res: Response) {
     });
   } catch (error) {
     console.error("Error getting poll:", error);
-    throw createError(500, "Ошибка получения опроса");
+    throw createError("Ошибка получения опроса", 500);
   }
 }
 
@@ -73,9 +73,10 @@ export async function getPollByPostId(req: Request, res: Response) {
 export async function checkUserVote(req: AuthRequest, res: Response) {
   try {
     const { postId } = req.params;
-    const userId = req.user?.userId;
+    const userId = req.user?.id;
+    const voterKey = typeof req.query.voterKey === "string" ? req.query.voterKey : null;
 
-    if (!userId) {
+    if (!userId && !voterKey) {
       return res.json({ data: { hasVoted: false, votedOptionId: null } });
     }
 
@@ -92,7 +93,12 @@ export async function checkUserVote(req: AuthRequest, res: Response) {
     const vote = await db
       .select()
       .from(pollVotes)
-      .where(and(eq(pollVotes.pollId, poll[0].id), eq(pollVotes.userId, userId)))
+      .where(
+        and(
+          eq(pollVotes.pollId, poll[0].id),
+          userId ? eq(pollVotes.userId, userId) : eq(pollVotes.voterKey, voterKey!)
+        )
+      )
       .limit(1);
 
     res.json({
@@ -103,7 +109,7 @@ export async function checkUserVote(req: AuthRequest, res: Response) {
     });
   } catch (error) {
     console.error("Error checking user vote:", error);
-    throw createError(500, "Ошибка проверки голоса");
+    throw createError("Ошибка проверки голоса", 500);
   }
 }
 
@@ -113,13 +119,13 @@ export async function checkUserVote(req: AuthRequest, res: Response) {
 export async function createPoll(req: AuthRequest, res: Response) {
   try {
     if (!req.user) {
-      throw createError(401, "Требуется авторизация");
+      throw createError("Требуется авторизация", 401);
     }
 
     const { postId, options, showPercentages, isEnded, allowMultiple } = req.body;
 
     if (!postId || !Array.isArray(options) || options.length === 0) {
-      throw createError(400, "Необходимо указать postId и варианты ответов");
+      throw createError("Необходимо указать postId и варианты ответов", 400);
     }
 
     // Проверяем, что пост существует и это ивент с форматом poll
@@ -130,11 +136,11 @@ export async function createPoll(req: AuthRequest, res: Response) {
       .limit(1);
 
     if (post.length === 0) {
-      throw createError(404, "Пост не найден");
+      throw createError("Пост не найден", 404);
     }
 
     if (!post[0].isEvent || post[0].eventFormat !== "poll") {
-      throw createError(400, "Пост должен быть ивентом с форматом 'poll'");
+      throw createError("Пост должен быть ивентом с форматом 'poll'", 400);
     }
 
     // Проверяем, что опрос еще не создан
@@ -145,7 +151,7 @@ export async function createPoll(req: AuthRequest, res: Response) {
       .limit(1);
 
     if (existingPoll.length > 0) {
-      throw createError(400, "Опрос для этого поста уже существует");
+      throw createError("Опрос для этого поста уже существует", 400);
     }
 
     // Создаем опрос
@@ -171,10 +177,10 @@ export async function createPoll(req: AuthRequest, res: Response) {
     res.status(201).json({ data: newPoll });
   } catch (error) {
     console.error("Error creating poll:", error);
-    if (error instanceof Error && error.message.includes("Ошибка")) {
+    if (error && typeof error === "object" && "statusCode" in error) {
       throw error;
     }
-    throw createError(500, "Ошибка создания опроса");
+    throw createError("Ошибка создания опроса", 500);
   }
 }
 
@@ -184,7 +190,7 @@ export async function createPoll(req: AuthRequest, res: Response) {
 export async function updatePoll(req: AuthRequest, res: Response) {
   try {
     if (!req.user) {
-      throw createError(401, "Требуется авторизация");
+      throw createError("Требуется авторизация", 401);
     }
 
     const { postId } = req.params;
@@ -197,7 +203,7 @@ export async function updatePoll(req: AuthRequest, res: Response) {
       .limit(1);
 
     if (poll.length === 0) {
-      throw createError(404, "Опрос не найден");
+      throw createError("Опрос не найден", 404);
     }
 
     const updateData: any = {};
@@ -235,10 +241,10 @@ export async function updatePoll(req: AuthRequest, res: Response) {
     res.json({ data: updatedPoll });
   } catch (error) {
     console.error("Error updating poll:", error);
-    if (error instanceof Error && error.message.includes("Ошибка")) {
+    if (error && typeof error === "object" && "statusCode" in error) {
       throw error;
     }
-    throw createError(500, "Ошибка обновления опроса");
+    throw createError("Ошибка обновления опроса", 500);
   }
 }
 
@@ -247,15 +253,19 @@ export async function updatePoll(req: AuthRequest, res: Response) {
  */
 export async function votePoll(req: AuthRequest, res: Response) {
   try {
-    if (!req.user) {
-      throw createError(401, "Требуется авторизация");
+    const { postId } = req.params;
+    const { optionId, voterKey } = req.body;
+
+    // Опрос открыт всем: вошедшего узнаём по учётной записи, гостя — по ключу,
+    // который его браузер хранит у себя
+    const userId = req.user?.id ?? null;
+
+    if (!userId && (typeof voterKey !== "string" || voterKey.length < 16)) {
+      throw createError("Не удалось определить голосующего, обновите страницу", 400);
     }
 
-    const { postId } = req.params;
-    const { optionId } = req.body;
-
     if (!optionId) {
-      throw createError(400, "Необходимо указать optionId");
+      throw createError("Необходимо указать optionId", 400);
     }
 
     const poll = await db
@@ -265,11 +275,11 @@ export async function votePoll(req: AuthRequest, res: Response) {
       .limit(1);
 
     if (poll.length === 0) {
-      throw createError(404, "Опрос не найден");
+      throw createError("Опрос не найден", 404);
     }
 
     if (poll[0].isEnded) {
-      throw createError(400, "Опрос завершен");
+      throw createError("Опрос завершен", 400);
     }
 
     // Проверяем, что вариант ответа существует
@@ -280,32 +290,43 @@ export async function votePoll(req: AuthRequest, res: Response) {
       .limit(1);
 
     if (option.length === 0) {
-      throw createError(404, "Вариант ответа не найден");
+      throw createError("Вариант ответа не найден", 404);
     }
 
     // Проверяем, не голосовал ли уже пользователь
     const existingVote = await db
       .select()
       .from(pollVotes)
-      .where(and(eq(pollVotes.pollId, poll[0].id), eq(pollVotes.userId, req.user.userId)))
+      .where(
+        and(
+          eq(pollVotes.pollId, poll[0].id),
+          userId ? eq(pollVotes.userId, userId) : eq(pollVotes.voterKey, voterKey as string)
+        )
+      )
       .limit(1);
 
     if (existingVote.length > 0 && !poll[0].allowMultiple) {
-      throw createError(400, "Вы уже проголосовали в этом опросе");
+      throw createError("Вы уже проголосовали в этом опросе", 400);
     }
 
     // Если allowMultiple = true, удаляем предыдущий голос за другой вариант
     if (existingVote.length > 0 && poll[0].allowMultiple) {
       await db
         .delete(pollVotes)
-        .where(and(eq(pollVotes.pollId, poll[0].id), eq(pollVotes.userId, req.user.userId)));
+        .where(
+          and(
+            eq(pollVotes.pollId, poll[0].id),
+            userId ? eq(pollVotes.userId, userId) : eq(pollVotes.voterKey, voterKey as string)
+          )
+        );
     }
 
     // Создаем новый голос
     await db.insert(pollVotes).values({
       pollId: poll[0].id,
       optionId: parseInt(optionId),
-      userId: req.user.userId,
+      userId,
+      voterKey: userId ? null : (voterKey as string),
     });
 
     // Получаем обновленный опрос с результатами
@@ -354,9 +375,9 @@ export async function votePoll(req: AuthRequest, res: Response) {
     });
   } catch (error) {
     console.error("Error voting poll:", error);
-    if (error instanceof Error && error.message.includes("Ошибка")) {
+    if (error && typeof error === "object" && "statusCode" in error) {
       throw error;
     }
-    throw createError(500, "Ошибка голосования");
+    throw createError("Ошибка голосования", 500);
   }
 }

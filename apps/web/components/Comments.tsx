@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { ImagePlus, Send, X, MessageCircle, Reply } from "lucide-react";
+import { HoneypotField, useFormToken } from "./FormGuard";
 
 interface Comment {
   id: number;
@@ -30,7 +31,8 @@ export default function Comments({ targetType, targetId }: CommentsProps) {
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [captchaVerified, setCaptchaVerified] = useState(false);
+  const [website, setWebsite] = useState("");
+  const { formToken, refresh: refreshFormToken } = useFormToken();
 
   // Ответ на комментарий
   const [replyTo, setReplyTo] = useState<Comment | null>(null);
@@ -132,11 +134,6 @@ export default function Comments({ targetType, targetId }: CommentsProps) {
       return;
     }
 
-    if (!captchaVerified) {
-      setError("Подтвердите, что вы не робот");
-      return;
-    }
-
     setSubmitting(true);
     setError(null);
 
@@ -151,7 +148,8 @@ export default function Comments({ targetType, targetId }: CommentsProps) {
           content: content.trim(),
           image,
           parentId: replyTo?.id,
-          captchaToken: "stub-token", // Заглушка для капчи
+          website,
+          formToken,
         }),
       });
 
@@ -186,12 +184,13 @@ export default function Comments({ targetType, targetId }: CommentsProps) {
       setImage(null);
       setImagePreview(null);
       setReplyTo(null);
-      setCaptchaVerified(false);
+      refreshFormToken();
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка отправки");
+      refreshFormToken();
     } finally {
       setSubmitting(false);
     }
@@ -326,15 +325,7 @@ export default function Comments({ targetType, targetId }: CommentsProps) {
               {uploading ? "Загружаем…" : "Фото"}
             </label>
 
-            {/* Заглушка капчи */}
-            <label className="kjar-comments__captcha">
-              <input
-                type="checkbox"
-                checked={captchaVerified}
-                onChange={(e) => setCaptchaVerified(e.target.checked)}
-              />
-              <span>Я не робот</span>
-            </label>
+            <HoneypotField value={website} onChange={setWebsite} />
           </div>
 
           <button

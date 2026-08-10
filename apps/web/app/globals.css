@@ -525,6 +525,18 @@ a.kjar-chip:hover {
   color: var(--ash);
 }
 
+/* Необратимое действие: тот же красный, что у ошибок */
+.kjar-button--danger {
+  border-color: var(--rust);
+  color: var(--rust);
+}
+
+.kjar-button--danger:hover {
+  border-color: var(--rust);
+  background: var(--rust);
+  color: var(--bark);
+}
+
 /* Ссылки-указатели */
 /* Ссылка-действие: золотая, со стрелкой направления. Видна в потоке текста */
 .kjar-link,
@@ -692,8 +704,7 @@ a.kjar-chip:hover {
 .kjar-lore__checkboxes label,
 .kjar-characters__checkboxes label,
 .kjar-events__checkboxes label,
-.kjar-forum__checkboxes label,
-.kjar-comments__captcha {
+.kjar-forum__checkboxes label {
   display: flex;
   align-items: center;
   gap: var(--s2);
@@ -2728,6 +2739,23 @@ input[type="radio"] {
   color: var(--ash);
 }
 
+.kjar-admin__summary {
+  display: grid;
+  gap: var(--s2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kjar-admin__summary a {
+  color: var(--gold);
+  text-decoration: none;
+}
+
+.kjar-admin__summary a:hover {
+  text-decoration: underline;
+}
+
 .kjar-admin__table-wrap {
   overflow-x: auto;
 }
@@ -2804,6 +2832,28 @@ input[type="radio"] {
 .kjar-modal h2,
 .kjar-modal h3 {
   margin-top: 0;
+  font-family: var(--display);
+  font-size: var(--t-m);
+  font-weight: 500;
+}
+
+.kjar-modal__text {
+  margin: 0 0 var(--s3);
+  color: var(--ash);
+  line-height: 1.6;
+}
+
+.kjar-modal__item {
+  display: block;
+  margin-top: var(--s2);
+  color: var(--ink);
+}
+
+.kjar-modal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--s2);
 }
 
 /* ============================ Страница 404 ============================ */

@@ -102,7 +102,7 @@ export async function getComments(req: Request, res: Response) {
 export async function createComment(req: Request, res: Response) {
   try {
     const { targetType, targetId } = req.params;
-    const { authorName, content, image, parentId, captchaToken } = req.body;
+    const { authorName, content, image, parentId } = req.body;
 
     if (!["post", "event", "article"].includes(targetType)) {
       throw createError("Неверный тип сущности", 400);
@@ -122,12 +122,6 @@ export async function createComment(req: Request, res: Response) {
 
     if (content.trim().length > 5000) {
       throw createError("Комментарий слишком длинный (максимум 5000 символов)", 400);
-    }
-
-    // Заглушка для капчи - в будущем заменить на реальную проверку
-    // Сейчас просто проверяем, что токен передан
-    if (!captchaToken) {
-      throw createError("Подтвердите, что вы не робот", 400);
     }
 
     // Проверяем, существует ли родительский комментарий (если указан)
@@ -239,4 +233,59 @@ export async function uploadCommentImage(req: Request, res: Response) {
     }
     throw createError("Ошибка загрузки изображения", 500);
   }
+}
+
+/**
+ * Список всех комментариев для модерации: и одобренные, и скрытые
+ */
+export async function getAllComments(req: Request, res: Response) {
+  const limit = Math.min(parseInt(req.query.limit as string) || 50, 100);
+  const offset = parseInt(req.query.offset as string) || 0;
+  const approved = req.query.approved as string | undefined;
+
+  const whereClause =
+    approved === "true"
+      ? eq(comments.isApproved, true)
+      : approved === "false"
+        ? eq(comments.isApproved, false)
+        : undefined;
+
+  const data = await db
+    .select()
+    .from(comments)
+    .where(whereClause)
+    .orderBy(desc(comments.createdAt))
+    .limit(limit)
+    .offset(offset);
+
+  const [total] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(comments)
+    .where(whereClause);
+
+  res.json({ data, total: Number(total?.count || 0), limit, offset });
+}
+
+/**
+ * Скрыть или вернуть комментарий (только для модераторов)
+ */
+export async function updateCommentApproval(req: Request, res: Response) {
+  const commentId = parseInt(req.params.commentId);
+  const { isApproved } = req.body as { isApproved: boolean };
+
+  if (!Number.isInteger(commentId)) {
+    throw createError("Неверный идентификатор комментария", 400);
+  }
+
+  const [updated] = await db
+    .update(comments)
+    .set({ isApproved })
+    .where(eq(comments.id, commentId))
+    .returning();
+
+  if (!updated) {
+    throw createError("Комментарий не найден", 404);
+  }
+
+  res.json({ data: updated });
 }

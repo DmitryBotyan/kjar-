@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getThreadBySlug } from "@/lib/api";
+import { ReplyForm } from "./ReplyForm";
 
 type DiscussionPageProps = {
   params: { slug: string };
@@ -103,30 +104,7 @@ export default async function DiscussionThreadPage({ params }: DiscussionPagePro
             )}
 
             {!thread.isLocked && (
-              <form className="kjar-form-card kjar-thread__reply" method="post">
-                <h2 className="kjar-thread__section-title">Ответить</h2>
-                <div className="kjar-field">
-                  <label className="kjar-label" htmlFor={`reply-${thread.slug}`}>
-                    Сообщение
-                  </label>
-                  <textarea
-                    className="kjar-textarea"
-                    id={`reply-${thread.slug}`}
-                    name="reply"
-                    rows={6}
-                    placeholder="Сформулируйте ответ и добавьте ссылки на хроники, если нужно."
-                    required
-                  />
-                </div>
-                <div className="kjar-form-actions">
-                  <button className="kjar-button kjar-button--primary" type="submit">
-                    Отправить ответ
-                  </button>
-                </div>
-                <p className="kjar-form-note">
-                  Ответы проходят модерацию перед публикацией.
-                </p>
-              </form>
+              <ReplyForm slug={thread.slug} />
             )}
           </div>
 

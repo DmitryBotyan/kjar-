@@ -1,6 +1,20 @@
 import Link from "next/link";
+import { getTags, getThreads } from "@/lib/api";
+import { NewThreadForm } from "./NewThreadForm";
 
-export default function NewDiscussionPage() {
+export default async function NewDiscussionPage() {
+  // Разделы и теги берём из базы: списка в коде быть не должно
+  const [threadsResponse, tagsResponse] = await Promise.all([
+    getThreads({ limit: 200 }).catch(() => ({ data: [] as any[] })),
+    getTags().catch(() => ({ data: [] as any[] }))
+  ]);
+
+  const categories = Array.from(
+    new Set(((threadsResponse.data as any[]) || []).map((thread) => thread.category).filter(Boolean))
+  ).sort() as string[];
+
+  const knownTags = (((tagsResponse.data as any[]) || []).map((tag) => tag.name) as string[]).sort();
+
   return (
     <div className="kjar-thread kjar-thread--new">
       <section className="kjar-thread__hero">
@@ -19,94 +33,7 @@ export default function NewDiscussionPage() {
       <section className="kjar-thread__body">
         <div className="kjar-thread__inner kjar-thread__layout">
           <div className="kjar-thread__main">
-            <form className="kjar-form-card" method="post">
-              <div className="kjar-field">
-                <label className="kjar-label" htmlFor="thread-title">
-                  Название темы
-                </label>
-                <input
-                  className="kjar-input"
-                  id="thread-title"
-                  name="title"
-                  type="text"
-                  placeholder="Коротко обозначьте вопрос или задачу"
-                  required
-                />
-              </div>
-
-              <div className="kjar-field">
-                <label className="kjar-label" htmlFor="thread-category">
-                  Раздел
-                </label>
-                <select
-                  className="kjar-select"
-                  id="thread-category"
-                  name="category"
-                  required
-                  defaultValue=""
-                >
-                  <option value="">Выберите раздел</option>
-                  <option value="Лор">Лор</option>
-                  <option value="Ивенты">Ивенты</option>
-                  <option value="Исследования">Исследования</option>
-                  <option value="Сообщество">Сообщество</option>
-                  <option value="Ритуалы">Ритуалы</option>
-                  <option value="Редактура">Редактура</option>
-                </select>
-              </div>
-
-              <div className="kjar-field">
-                <label className="kjar-label" htmlFor="thread-author">
-                  Имя или персонаж
-                </label>
-                <input
-                  className="kjar-input"
-                  id="thread-author"
-                  name="authorName"
-                  type="text"
-                  placeholder="От чьего лица открываете тему"
-                />
-              </div>
-
-              <div className="kjar-field">
-                <label className="kjar-label" htmlFor="thread-tags">
-                  Теги
-                </label>
-                <input
-                  className="kjar-input"
-                  id="thread-tags"
-                  name="tags"
-                  type="text"
-                  placeholder="Например: руны, экспедиции, хроники"
-                />
-              </div>
-
-              <div className="kjar-field">
-                <label className="kjar-label" htmlFor="thread-message">
-                  Описание
-                </label>
-                <textarea
-                  className="kjar-textarea"
-                  id="thread-message"
-                  name="message"
-                  rows={8}
-                  placeholder="Раскройте контекст, приложите ссылки и вопросы."
-                  required
-                />
-              </div>
-
-              <div className="kjar-form-actions">
-                <button className="kjar-button kjar-button--primary" type="submit">
-                  Создать тему
-                </button>
-                <button className="kjar-button kjar-button--ghost" type="reset">
-                  Очистить
-                </button>
-              </div>
-              <p className="kjar-form-note">
-                После отправки тема появится в списке обсуждений и попадёт на модерацию.
-              </p>
-            </form>
+            <NewThreadForm categories={categories} knownTags={knownTags} />
           </div>
 
           <aside className="kjar-thread__aside" aria-label="Подсказки для темы">

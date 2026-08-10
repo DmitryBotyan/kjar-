@@ -3,6 +3,8 @@ import { eq, desc, and, or, ilike, sql, inArray } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { threads, threadTags, tags, messages } from "@kjar/db";
 import { createError } from "../middlewares/errorHandler.js";
+import type { AuthRequest } from "../middlewares/auth.js";
+import { uniqueSlug } from "../utils/slug.js";
 
 export async function getThreads(req: Request, res: Response) {
   try {
@@ -160,4 +162,175 @@ export async function getThreadBySlug(req: Request, res: Response) {
       { originalError: error instanceof Error ? error.message : String(error) }
     );
   }
+}
+
+export async function createThread(req: AuthRequest, res: Response) {
+  const { title, excerpt, category, authorName, content, tags: tagNames } = req.body as {
+    title: string;
+    excerpt?: string;
+    category?: string;
+    authorName: string;
+    content: string;
+    tags?: string[];
+  };
+
+  const slug = await uniqueSlug(title, async (candidate) => {
+    const [taken] = await db
+      .select({ id: threads.id })
+      .from(threads)
+      .where(eq(threads.slug, candidate))
+      .limit(1);
+    return Boolean(taken);
+  });
+
+  const [thread] = await db
+    .insert(threads)
+    .values({
+      slug,
+      title: title.trim(),
+      excerpt: excerpt?.trim() || content.trim().slice(0, 280),
+      category: category?.trim() || null,
+      authorId: req.user?.id ?? null,
+      authorName: authorName.trim()
+    })
+    .returning();
+
+  // Теги только из существующих: заводить новые из публичной формы нельзя,
+  // иначе справочник быстро зарастёт мусором
+  if (tagNames && tagNames.length > 0) {
+    const normalized = tagNames.map((name) => name.trim().toLowerCase()).filter(Boolean);
+
+    if (normalized.length > 0) {
+      const known = await db
+        .select({ id: tags.id })
+        .from(tags)
+        .where(
+          or(
+            inArray(sql`lower(${tags.name})`, normalized),
+            inArray(sql`lower(${tags.slug})`, normalized)
+          )!
+        );
+
+      if (known.length > 0) {
+        await db
+          .insert(threadTags)
+          .values(known.map((tag) => ({ threadId: thread.id, tagId: tag.id })));
+      }
+    }
+  }
+
+  // Первое сообщение темы — её текст: так ветка сразу читается целиком
+  await db.insert(messages).values({
+    threadId: thread.id,
+    authorId: req.user?.id ?? null,
+    authorName: authorName.trim(),
+    role: "Автор темы",
+    content: content.trim()
+  });
+
+  res.status(201).json({ data: thread });
+}
+
+export async function createMessage(req: AuthRequest, res: Response) {
+  const { slug } = req.params;
+  const { authorName, content } = req.body as {
+    authorName: string;
+    content: string;
+  };
+
+  const [thread] = await db
+    .select({ id: threads.id, isLocked: threads.isLocked })
+    .from(threads)
+    .where(eq(threads.slug, slug))
+    .limit(1);
+
+  if (!thread) {
+    throw createError("Обсуждение не найдено", 404, "THREAD_NOT_FOUND");
+  }
+
+  if (thread.isLocked) {
+    throw createError("Тема закрыта для ответов", 403, "THREAD_LOCKED");
+  }
+
+  const [message] = await db
+    .insert(messages)
+    .values({
+      threadId: thread.id,
+      authorId: req.user?.id ?? null,
+      authorName: authorName.trim(),
+      role: req.user?.role === "admin" || req.user?.role === "mod" ? "Модератор" : "Участник",
+      content: content.trim()
+    })
+    .returning();
+
+  // Тема поднимается в списке по времени последнего ответа
+  await db
+    .update(threads)
+    .set({ updatedAt: new Date() })
+    .where(eq(threads.id, thread.id));
+
+  res.status(201).json({ data: message });
+}
+
+export async function updateThread(req: AuthRequest, res: Response) {
+  const { slug } = req.params;
+  const data = req.body as {
+    title?: string;
+    excerpt?: string | null;
+    category?: string | null;
+    isLocked?: boolean;
+    isPinned?: boolean;
+  };
+
+  const [thread] = await db
+    .select({ id: threads.id })
+    .from(threads)
+    .where(eq(threads.slug, slug))
+    .limit(1);
+
+  if (!thread) {
+    throw createError("Обсуждение не найдено", 404, "THREAD_NOT_FOUND");
+  }
+
+  const [updated] = await db
+    .update(threads)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(threads.id, thread.id))
+    .returning();
+
+  res.json({ data: updated });
+}
+
+export async function deleteThread(req: AuthRequest, res: Response) {
+  const { slug } = req.params;
+
+  const [deleted] = await db
+    .delete(threads)
+    .where(eq(threads.slug, slug))
+    .returning({ id: threads.id });
+
+  if (!deleted) {
+    throw createError("Обсуждение не найдено", 404, "THREAD_NOT_FOUND");
+  }
+
+  res.json({ data: { id: deleted.id } });
+}
+
+export async function deleteMessage(req: AuthRequest, res: Response) {
+  const messageId = Number(req.params.messageId);
+
+  if (!Number.isInteger(messageId)) {
+    throw createError("Неверный идентификатор сообщения", 400, "INVALID_ID");
+  }
+
+  const [deleted] = await db
+    .delete(messages)
+    .where(eq(messages.id, messageId))
+    .returning({ id: messages.id });
+
+  if (!deleted) {
+    throw createError("Сообщение не найдено", 404, "MESSAGE_NOT_FOUND");
+  }
+
+  res.json({ data: { id: deleted.id } });
 }

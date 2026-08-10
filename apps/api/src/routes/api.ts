@@ -11,7 +11,9 @@ import authRouter from "./auth.js";
 import uploadRouter from "./upload.js";
 import pollsRouter from "./polls.js";
 import commentsRouter from "./comments.js";
+import contactsRouter from "./contacts.js";
 import { rateLimit } from "../middlewares/rateLimit.js";
+import { issueFormToken } from "../middlewares/antiSpam.js";
 
 const router = Router();
 
@@ -21,6 +23,11 @@ router.use(rateLimit());
 router.get("/", getRoot);
 router.get("/health", (_req, res) => {
   res.json({ status: "ok" });
+});
+
+// Токен для публичных форм: подтверждает, что форму открывали в браузере
+router.get("/form-token", (_req, res) => {
+  res.json({ data: { formToken: issueFormToken() } });
 });
 
 // Публичные эндпоинты (не требуют аутентификации)
@@ -35,5 +42,6 @@ router.use("/tags", tagsRouter);
 router.use("/upload", uploadRouter);
 router.use("/polls", pollsRouter);
 router.use("/comments", commentsRouter);
+router.use("/contacts", contactsRouter);
 
 export default router;

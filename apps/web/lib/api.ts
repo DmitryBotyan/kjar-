@@ -33,26 +33,14 @@ export async function fetchFromApi<T>(
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
   // В Server Components fetch требует абсолютный URL
-  // Определяем базовый URL Next.js приложения
+  // Серверные компоненты ходят в собственный прокси /api. Делать это через
+  // публичный домен незачем: лишний выход наружу и зависимость от DNS и TLS
+  // внутри контейнера. Поэтому всегда обращаемся к себе по локальному адресу.
   const getBaseUrl = () => {
-    // В production используем переменную окружения или определяем автоматически
-    if (process.env.NEXT_PUBLIC_SITE_URL) {
-      return process.env.NEXT_PUBLIC_SITE_URL;
-    }
-    
-    // В Vercel используем автоматически определяемый URL
-    if (process.env.VERCEL_URL) {
-      return `https://${process.env.VERCEL_URL}`;
-    }
-    
-    // В Docker или dev окружении Next.js обычно работает на localhost:3000
-    // Внутри Docker контейнера localhost указывает на сам контейнер, что нам и нужно
-    const port = process.env.PORT || process.env.NEXT_PUBLIC_PORT || '3000';
-    return process.env.NODE_ENV === 'production' 
-      ? 'https://your-domain.com' // Замените на ваш production домен
-      : `http://localhost:${port}`;
+    const port = process.env.PORT || process.env.NEXT_PUBLIC_PORT || "3000";
+    return `http://127.0.0.1:${port}`;
   };
-  
+
   const baseUrl = getBaseUrl();
   const url = `${baseUrl}${API_BASE_PATH}${endpoint}`;
   

@@ -312,6 +312,8 @@ export const pollVotes = pgTable(
     characterId: integer("character_id").references(() => characters.id, {
       onDelete: "cascade"
     }),
+    // Гостевой голос: браузер хранит случайный ключ, входа для опроса не требуется
+    voterKey: varchar("voter_key", { length: 64 }),
     createdAt: timestamp("created_at").notNull().defaultNow()
   },
   (table) => ({
@@ -322,7 +324,8 @@ export const pollVotes = pgTable(
     // Уникальный индекс: один пользователь/персонаж может проголосовать один раз в опросе
     // (если allowMultiple = false, то только за один вариант)
     uniqueUserPoll: unique("poll_votes_user_poll_unique").on(table.pollId, table.userId),
-    uniqueCharacterPoll: unique("poll_votes_character_poll_unique").on(table.pollId, table.characterId)
+    uniqueCharacterPoll: unique("poll_votes_character_poll_unique").on(table.pollId, table.characterId),
+    uniqueVoterPoll: unique("poll_votes_voter_poll_unique").on(table.pollId, table.voterKey)
   })
 );
 
@@ -433,6 +436,25 @@ export const comments = pgTable(
     targetIdx: index("comments_target_idx").on(table.targetType, table.targetId),
     parentIdx: index("comments_parent_idx").on(table.parentId),
     createdAtIdx: index("comments_created_at_idx").on(table.createdAt)
+  })
+);
+
+// ===== Contact Requests (форма на странице контактов) =====
+export const contactRequests = pgTable(
+  "contact_requests",
+  {
+    id: serial("id").primaryKey(),
+    name: varchar("name", { length: 200 }).notNull(),
+    // Канал для ответа: почта или мессенджер, заполняет сам отправитель
+    contact: varchar("contact", { length: 200 }).notNull(),
+    subject: varchar("subject", { length: 300 }).notNull(),
+    message: text("message").notNull(),
+    status: varchar("status", { length: 24 }).notNull().default("new"), // new, in_progress, done
+    createdAt: timestamp("created_at").notNull().defaultNow()
+  },
+  (table) => ({
+    statusIdx: index("contact_requests_status_idx").on(table.status),
+    createdAtIdx: index("contact_requests_created_at_idx").on(table.createdAt)
   })
 );
 

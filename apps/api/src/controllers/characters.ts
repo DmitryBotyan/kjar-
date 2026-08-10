@@ -4,6 +4,7 @@ import { db } from "../db/index.js";
 import { characters, characterTags, tags } from "@kjar/db";
 import { createError } from "../middlewares/errorHandler.js";
 import type { AuthRequest } from "../middlewares/auth.js";
+import { slugify } from "../utils/slug.js";
 
 export async function getCharacters(req: Request, res: Response) {
   try {
@@ -140,16 +141,6 @@ export async function getCharacterBySlug(req: Request, res: Response) {
   }
 }
 
-// Функция для генерации slug из строки
-function generateSlug(text: string): string {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/[\s_-]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
 export async function createCharacter(req: AuthRequest, res: Response) {
   try {
     if (!req.user) {
@@ -175,7 +166,7 @@ export async function createCharacter(req: AuthRequest, res: Response) {
     };
 
     // Генерируем slug если не указан
-    let slug = data.slug || generateSlug(data.name);
+    let slug = data.slug || slugify(data.name);
 
     // Проверяем уникальность slug
     const existing = await db
@@ -217,7 +208,7 @@ export async function createCharacter(req: AuthRequest, res: Response) {
         image: data.image || null,
         statsJson: data.statsJson || null,
         relationsJson: data.relationsJson || null,
-        createdBy: req.user.userId,
+        createdBy: req.user.id,
       })
       .returning();
 
@@ -287,7 +278,7 @@ export async function updateCharacter(req: AuthRequest, res: Response) {
 
     // Если меняется name и slug не указан, генерируем новый slug
     if (data.name && !data.slug) {
-      newSlug = generateSlug(data.name);
+      newSlug = slugify(data.name);
       if (newSlug !== existing.slug) {
         const check = await db
           .select({ id: characters.id })

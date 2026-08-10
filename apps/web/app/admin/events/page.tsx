@@ -112,7 +112,7 @@ export default function AdminEventsPage() {
         ) : events.length === 0 ? (
           <div className="kjar-admin__empty">
             <p>Ивентов пока нет</p>
-            <Link href="/admin/events/new" className="kjar-button kjar-button--primary" style={{ marginTop: "16px" }}>
+            <Link href="/admin/events/new" className="kjar-button kjar-button--primary">
               Добавить первый ивент
             </Link>
           </div>
@@ -148,7 +148,6 @@ export default function AdminEventsPage() {
                         type="button"
                         onClick={() => handleDeleteClick(event)}
                         className="kjar-admin__action-link kjar-admin__action-link--danger"
-                        style={{ background: "none", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline", color: "#d32f2f" }}
                       >
                         Удалить
                       </button>

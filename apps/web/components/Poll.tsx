@@ -23,6 +23,19 @@ interface PollProps {
   postId: number;
 }
 
+// Ключ голосующего: опрос открыт гостям, поэтому браузер держит у себя
+// случайный идентификатор — по нему считается «уже голосовал»
+const VOTER_KEY_STORAGE = "pollVoterKey";
+
+function getVoterKey(): string {
+  let key = localStorage.getItem(VOTER_KEY_STORAGE);
+  if (!key) {
+    key = crypto.randomUUID().replace(/-/g, "");
+    localStorage.setItem(VOTER_KEY_STORAGE, key);
+  }
+  return key;
+}
+
 export default function Poll({ postId }: PollProps) {
   const [poll, setPoll] = useState<Poll | null>(null);
   const [loading, setLoading] = useState(true);
@@ -54,14 +67,14 @@ export default function Poll({ postId }: PollProps) {
 
   const checkVote = async () => {
     const token = localStorage.getItem("authToken");
-    if (!token) return;
 
     try {
-      const response = await fetch(`/api/polls/post/${postId}/vote`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `/api/polls/post/${postId}/vote?voterKey=${encodeURIComponent(getVoterKey())}`,
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        }
+      );
       if (response.ok) {
         const data = await response.json();
         setHasVoted(data.data.hasVoted);
@@ -74,10 +87,6 @@ export default function Poll({ postId }: PollProps) {
 
   const handleVote = async (optionId: number) => {
     const token = localStorage.getItem("authToken");
-    if (!token) {
-      setError("Требуется авторизация для голосования");
-      return;
-    }
 
     if (poll?.isEnded) {
       setError("Опрос завершен");
@@ -97,9 +106,9 @@ export default function Poll({ postId }: PollProps) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ optionId }),
+        body: JSON.stringify({ optionId, voterKey: getVoterKey() }),
       });
 
       if (!response.ok) {
@@ -142,17 +151,7 @@ export default function Poll({ postId }: PollProps) {
       <h3 style={{ marginTop: 0, marginBottom: "16px" }}>Опрос</h3>
 
       {error && (
-        <div
-          style={{
-            marginBottom: "12px",
-            padding: "8px 12px",
-            background: "color-mix(in srgb, #d32f2f 20%, transparent)",
-            border: "1px solid #d32f2f",
-            borderRadius: "4px",
-            color: "#d32f2f",
-            fontSize: "14px",
-          }}
-        >
+        <div className="kjar-comments__error">
           {error}
         </div>
       )}

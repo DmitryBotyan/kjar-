@@ -146,7 +146,7 @@ export default function PollManager({ postId, eventFormat }: PollManagerProps) {
       <h3 style={{ marginTop: 0, marginBottom: "16px" }}>Управление опросом</h3>
 
       {error && (
-        <div style={{ marginBottom: "12px", color: "#d32f2f", fontSize: "14px" }}>
+        <div className="kjar-admin__error">
           {error}
         </div>
       )}
@@ -171,8 +171,7 @@ export default function PollManager({ postId, eventFormat }: PollManagerProps) {
                 <button
                   type="button"
                   onClick={() => removeOption(index)}
-                  className="kjar-button kjar-button--ghost"
-                  style={{ color: "#d32f2f" }}
+                  className="kjar-button kjar-button--danger"
                 >
                   Удалить
                 </button>
@@ -209,7 +208,7 @@ export default function PollManager({ postId, eventFormat }: PollManagerProps) {
             onClick={handleCreatePoll}
             disabled={saving || options.length < 2}
             className="kjar-button"
-            style={{ marginTop: "16px" }}
+           
           >
             {saving ? "Создание..." : "Создать опрос"}
           </button>
@@ -253,7 +252,7 @@ export default function PollManager({ postId, eventFormat }: PollManagerProps) {
             </label>
           </div>
 
-          <div className="kjar-field" style={{ marginTop: "16px" }}>
+          <div className="kjar-field">
             <label className="kjar-label">Варианты ответов</label>
             {poll.options.map((option, index) => (
               <div
@@ -286,7 +285,7 @@ export default function PollManager({ postId, eventFormat }: PollManagerProps) {
             onClick={handleUpdatePoll}
             disabled={saving}
             className="kjar-button"
-            style={{ marginTop: "16px" }}
+           
           >
             {saving ? "Сохранение..." : "Сохранить изменения"}
           </button>

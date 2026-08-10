@@ -118,7 +118,7 @@ export default function EditPostPage() {
       <div className="kjar-admin">
         <div className="kjar-admin__empty">
           <p>Пост не найден</p>
-          <Link href="/admin/posts" className="kjar-button kjar-button--primary" style={{ marginTop: "16px" }}>
+          <Link href="/admin/posts" className="kjar-button kjar-button--primary">
             Вернуться к списку
           </Link>
         </div>
@@ -138,7 +138,7 @@ export default function EditPostPage() {
       <div className="kjar-admin__content">
         <form className="kjar-form-card" onSubmit={handleSubmit}>
           {error && (
-            <div style={{ padding: "12px", background: "rgba(211, 47, 47, 0.1)", border: "1px solid #d32f2f", borderRadius: "6px", color: "#d32f2f" }}>
+            <div className="kjar-admin__error">
               {error}
             </div>
           )}

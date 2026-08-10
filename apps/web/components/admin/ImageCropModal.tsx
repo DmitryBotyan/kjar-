@@ -127,7 +127,7 @@ export default function ImageCropModal({
           maxWidth: "800px",
           height: "80vh",
           maxHeight: "600px",
-          backgroundColor: "var(--surface, #1a1a1a)",
+          backgroundColor: "var(--peat)",
           borderRadius: "8px",
           padding: "20px",
           display: "flex",

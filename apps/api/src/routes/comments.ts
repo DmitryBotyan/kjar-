@@ -5,11 +5,14 @@ import {
   createComment,
   deleteComment,
   uploadCommentImage,
+  getAllComments,
+  updateCommentApproval,
 } from "../controllers/comments.js";
 import { authenticate } from "../middlewares/auth.js";
 import { requireMinRole } from "../middlewares/authorize.js";
 import { rateLimit } from "../middlewares/rateLimit.js";
 import { validateBody } from "../middlewares/validate.js";
+import { antiSpam } from "../middlewares/antiSpam.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import { uploadSingle } from "../middlewares/upload.js";
 
@@ -20,8 +23,10 @@ const createCommentSchema = z.object({
   content: z.string().min(1).max(5000),
   image: z.string().max(500).nullable().optional(),
   parentId: z.union([z.string(), z.number()]).nullable().optional(),
-  captchaToken: z.string().min(1), // Заглушка для капчи
 });
+
+// Все комментарии для модерации (только для модераторов)
+router.get("/", authenticate, requireMinRole("mod"), asyncHandler(getAllComments));
 
 // Получить комментарии (публичный)
 router.get(
@@ -34,10 +39,11 @@ router.get(
 const commentLimit = rateLimit(10, 10 * 60 * 1000, "comment");
 const commentUploadLimit = rateLimit(10, 60 * 60 * 1000, "comment-upload");
 
-// Создать комментарий (публичный, но требует капчу)
+// Создать комментарий: публично, но с защитой формы
 router.post(
   "/:targetType/:targetId",
   commentLimit,
+  antiSpam,
   validateBody(createCommentSchema),
   asyncHandler(createComment)
 );
@@ -48,6 +54,15 @@ router.post(
   commentUploadLimit,
   uploadSingle("image"),
   asyncHandler(uploadCommentImage)
+);
+
+// Скрыть или вернуть комментарий (только для модераторов)
+router.patch(
+  "/:commentId",
+  authenticate,
+  requireMinRole("mod"),
+  validateBody(z.object({ isApproved: z.boolean() })),
+  asyncHandler(updateCommentApproval)
 );
 
 // Удалить комментарий (только для модераторов)

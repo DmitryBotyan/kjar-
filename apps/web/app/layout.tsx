@@ -3,10 +3,24 @@ import Link from "next/link";
 import { Menu, Search } from "lucide-react";
 import "./globals.css";
 
+// Адрес сайта и почта редакции задаются окружением: в коде их быть не должно
+const SITE_URL = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL;
+const CONTACT_EMAIL = process.env.CONTACT_EMAIL || "hello@kjar.ru";
+
+const title = "KJÁR — карточная ролевая игра северных хроник";
+const description =
+  "Мир KJÁR: колода персонажей, энциклопедия лора, ивенты и обсуждения северных хроник";
+
 export const metadata = {
-  title: "KJÁR — карточная ролевая игра северных хроник",
-  description:
-    "Мир KJÁR: колода персонажей, энциклопедия лора, ивенты и обсуждения северных хроник"
+  ...(SITE_URL ? { metadataBase: new URL(SITE_URL) } : {}),
+  title,
+  description,
+  openGraph: {
+    title,
+    description,
+    type: "website",
+    locale: "ru_RU"
+  }
 };
 
 const navigation = [
@@ -92,8 +106,8 @@ export default function RootLayout({ children }: RootLayoutProps) {
                 стол для игроков.
               </p>
               <div className="kjar-footer__stack">
-                <a className="kjar-footer__link" href="mailto:редакция@kjar.example">
-                  редакция@kjar.example
+                <a className="kjar-footer__link" href={`mailto:${CONTACT_EMAIL}`}>
+                  {CONTACT_EMAIL}
                 </a>
                 <Link className="kjar-footer__link" href="/contacts">
                   Написать редакции

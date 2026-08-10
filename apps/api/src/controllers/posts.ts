@@ -4,6 +4,7 @@ import { db } from "../db/index.js";
 import { posts, postTags, tags } from "@kjar/db";
 import { createError } from "../middlewares/errorHandler.js";
 import type { AuthRequest } from "../middlewares/auth.js";
+import { slugify } from "../utils/slug.js";
 
 export async function getPosts(req: Request, res: Response) {
   try {
@@ -142,16 +143,6 @@ export async function getPostBySlug(req: Request, res: Response) {
   }
 }
 
-// Функция для генерации slug из строки
-function generateSlug(text: string): string {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/[\s_-]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
 export async function createPost(req: AuthRequest, res: Response) {
   try {
     if (!req.user) {
@@ -176,7 +167,7 @@ export async function createPost(req: AuthRequest, res: Response) {
     };
 
     // Генерируем slug если не указан
-    let slug = data.slug || generateSlug(data.title);
+    let slug = data.slug || slugify(data.title);
 
     // Проверяем уникальность slug
     const existing = await db
@@ -217,7 +208,7 @@ export async function createPost(req: AuthRequest, res: Response) {
         eventType: data.eventType || null,
         eventFormat: data.eventFormat || null,
         participationType: data.participationType || null,
-        createdBy: req.user.userId,
+        createdBy: req.user.id,
       })
       .returning();
 
@@ -286,7 +277,7 @@ export async function updatePost(req: AuthRequest, res: Response) {
 
     // Если меняется title и slug не указан, генерируем новый slug
     if (data.title && !data.slug) {
-      newSlug = generateSlug(data.title);
+      newSlug = slugify(data.title);
       if (newSlug !== existing.slug) {
         const check = await db
           .select({ id: posts.id })
