@@ -195,6 +195,10 @@ export const postTags = pgTable(
 );
 
 // ===== Events =====
+// Не используется: ивенты живут в posts с флагом isEvent, API к этой таблице
+// не обращается. Осталась от прежней схемы, вместе с event_tags и
+// event_participants. Удалять отдельной миграцией, когда решим, что участники
+// ивентов точно не понадобятся в этом виде.
 export const events = pgTable(
   "events",
   {
@@ -395,6 +399,7 @@ export const messages = pgTable(
 );
 
 // ===== Related Materials (связи между сущностями) =====
+// Не используется: связи между статьями и персонажами пока нигде не строятся.
 export const relatedMaterials = pgTable(
   "related_materials",
   {
