@@ -148,5 +148,5 @@ ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBu3o2WVsxl+vXP9XI+99ecCa4JfFAQ78oGJwmJcegcF
 ssh недоступен пять минут подряд
 + exit 1
 
-прогон: 31325115597
+прогон: 31379296162
 результат выкладки: failure
