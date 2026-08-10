@@ -24,6 +24,25 @@ IP `72.56.67.219`. Swap 2 ГБ, ufw открывает 22, 80, 443.
 **Секреты репозитория:** `SSH_HOST`, `SSH_USER`, `SSH_PORT`, `SSH_PRIVATE_KEY`,
 `ENV_PRODUCTION`.
 
+**Домен и сертификат.** `kjar.ru` и `www.kjar.ru` смотрят на сервер, сертификат
+Let's Encrypt выпущен до 8 ноября 2026. HTTP отвечает редиректом на HTTPS, `www`
+уходит на основной домен. Продление:
+
+```
+cd /opt/kjar && docker compose --env-file .env.production -f docker/docker-compose.prod.yml \
+  --profile tools run --rm certbot renew && docker compose --env-file .env.production \
+  -f docker/docker-compose.prod.yml restart nginx
+```
+
+**Первый администратор.** Роль `admin` через регистрацию не выдаётся, поэтому:
+
+```
+cd /opt/kjar && docker compose --env-file .env.production -f docker/docker-compose.prod.yml \
+  exec -T -e ADMIN_PASSWORD='пароль' api node --import tsx src/scripts/createAdmin.ts логин "$ADMIN_PASSWORD"
+```
+
+Тем же скриптом меняется пароль существующего пользователя.
+
 ---
 
 
