@@ -20,12 +20,11 @@ services:
     # Наружу порт не публикуем: до базы ходят только контейнеры этой сети
 
   api:
-    image: kjar-api:latest
+    image: ${REGISTRY:-ghcr.io/dmitrybotyan}/kjar-api:latest
     build:
       context: ..
       dockerfile: docker/Dockerfile.prod
       target: api
-    pull_policy: never
     restart: always
     environment:
       NODE_ENV: production
@@ -56,12 +55,11 @@ services:
       start_period: 20s
 
   web:
-    image: kjar-web:latest
+    image: ${REGISTRY:-ghcr.io/dmitrybotyan}/kjar-web:latest
     build:
       context: ..
       dockerfile: docker/Dockerfile.prod
       target: web
-    pull_policy: never
     restart: always
     environment:
       NODE_ENV: production
@@ -132,8 +130,7 @@ services:
 
   # Миграции: docker compose ... --profile tools run --rm migrate
   migrate:
-    image: kjar-api:latest
-    pull_policy: never
+    image: ${REGISTRY:-ghcr.io/dmitrybotyan}/kjar-api:latest
     environment:
       DATABASE_URL: ${DATABASE_URL}
     working_dir: /app/packages/db
