@@ -75,7 +75,7 @@ export default function AdminTagsPage() {
         localStorage.removeItem("authToken");
         router.push("/admin");
       } else {
-        alert(err instanceof Error ? err.message : "Ошибка удаления тега");
+        setError(err instanceof Error ? err.message : "Ошибка удаления тега");
       }
     } finally {
       setDeleting(false);
@@ -105,11 +105,9 @@ export default function AdminTagsPage() {
       </div>
 
       <div className="kjar-admin__content">
-        {error ? (
-          <div className="kjar-admin__empty">
-            <p>Ошибка: {error}</p>
-          </div>
-        ) : tags.length === 0 ? (
+        {error ? <div className="kjar-admin__error">{error}</div> : null}
+
+        {tags.length === 0 ? (
           <div className="kjar-admin__empty">
             <p>Тегов пока нет</p>
             <Link href="/admin/tags/new" className="kjar-button kjar-button--primary">

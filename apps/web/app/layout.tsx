@@ -182,7 +182,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
           </div>
 
           <div className="kjar-footer__bottom">
-            <span>© 2026 KJÁR</span>
+            <span>© {new Date().getFullYear()} KJÁR</span>
             <span>Мир, который звучит тишиной</span>
           </div>
         </footer>

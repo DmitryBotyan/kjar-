@@ -75,7 +75,7 @@ export default function AdminEventsPage() {
         localStorage.removeItem("authToken");
         router.push("/admin");
       } else {
-        alert(err instanceof Error ? err.message : "Ошибка удаления ивента");
+        setError(err instanceof Error ? err.message : "Ошибка удаления ивента");
       }
     } finally {
       setDeleting(false);
@@ -105,11 +105,9 @@ export default function AdminEventsPage() {
       </div>
 
       <div className="kjar-admin__content">
-        {error ? (
-          <div className="kjar-admin__empty">
-            <p>Ошибка: {error}</p>
-          </div>
-        ) : events.length === 0 ? (
+        {error ? <div className="kjar-admin__error">{error}</div> : null}
+
+        {events.length === 0 ? (
           <div className="kjar-admin__empty">
             <p>Ивентов пока нет</p>
             <Link href="/admin/events/new" className="kjar-button kjar-button--primary">

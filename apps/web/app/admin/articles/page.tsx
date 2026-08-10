@@ -76,7 +76,7 @@ export default function AdminArticlesPage() {
         localStorage.removeItem("authToken");
         router.push("/admin");
       } else {
-        alert(err instanceof Error ? err.message : "Ошибка удаления статьи");
+        setError(err instanceof Error ? err.message : "Ошибка удаления статьи");
       }
     } finally {
       setDeleting(false);
@@ -106,11 +106,9 @@ export default function AdminArticlesPage() {
       </div>
 
       <div className="kjar-admin__content">
-        {error ? (
-          <div className="kjar-admin__empty">
-            <p>Ошибка: {error}</p>
-          </div>
-        ) : articles.length === 0 ? (
+        {error ? <div className="kjar-admin__error">{error}</div> : null}
+
+        {articles.length === 0 ? (
           <div className="kjar-admin__empty">
             <p>Статей пока нет</p>
             <Link href="/admin/articles/new" className="kjar-button kjar-button--primary">

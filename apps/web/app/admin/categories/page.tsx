@@ -75,7 +75,7 @@ export default function AdminCategoriesPage() {
         localStorage.removeItem("authToken");
         router.push("/admin");
       } else {
-        alert(err instanceof Error ? err.message : "Ошибка удаления категории");
+        setError(err instanceof Error ? err.message : "Ошибка удаления категории");
       }
     } finally {
       setDeleting(false);
@@ -105,11 +105,9 @@ export default function AdminCategoriesPage() {
       </div>
 
       <div className="kjar-admin__content">
-        {error ? (
-          <div className="kjar-admin__empty">
-            <p>Ошибка: {error}</p>
-          </div>
-        ) : categories.length === 0 ? (
+        {error ? <div className="kjar-admin__error">{error}</div> : null}
+
+        {categories.length === 0 ? (
           <div className="kjar-admin__empty">
             <p>Категорий пока нет</p>
             <Link href="/admin/categories/new" className="kjar-button kjar-button--primary">

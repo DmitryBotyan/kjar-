@@ -75,7 +75,7 @@ export default function AdminCharactersPage() {
         localStorage.removeItem("authToken");
         router.push("/admin");
       } else {
-        alert(err instanceof Error ? err.message : "Ошибка удаления персонажа");
+        setError(err instanceof Error ? err.message : "Ошибка удаления персонажа");
       }
     } finally {
       setDeleting(false);
@@ -105,11 +105,9 @@ export default function AdminCharactersPage() {
       </div>
 
       <div className="kjar-admin__content">
-        {error ? (
-          <div className="kjar-admin__empty">
-            <p>Ошибка: {error}</p>
-          </div>
-        ) : characters.length === 0 ? (
+        {error ? <div className="kjar-admin__error">{error}</div> : null}
+
+        {characters.length === 0 ? (
           <div className="kjar-admin__empty">
             <p>Персонажей пока нет</p>
             <Link href="/admin/characters/new" className="kjar-button kjar-button--primary">

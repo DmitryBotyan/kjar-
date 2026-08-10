@@ -76,7 +76,7 @@ export default function AdminPostsPage() {
         localStorage.removeItem("authToken");
         router.push("/admin");
       } else {
-        alert(err instanceof Error ? err.message : "Ошибка удаления поста");
+        setError(err instanceof Error ? err.message : "Ошибка удаления поста");
       }
     } finally {
       setDeleting(false);
@@ -106,11 +106,9 @@ export default function AdminPostsPage() {
       </div>
 
       <div className="kjar-admin__content">
-        {error ? (
-          <div className="kjar-admin__empty">
-            <p>Ошибка: {error}</p>
-          </div>
-        ) : posts.length === 0 ? (
+        {error ? <div className="kjar-admin__error">{error}</div> : null}
+
+        {posts.length === 0 ? (
           <div className="kjar-admin__empty">
             <p>Постов пока нет</p>
             <Link href="/admin/posts/new" className="kjar-button kjar-button--primary">
