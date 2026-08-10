@@ -15,10 +15,23 @@ const WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000;
 const MAX_REQUESTS = Number(process.env.RATE_LIMIT_MAX) || 100;
 
 function getClientId(req: Request): string {
-  // Используем IP адрес или user ID если аутентифицирован
+  // req.ip разворачивается в реальный адрес посетителя благодаря trust proxy
   const ip = req.ip || req.socket.remoteAddress || "unknown";
   const userId = (req as any).user?.id;
   return userId ? `user:${userId}` : `ip:${ip}`;
+}
+
+/**
+ * Серверные компоненты Next дергают API изнутри docker-сети, чтобы собрать
+ * страницу. Такие запросы нельзя считать за посетителя: одна страница делает
+ * их несколько, и общий лимит выбирался бы за пару десятков просмотров.
+ * Отличаем по отсутствию X-Forwarded-For — его проставляет nginx на входе,
+ * а порт API наружу не выставлен, подделать заголовок снаружи нельзя.
+ * Следствие: в dev-стенде без nginx лимиты не применяются, проверять их
+ * нужно запросами напрямую к API либо на боевом.
+ */
+function isInternalRequest(req: Request): boolean {
+  return !req.headers["x-forwarded-for"];
 }
 
 export function rateLimit(
@@ -29,6 +42,11 @@ export function rateLimit(
   // У каждого лимитера свой счётчик: точечный лимит на вход не должен
   // расходовать общий лимит и наоборот
   return (req: Request, res: Response, next: NextFunction): void => {
+    if (isInternalRequest(req)) {
+      next();
+      return;
+    }
+
     const clientId = `${bucket}:${getClientId(req)}`;
     const now = Date.now();
     const record = store[clientId];

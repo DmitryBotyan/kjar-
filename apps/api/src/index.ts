@@ -5,6 +5,13 @@ import { errorHandler } from "./middlewares/errorHandler.js";
 
 const app = express();
 const port = Number(process.env.PORT ?? 3001);
+
+// Запросы приходят не напрямую, а через nginx и прокси Next. Без этой настройки
+// req.ip показывал бы адрес соседнего контейнера, и лимиты считались бы одним
+// счётчиком на весь сайт: один посетитель исчерпывал лимит для всех.
+// Значение — число доверенных прокси между клиентом и этим сервером;
+// подделать X-Forwarded-For мимо них не выйдет, nginx дописывает реальный адрес.
+app.set("trust proxy", Number(process.env.TRUST_PROXY_HOPS) || 1);
 const corsOrigin = process.env.CORS_ORIGIN ?? "http://localhost:3000";
 
 // Безопасность: ограничиваем размер тела запроса
