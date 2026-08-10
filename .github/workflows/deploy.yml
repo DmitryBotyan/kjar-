@@ -68,6 +68,11 @@ jobs:
           printf '%s\n' "$KEY" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e '/^$/d' > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keygen -y -f ~/.ssh/id_ed25519 > /dev/null
+          # До московского сервера прямого хода с раннера нет: пакеты не доходят.
+          # Поэтому при заданном SSH_JUMP идём через перевалочный сервер тем же
+          # ключом. Пустой секрет — соединяемся напрямую.
+          JUMP="${{ secrets.SSH_JUMP }}"
+
           {
             echo "Host target"
             echo "  HostName ${{ secrets.SSH_HOST }}"
@@ -83,6 +88,21 @@ jobs:
             echo "  ControlMaster auto"
             echo "  ControlPath ~/.ssh/cm-%r@%h:%p"
             echo "  ControlPersist 15m"
+            if [ -n "$JUMP" ]; then
+              echo "  ProxyJump jump"
+            fi
+
+            if [ -n "$JUMP" ]; then
+              echo "Host jump"
+              echo "  HostName ${JUMP##*@}"
+              echo "  User ${JUMP%@*}"
+              echo "  IdentityFile ~/.ssh/id_ed25519"
+              echo "  IdentitiesOnly yes"
+              echo "  StrictHostKeyChecking no"
+              echo "  UserKnownHostsFile /dev/null"
+              echo "  BatchMode yes"
+              echo "  ConnectTimeout 20"
+            fi
           } > ~/.ssh/config
           chmod 600 ~/.ssh/config
 
