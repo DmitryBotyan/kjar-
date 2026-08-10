@@ -51,6 +51,10 @@ jobs:
 
           docker images | grep kjar
 
+  # Выкладка нужна только там, куда раннер может достучаться. Московский сервер
+  # обновляется сам: таймер systemd раз в две минуты забирает свежие образы из
+  # ghcr.io и конфиги из репозитория. Тогда SSH_HOST не задан, и задача
+  # завершается сразу, ничего не делая.
   deploy:
     name: Выкатить на сервер
     needs: build
@@ -59,7 +63,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Проверить, нужна ли выкладка по SSH
+        id: mode
+        run: |
+          if [ -n "${{ secrets.SSH_HOST }}" ]; then
+            echo "ssh=yes" >> "$GITHUB_OUTPUT"
+          else
+            echo "ssh=no" >> "$GITHUB_OUTPUT"
+            echo "SSH_HOST не задан: сервер забирает обновление сам, ждать нечего."
+          fi
+
       - name: Подготовить доступ
+        if: steps.mode.outputs.ssh == 'yes'
         env:
           KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
@@ -108,6 +123,7 @@ jobs:
 
       - name: Выкатить
         id: run
+        if: steps.mode.outputs.ssh == 'yes'
         continue-on-error: true
         env:
           ENV_PRODUCTION: ${{ secrets.ENV_PRODUCTION }}
@@ -162,7 +178,7 @@ jobs:
           ssh target "docker logout ghcr.io; docker image prune -f"
 
       - name: Сохранить лог
-        if: always()
+        if: always() && steps.mode.outputs.ssh == 'yes' 
         run: |
           mkdir -p .deploy-logs
           cp /tmp/deploy.log .deploy-logs/last-deploy.log 2>/dev/null || echo "лог не создан" > .deploy-logs/last-deploy.log
@@ -176,4 +192,4 @@ jobs:
 
       - name: Итог
         if: always()
-        run: '[ "${{ steps.run.outcome }}" = "success" ] || exit 1'
+        run: '[ "${{ steps.mode.outputs.ssh }}" != "yes" ] || [ "${{ steps.run.outcome }}" = "success" ] || exit 1'
