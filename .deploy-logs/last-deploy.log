@@ -4,5 +4,5 @@
 + ssh target 'hostname; docker --version; free -m | head -2; df -h / | tail -1'
 Connection to 147.45.153.163 port 22 timed out
 
-прогон: 31413326302
+прогон: 31413602121
 результат: failure
