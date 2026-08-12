@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCharacterBySlug } from "@/lib/api";
+import {
+  characterFacts,
+  characterGender,
+  characterMeters,
+  characterNumber
+} from "@/lib/character";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 
 type CharacterPageProps = {
@@ -23,18 +29,13 @@ export default async function CharacterPage({ params }: CharacterPageProps) {
   }
 
   // Роль, статус и род показаны чипами выше — в характеристиках их не дублируем
-  const stats: Array<[string, string]> = [];
-  if (character.field) stats.push(["Поле деятельности", character.field]);
+  const facts: Array<[string, string]> = [];
+  if (character.field) facts.push(["Поле деятельности", character.field]);
+  facts.push(...characterFacts(character));
 
-  // Ключи статов приходят из БД как есть — приводим к читаемому виду
-  const humanize = (key: string) =>
-    key.replace(/[_-]+/g, " ").replace(/^./, (c) => c.toUpperCase());
-
-  const extraStats =
-    character.statsJson && typeof character.statsJson === "object"
-      ? Object.entries(character.statsJson as Record<string, unknown>)
-      : [];
-
+  const meters = characterMeters(character);
+  const gender = characterGender(character);
+  const number = characterNumber(character);
   const relations = character.relationsJson;
 
   return (
@@ -51,13 +52,39 @@ export default async function CharacterPage({ params }: CharacterPageProps) {
           </nav>
 
           <div className="kjar-character__hero-grid">
-            <div className="kjar-character__portrait">
-              {character.image ? (
-                <img src={character.image} alt={`Портрет ${character.name}`} loading="eager" />
-              ) : (
-                <span />
-              )}
-            </div>
+            {/* Полный референс: карта раскрывается целиком, без обрезки */}
+            <figure className="kjar-character__card">
+              <div className="kjar-character__reference">
+                {character.image ? (
+                  <img
+                    src={character.image}
+                    alt={`Референс ${character.name}`}
+                    loading="eager"
+                  />
+                ) : (
+                  <span />
+                )}
+              </div>
+              <figcaption className="kjar-deck-card__plate">
+                <span className="kjar-deck-card__cell">{character.name}</span>
+                {gender && (
+                  <>
+                    <span className="kjar-deck-card__sep" aria-hidden="true">
+                      |
+                    </span>
+                    <span className="kjar-deck-card__cell">{gender}</span>
+                  </>
+                )}
+                {number && (
+                  <>
+                    <span className="kjar-deck-card__sep" aria-hidden="true">
+                      |
+                    </span>
+                    <span className="kjar-deck-card__num">{number}</span>
+                  </>
+                )}
+              </figcaption>
+            </figure>
 
             <div className="kjar-character__intro">
               <h1 className="kjar-character__title">{character.name}</h1>
@@ -76,20 +103,12 @@ export default async function CharacterPage({ params }: CharacterPageProps) {
                 <p className="kjar-character__tagline">{character.summary}</p>
               )}
 
-              {(stats.length > 0 || extraStats.length > 0) && (
+              {facts.length > 0 && (
                 <ul className="kjar-character__stats">
-                  {stats.map(([label, value]) => (
+                  {facts.map(([label, value]) => (
                     <li className="kjar-character__stat" key={label}>
                       <span className="kjar-character__stat-label">{label}</span>
                       <span className="kjar-character__stat-value">{value}</span>
-                    </li>
-                  ))}
-                  {extraStats.map(([label, value]) => (
-                    <li className="kjar-character__stat" key={`extra-${label}`}>
-                      <span className="kjar-character__stat-label">
-                        {humanize(label)}
-                      </span>
-                      <span className="kjar-character__stat-value">{String(value)}</span>
                     </li>
                   ))}
                 </ul>
@@ -110,6 +129,41 @@ export default async function CharacterPage({ params }: CharacterPageProps) {
               )}
             </div>
           </div>
+
+          {/* Игровая сводка идёт под референсом и именем, как в листе персонажа */}
+          {meters.length > 0 && (
+            <section className="kjar-character__sheet" aria-label="Характеристики">
+              <h2 className="kjar-section__title">Характеристики</h2>
+              <ul className="kjar-character__meters">
+                {meters.map((meter) => (
+                  <li className="kjar-meter" key={meter.label}>
+                    <div className="kjar-meter__head">
+                      <span className="kjar-meter__label">{meter.label}</span>
+                      <span className="kjar-meter__value">{meter.value}</span>
+                    </div>
+                    <div
+                      className="kjar-meter__track"
+                      role="meter"
+                      aria-label={meter.label}
+                      aria-valuenow={meter.value}
+                      aria-valuemin={0}
+                      aria-valuemax={meter.max}
+                    >
+                      <span
+                        className="kjar-meter__fill"
+                        style={{
+                          width: `${Math.max(
+                            2,
+                            Math.min(100, (meter.value / meter.max) * 100)
+                          )}%`
+                        }}
+                      />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
         </div>
       </section>
 

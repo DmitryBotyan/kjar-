@@ -5,18 +5,38 @@
    Ничего вне токенов ниже в файле быть не должно.
    ========================================================================== */
 
+/* Рунический гротеск для вордмарка, навигации, заголовков и плашек карт */
+@font-face {
+  font-family: "Norse";
+  src: url("/fonts/Norse-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Norse";
+  src: url("/fonts/Norse-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
-  /* Палитра: шесть значений и один системный */
-  --bark: #14120f;
-  --peat: #1b1815;
-  --line: #2e2a25;
-  --ash: #988f83;
-  --ink: #ece5d8;
-  --gold: #c8a464;
-  --ash-on-line: #a49a8d;
+  /* Палитра «лес»: поверхности почти нейтральные, зелень остаётся акцентом */
+  --bark: #171916;
+  --peat: #1f211d;
+  --line: #2c2e28;
+  --moss: #475248;
+  --plate: #2a3426;
+  --ash: #9b9d93;
+  --ink: #e7e8e2;
+  --gold: #a3b592;
+  --ash-on-line: #a4a69c;
   --rust: #cc6a48;
 
   /* Гарнитуры */
+  --rune: "Norse", "Alegreya", Georgia, serif;
   --display: "Alegreya", Georgia, serif;
   --body: "Golos Text", system-ui, sans-serif;
 
@@ -42,7 +62,7 @@
 
   --wrap: 1180px;
 
-  --weave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='24' viewBox='0 0 48 24' fill='none' stroke='%23c8a464' stroke-width='1'%3E%3Cpath d='M0 12 L12 2 L24 12 L36 2 L48 12'/%3E%3Cpath d='M0 12 L12 22 L24 12 L36 22 L48 12'/%3E%3Cpath d='M12 2 V22 M36 2 V22'/%3E%3C/svg%3E");
+  --weave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='24' viewBox='0 0 48 24' fill='none' stroke='%23a3b592' stroke-width='1'%3E%3Cpath d='M0 12 L12 2 L24 12 L36 2 L48 12'/%3E%3Cpath d='M0 12 L12 22 L24 12 L36 22 L48 12'/%3E%3Cpath d='M12 2 V22 M36 2 V22'/%3E%3C/svg%3E");
 }
 
 /* ============================ База ============================ */
@@ -109,7 +129,7 @@ a {
 }
 
 ::selection {
-  background: rgba(200, 164, 100, 0.3);
+  background: rgba(163, 181, 146, 0.28);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -198,9 +218,11 @@ a {
 .kjar-article__section-title,
 .kjar-updates__title {
   margin: 0;
-  font-family: var(--display);
+  font-family: var(--rune);
   font-size: var(--t-l);
-  font-weight: 500;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  line-height: 1.1;
 }
 
 .kjar-section__note,
@@ -796,11 +818,11 @@ input[type="radio"] {
 }
 
 .kjar-brand__title {
-  font-family: var(--display);
-  font-size: var(--t-m);
+  font-family: var(--rune);
+  font-size: var(--t-l);
   font-weight: 700;
-  letter-spacing: 0.12em;
-  line-height: 1.1;
+  letter-spacing: 0.06em;
+  line-height: 1;
 }
 
 .kjar-brand__subtitle {
@@ -831,6 +853,9 @@ input[type="radio"] {
   align-items: center;
   min-height: 44px;
   color: var(--ash);
+  font-family: var(--rune);
+  font-size: var(--t-m);
+  letter-spacing: 0.04em;
   text-decoration: none;
   transition: color 0.15s ease;
 }
@@ -947,7 +972,7 @@ input[type="radio"] {
 .kjar-hero__scrim {
   position: absolute;
   inset: 0;
-  background: rgba(20, 18, 15, 0.55);
+  background: rgba(23, 25, 22, 0.62);
 }
 
 .kjar-hero__inner {
@@ -965,12 +990,26 @@ input[type="radio"] {
   max-width: 60ch;
 }
 
+/* Эпиграф: высечен над заголовком, а не подпись-ярлык */
+.kjar-hero__quote {
+  margin: 0 0 var(--s2);
+  max-width: none;
+  text-wrap: balance;
+  color: var(--ash);
+  font-family: var(--rune);
+  font-size: var(--t-m);
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  line-height: 1.35;
+}
+
 .kjar-hero__title {
   margin: 0;
-  font-family: var(--display);
-  font-size: clamp(var(--t-l), 1.2rem + 2.4vw, var(--t-xl));
-  font-weight: 500;
-  line-height: 1.1;
+  font-family: var(--rune);
+  font-size: clamp(var(--t-xl), 1.6rem + 3.4vw, var(--t-2xl));
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1;
 }
 
 .kjar-hero__title span {
@@ -1165,7 +1204,9 @@ input[type="radio"] {
 }
 
 .kjar-deck-row .kjar-character-card,
-.kjar-characters__grid .kjar-character-card {
+.kjar-characters__grid .kjar-character-card,
+.kjar-deck-row .kjar-deck-card,
+.kjar-characters__grid .kjar-deck-card {
   height: 100%;
 }
 
@@ -1277,10 +1318,11 @@ input[type="radio"] {
 .kjar-contacts__title,
 .kjar-forum__title {
   margin: 0;
-  font-family: var(--display);
+  font-family: var(--rune);
   font-size: clamp(var(--t-l), 1.5rem + 2vw, var(--t-xl));
-  font-weight: 500;
-  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1;
 }
 
 .kjar-lore__lead,
@@ -1402,7 +1444,7 @@ input[type="radio"] {
 }
 
 .kjar-characters__grid {
-  grid-template-columns: repeat(auto-fill, minmax(min(230px, 100%), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
 }
 
 .kjar-events__grid {
@@ -1540,6 +1582,76 @@ input[type="radio"] {
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* Карта из колоды: портрет и плашка «имя | пол | номер» под ним, больше ничего */
+.kjar-deck-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--r-field);
+  background: var(--bark);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.kjar-deck-card:hover,
+.kjar-deck-card:focus-visible {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px var(--gold), 0 0 24px rgba(163, 181, 146, 0.24);
+  outline: none;
+}
+
+.kjar-deck-card__frame {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  background: #000;
+}
+
+.kjar-deck-card__frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Одна строка, фиксированная высота: все карты в сетке одинаковы */
+.kjar-deck-card__plate {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0 var(--s2);
+  height: 44px;
+  padding-inline: var(--s2);
+  background: var(--plate);
+  color: var(--ink);
+  font-family: var(--rune);
+  font-size: var(--t-m);
+  letter-spacing: 0.04em;
+  line-height: 44px;
+  white-space: nowrap;
+}
+
+.kjar-deck-card__cell {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kjar-deck-card__num {
+  flex: 0 0 auto;
+}
+
+.kjar-deck-card__sep {
+  flex: 0 0 auto;
+  color: var(--ink);
+  opacity: 0.45;
 }
 
 /* ============================ Ивенты ============================ */
@@ -1694,10 +1806,11 @@ input[type="radio"] {
 .kjar-event__title,
 .kjar-character__title {
   margin: 0;
-  font-family: var(--display);
+  font-family: var(--rune);
   font-size: clamp(var(--t-l), 1.4rem + 2vw, var(--t-xl));
-  font-weight: 500;
-  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1;
 }
 
 .kjar-thread__lead,
@@ -2049,7 +2162,7 @@ input[type="radio"] {
 
 @media (min-width: 860px) {
   .kjar-character__hero-grid {
-    grid-template-columns: 280px minmax(0, 1fr);
+    grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
     gap: var(--s5);
   }
 }
@@ -2102,6 +2215,86 @@ input[type="radio"] {
 .kjar-character__stat-value {
   font-family: var(--display);
   font-size: var(--t-m);
+}
+
+/* Карта персонажа на его странице: тот же объект, что в колоде, но раскрытый */
+.kjar-character__card {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--r-field);
+  background: var(--bark);
+  box-shadow: 0 0 24px rgba(163, 181, 146, 0.1);
+}
+
+.kjar-character__reference {
+  background: #000;
+}
+
+.kjar-character__reference img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.kjar-character__reference > span {
+  display: block;
+  aspect-ratio: 3 / 4;
+}
+
+/* Игровая сводка: числа читаются шкалами, а не строкой цифр */
+.kjar-character__sheet {
+  display: grid;
+  gap: var(--s3);
+  margin-top: var(--s4);
+  padding-top: var(--s4);
+  border-top: 1px solid var(--line);
+}
+
+.kjar-character__meters {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--s3) var(--s4);
+  grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
+}
+
+.kjar-meter {
+  display: grid;
+  gap: var(--s1);
+  min-width: 0;
+}
+
+.kjar-meter__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s2);
+}
+
+.kjar-meter__label {
+  color: var(--ash);
+  font-size: var(--t-xs);
+}
+
+.kjar-meter__value {
+  font-family: var(--rune);
+  font-size: var(--t-m);
+  line-height: 1;
+}
+
+.kjar-meter__track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.kjar-meter__fill {
+  display: block;
+  height: 100%;
+  background: var(--gold);
 }
 
 .kjar-character__main,
@@ -2606,10 +2799,11 @@ input[type="radio"] {
 }
 
 .kjar-footer__title {
-  font-family: var(--display);
-  font-size: var(--t-m);
+  font-family: var(--rune);
+  font-size: var(--t-l);
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.06em;
+  line-height: 1;
 }
 
 .kjar-footer__text {

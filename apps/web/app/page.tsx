@@ -6,6 +6,7 @@ import {
   Newspaper,
   Users
 } from "lucide-react";
+import CharacterCard from "@/components/CharacterCard";
 import { getArticles, getCharacters, getEvents, getPosts, getThreads } from "@/lib/api";
 import {
   EVENT_TYPE_LABELS,
@@ -58,21 +59,23 @@ export default async function HomePage() {
         <div className="kjar-hero__scrim" aria-hidden="true" />
         <div className="kjar-hero__inner">
           <div className="kjar-hero__content">
+            <p className="kjar-hero__quote">
+              Есть земли, о которых не рассказывают вслух
+            </p>
             <h1 className="kjar-hero__title">
-              Северные хроники,
-              <span>собранные в колоду</span>
+              KJÁR — сказы,
+              <span>которые обрели плоть</span>
             </h1>
             <p className="kjar-hero__lead">
-              KJÁR — ролевая игра, где каждый персонаж это карта: имя, род, поле
-              деятельности и след в хрониках. Туманный лес помнит всех, кто выходил
-              к нему с руной в руке.
+              Ролевой адопт-проект, посвященный существам, способным проводить Вас в
+              скандинавские суровые времена и показать, на что они способны.
             </p>
             <div className="kjar-hero__actions">
-              <Link className="kjar-button kjar-button--primary" href="/characters">
-                Открыть колоду
+              <Link className="kjar-button kjar-button--primary" href="/lore">
+                Погрузиться в сеттинг
               </Link>
-              <Link className="kjar-button kjar-button--ghost" href="/lore">
-                Читать хроники
+              <Link className="kjar-button kjar-button--ghost" href="/characters">
+                Встретить Кьяра
               </Link>
             </div>
           </div>
@@ -86,25 +89,25 @@ export default async function HomePage() {
             <li className="kjar-shortcuts__item">
               <Link className="kjar-shortcuts__link" href="/lore">
                 <BookOpen className="kjar-shortcuts__icon" aria-hidden="true" />
-                Энциклопедия мира
+                Свод мира
               </Link>
             </li>
             <li className="kjar-shortcuts__item">
               <Link className="kjar-shortcuts__link" href="/characters">
                 <Users className="kjar-shortcuts__icon" aria-hidden="true" />
-                Персонажи и роли
+                Звери и роли
               </Link>
             </li>
             <li className="kjar-shortcuts__item">
               <Link className="kjar-shortcuts__link" href="/events">
                 <CalendarDays className="kjar-shortcuts__icon" aria-hidden="true" />
-                Ивенты и задания
+                События и задания
               </Link>
             </li>
             <li className="kjar-shortcuts__item">
               <Link className="kjar-shortcuts__link" href="/discussions">
                 <MessageCircle className="kjar-shortcuts__icon" aria-hidden="true" />
-                Общий стол обсуждений
+                Важное за общим столом
               </Link>
             </li>
           </ul>
@@ -116,9 +119,9 @@ export default async function HomePage() {
         <section className="kjar-updates kjar-section--tight">
           <div className="kjar-updates__inner">
             <div className="kjar-section__head">
-              <h2 className="kjar-section__title">Ивент на столе</h2>
+              <h2 className="kjar-section__title">Событие на столе</h2>
               <Link className="kjar-section__link" href="/events">
-                Все ивенты
+                Все события
               </Link>
             </div>
 
@@ -156,7 +159,7 @@ export default async function HomePage() {
                   className="kjar-updates__link"
                   href={`/events/${featuredEvent.slug || featuredEvent.id}`}
                 >
-                  Войти в ивент
+                  Войти в событие
                 </Link>
               </div>
             </article>
@@ -218,7 +221,7 @@ export default async function HomePage() {
           <div className="kjar-updates__inner">
             <div className="kjar-section__head">
               <div>
-                <h2 className="kjar-section__title">Карты из колоды</h2>
+                <h2 className="kjar-section__title">Звери из колоды</h2>
                 <p className="kjar-section__note">
                   Игроки и НПС, которые сейчас в игре
                 </p>
@@ -229,44 +232,9 @@ export default async function HomePage() {
             </div>
 
             <ul className="kjar-deck-row">
-              {characters.slice(0, 4).map((character: any, index: number) => (
+              {characters.slice(0, 4).map((character: any) => (
                 <li key={character.id || character.slug}>
-                  <article className="kjar-character-card">
-                    <div className="kjar-character-card__media">
-                      {character.role && (
-                        <span className="kjar-character-card__badge">
-                          {character.role}
-                        </span>
-                      )}
-                      {character.image ? (
-                        <img src={character.image} alt="" loading="lazy" />
-                      ) : (
-                        <span />
-                      )}
-                    </div>
-                    <div className="kjar-character-card__body">
-                      <h3 className="kjar-character-card__name">
-                        <Link href={`/characters/${character.slug || character.id}`}>
-                          {character.name}
-                        </Link>
-                      </h3>
-                      {character.summary && (
-                        <p className="kjar-character-card__text">
-                          {character.summary}
-                        </p>
-                      )}
-                      <div className="kjar-character-card__chips">
-                        {character.status && (
-                          <span className="kjar-chip">
-                            {character.status}
-                          </span>
-                        )}
-                        {character.species && (
-                          <span className="kjar-chip">{character.species}</span>
-                        )}
-                      </div>
-                    </div>
-                  </article>
+                  <CharacterCard character={character} />
                 </li>
               ))}
             </ul>

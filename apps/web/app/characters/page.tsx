@@ -1,4 +1,5 @@
 import Link from "next/link";
+import CharacterCard from "@/components/CharacterCard";
 import { getCharacters, getTags } from "@/lib/api";
 
 interface CharactersPageProps {
@@ -229,69 +230,9 @@ export default async function CharactersPage({ searchParams }: CharactersPagePro
               </div>
             ) : (
               <ul className="kjar-characters__grid">
-                {characters.map((character: any, index: number) => (
+                {characters.map((character: any) => (
                   <li key={character.id || character.slug}>
-                    <article className="kjar-character-card">
-                      <div className="kjar-character-card__media">
-                        {character.role && (
-                          <span className="kjar-character-card__badge">
-                            {character.role}
-                          </span>
-                        )}
-                        {character.image ? (
-                          <img
-                            src={character.image}
-                            alt={`Портрет ${character.name}`}
-                            loading="lazy"
-                          />
-                        ) : (
-                          <span />
-                        )}
-                      </div>
-
-                      <div className="kjar-character-card__body">
-                        <h3 className="kjar-character-card__name">
-                          <Link href={`/characters/${character.slug || character.id}`}>
-                            {character.name}
-                          </Link>
-                        </h3>
-
-                        {character.summary && (
-                          <p className="kjar-character-card__text">
-                            {character.summary}
-                          </p>
-                        )}
-
-                        <dl className="kjar-character-card__meta">
-                          {character.species && (
-                            <div>
-                              <dt>Род</dt>
-                              <dd>{character.species}</dd>
-                            </div>
-                          )}
-                          {character.field && (
-                            <div>
-                              <dt>Поле</dt>
-                              <dd>{character.field}</dd>
-                            </div>
-                          )}
-                        </dl>
-
-                        <div className="kjar-character-card__chips">
-                          {character.status && (
-                            <span className="kjar-chip">
-                              {character.status}
-                            </span>
-                          )}
-                          {character.tags &&
-                            character.tags.slice(0, 2).map((tag: any) => (
-                              <span className="kjar-chip" key={tag.id || tag.slug || tag}>
-                                {tag.name || tag}
-                              </span>
-                            ))}
-                        </div>
-                      </div>
-                    </article>
+                    <CharacterCard character={character} />
                   </li>
                 ))}
               </ul>

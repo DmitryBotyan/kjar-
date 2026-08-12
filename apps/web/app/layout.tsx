@@ -25,12 +25,12 @@ export const metadata = {
 
 const navigation = [
   { href: "/", label: "Главная" },
-  { href: "/lore", label: "Энциклопедия" },
-  { href: "/characters", label: "Персонажи" },
+  { href: "/lore", label: "Свод" },
+  { href: "/characters", label: "Звери" },
   { href: "/posts", label: "Посты" },
-  { href: "/events", label: "Ивенты" },
-  { href: "/discussions", label: "Обсуждения" },
-  { href: "/contacts", label: "Контакты" }
+  { href: "/events", label: "События" },
+  { href: "/discussions", label: "Важное" },
+  { href: "/contacts", label: "Связь" }
 ];
 
 type RootLayoutProps = {
@@ -121,12 +121,12 @@ export default function RootLayout({ children }: RootLayoutProps) {
                 <ul className="kjar-footer__list">
                   <li>
                     <Link className="kjar-footer__link" href="/lore">
-                      Энциклопедия
+                      Свод
                     </Link>
                   </li>
                   <li>
                     <Link className="kjar-footer__link" href="/characters">
-                      Колода персонажей
+                      Колода зверей
                     </Link>
                   </li>
                   <li>
@@ -142,7 +142,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
                 <ul className="kjar-footer__list">
                   <li>
                     <Link className="kjar-footer__link" href="/events">
-                      Ивенты
+                      События
                     </Link>
                   </li>
                   <li>
@@ -152,7 +152,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
                   </li>
                   <li>
                     <Link className="kjar-footer__link" href="/discussions">
-                      Обсуждения
+                      Важное
                     </Link>
                   </li>
                 </ul>
