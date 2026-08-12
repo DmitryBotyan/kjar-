@@ -806,8 +806,8 @@ input[type="radio"] {
 }
 
 .kjar-brand__mark {
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   flex: 0 0 auto;
   object-fit: contain;
 }
@@ -2796,6 +2796,19 @@ input[type="radio"] {
   display: grid;
   gap: var(--s2);
   max-width: 44ch;
+}
+
+.kjar-footer__lockup {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.kjar-footer__mark {
+  width: 56px;
+  height: 56px;
+  flex: 0 0 auto;
+  object-fit: contain;
 }
 
 .kjar-footer__title {

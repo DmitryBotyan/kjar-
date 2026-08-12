@@ -49,8 +49,8 @@ export default function RootLayout({ children }: RootLayoutProps) {
                   className="kjar-brand__mark"
                   src="/images/logo.png"
                   alt=""
-                  width={38}
-                  height={38}
+                  width={44}
+                  height={44}
                 />
                 <span className="kjar-brand__text">
                   <span className="kjar-brand__title">KJÁR</span>
@@ -99,7 +99,16 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <footer className="kjar-footer">
           <div className="kjar-footer__inner">
             <div className="kjar-footer__brand">
-              <span className="kjar-footer__title">KJÁR</span>
+              <div className="kjar-footer__lockup">
+                <img
+                  className="kjar-footer__mark"
+                  src="/images/logo.png"
+                  alt=""
+                  width={56}
+                  height={56}
+                />
+                <span className="kjar-footer__title">KJÁR</span>
+              </div>
               <p className="kjar-footer__text">
                 Карточная ролевая игра о северном лесе, ремесле рун и людях, которые
                 держат тишину. Здесь живут колода персонажей, хроники эпох и общий
