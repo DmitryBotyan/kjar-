@@ -947,6 +947,11 @@ input[type="radio"] {
     display: block;
   }
 
+  /* На десктопе меню дышит: пункты стоят вразрядку, а не слипшимся блоком */
+  .kjar-nav__list {
+    gap: var(--s4);
+  }
+
   .kjar-drawer {
     display: none;
   }

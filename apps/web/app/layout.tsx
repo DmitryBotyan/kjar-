@@ -7,9 +7,9 @@ import "./globals.css";
 const SITE_URL = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL;
 const CONTACT_EMAIL = process.env.CONTACT_EMAIL || "hello@kjar.ru";
 
-const title = "KJÁR — карточная ролевая игра северных хроник";
+const title = "KJÁR — сказы, которые обрели плоть";
 const description =
-  "Мир KJÁR: колода персонажей, энциклопедия лора, ивенты и обсуждения северных хроник";
+  "Ролевой адопт-проект, посвященный существам, способным проводить Вас в скандинавские суровые времена и показать, на что они способны";
 
 export const metadata = {
   ...(SITE_URL ? { metadataBase: new URL(SITE_URL) } : {}),
@@ -110,9 +110,8 @@ export default function RootLayout({ children }: RootLayoutProps) {
                 <span className="kjar-footer__title">KJÁR</span>
               </div>
               <p className="kjar-footer__text">
-                Карточная ролевая игра о северном лесе, ремесле рун и людях, которые
-                держат тишину. Здесь живут колода персонажей, хроники эпох и общий
-                стол для игроков.
+                Ролевой адопт-проект, посвященный существам, способным проводить Вас в
+                скандинавские суровые времена и показать, на что они способны.
               </p>
               <div className="kjar-footer__stack">
                 <a className="kjar-footer__link" href={`mailto:${CONTACT_EMAIL}`}>
