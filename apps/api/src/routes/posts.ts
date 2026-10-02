@@ -34,11 +34,9 @@ const updatePostSchema = z.object({
   participationType: z.string().optional().nullable(),
 });
 
-// Публичные эндпоинты
 router.get("/", asyncHandler(getPosts));
 router.get("/:slug", asyncHandler(getPostBySlug));
 
-// Защищенные эндпоинты (требуют mod/admin)
 router.post("/", authenticate, requireMinRole("mod"), validateBody(createPostSchema), asyncHandler(createPost));
 router.put("/:slug", authenticate, requireMinRole("mod"), validateParams(slugSchema), validateBody(updatePostSchema), asyncHandler(updatePost));
 router.delete("/:slug", authenticate, requireMinRole("mod"), validateParams(slugSchema), asyncHandler(deletePost));

@@ -65,7 +65,7 @@ export default function AdminCharactersPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error?.message || "Ошибка удаления персонажа");
+        throw new Error(errorData.error?.message || "Ошибка удаления кьяра");
       }
 
       setCharacters(characters.filter((c) => c.id !== deleteModal.character.id));
@@ -75,7 +75,7 @@ export default function AdminCharactersPage() {
         localStorage.removeItem("authToken");
         router.push("/admin");
       } else {
-        setError(err instanceof Error ? err.message : "Ошибка удаления персонажа");
+        setError(err instanceof Error ? err.message : "Ошибка удаления кьяра");
       }
     } finally {
       setDeleting(false);
@@ -93,13 +93,13 @@ export default function AdminCharactersPage() {
   return (
     <div className="kjar-admin">
       <div className="kjar-admin__header">
-        <h1 className="kjar-admin__title">Управление персонажами</h1>
+        <h1 className="kjar-admin__title">Управление кьярами</h1>
         <div>
           <Link href="/admin" className="kjar-button kjar-button--ghost">
             Назад
           </Link>
           <Link href="/admin/characters/new" className="kjar-button kjar-button--primary">
-            Добавить персонажа
+            Добавить кьяра
           </Link>
         </div>
       </div>
@@ -109,9 +109,9 @@ export default function AdminCharactersPage() {
 
         {characters.length === 0 ? (
           <div className="kjar-admin__empty">
-            <p>Персонажей пока нет</p>
+            <p>Кьяров пока нет</p>
             <Link href="/admin/characters/new" className="kjar-button kjar-button--primary">
-              Добавить первого персонажа
+              Добавить первого кьяра
             </Link>
           </div>
         ) : (
@@ -165,8 +165,8 @@ export default function AdminCharactersPage() {
         isOpen={deleteModal.isOpen}
         onClose={() => setDeleteModal({ isOpen: false, character: null })}
         onConfirm={handleDeleteConfirm}
-        title="Удалить персонажа?"
-        message="Вы уверены, что хотите удалить этого персонажа? Это действие нельзя отменить."
+        title="Удалить кьяра?"
+        message="Вы уверены, что хотите удалить этого кьяра? Это действие нельзя отменить."
         itemName={deleteModal.character?.name}
         loading={deleting}
       />

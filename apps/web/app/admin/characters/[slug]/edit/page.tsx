@@ -5,6 +5,9 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { fetchFromAdminApi } from "@/lib/admin-api";
 import ImageUpload from "@/components/admin/ImageUpload";
+import CharacterSheetEditor from "@/components/admin/CharacterSheetEditor";
+import CharacterCardEditor, { type CharacterCardValue } from "@/components/admin/CharacterCardEditor";
+import DictionarySelect from "@/components/admin/DictionarySelect";
 
 export default function EditCharacterPage() {
   const router = useRouter();
@@ -16,6 +19,8 @@ export default function EditCharacterPage() {
   const [error, setError] = useState<string | null>(null);
   const [character, setCharacter] = useState<any>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [stats, setStats] = useState<Record<string, unknown> | null>(null);
+  const [card, setCard] = useState<CharacterCardValue | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
@@ -28,6 +33,11 @@ export default function EditCharacterPage() {
       .then((response) => {
         setCharacter(response.data);
         setImageUrl(response.data.image || null);
+        setStats(
+          response.data.statsJson && typeof response.data.statsJson === "object"
+            ? response.data.statsJson
+            : null
+        );
       })
       .catch((e) => {
         if (e.message.includes("401") || e.message.includes("UNAUTHORIZED")) {
@@ -58,6 +68,8 @@ export default function EditCharacterPage() {
       summary: formData.get("summary") || null,
       description: formData.get("description") || null,
       image: imageUrl,
+      statsJson: stats && Object.keys(stats).length > 0 ? stats : null,
+      ...card,
     };
 
     const token = localStorage.getItem("authToken");
@@ -78,7 +90,7 @@ export default function EditCharacterPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error?.message || "Ошибка обновления персонажа");
+        throw new Error(errorData.error?.message || "Ошибка обновления кьяра");
       }
 
       router.push("/admin/characters");
@@ -87,7 +99,7 @@ export default function EditCharacterPage() {
         localStorage.removeItem("authToken");
         router.push("/admin");
       } else {
-        setError(err instanceof Error ? err.message : "Ошибка обновления персонажа");
+        setError(err instanceof Error ? err.message : "Ошибка обновления кьяра");
       }
     } finally {
       setSaving(false);
@@ -106,7 +118,7 @@ export default function EditCharacterPage() {
     return (
       <div className="kjar-admin">
         <div className="kjar-admin__empty">
-          <p>Персонаж не найден</p>
+          <p>Кьяр не найден</p>
           <Link href="/admin/characters" className="kjar-button kjar-button--primary">
             Вернуться к списку
           </Link>
@@ -118,7 +130,7 @@ export default function EditCharacterPage() {
   return (
     <div className="kjar-admin">
       <div className="kjar-admin__header">
-        <h1 className="kjar-admin__title">Редактировать персонажа</h1>
+        <h1 className="kjar-admin__title">Редактировать кьяра</h1>
         <Link href="/admin/characters" className="kjar-button kjar-button--ghost">
           Назад
         </Link>
@@ -164,35 +176,38 @@ export default function EditCharacterPage() {
             <label className="kjar-label" htmlFor="role">
               Роль *
             </label>
-            <select className="kjar-select" id="role" name="role" required defaultValue={character.role}>
-              <option value="Игрок">Игрок</option>
-              <option value="НПС">НПС</option>
-            </select>
+            <DictionarySelect
+              group="character_role"
+              id="role"
+              name="role"
+              required
+              defaultValue={character.role}
+            />
           </div>
 
           <div className="kjar-field">
             <label className="kjar-label" htmlFor="status">
               Статус *
             </label>
-            <select className="kjar-select" id="status" name="status" required defaultValue={character.status}>
-              <option value="Активна">Активна</option>
-              <option value="На посту">На посту</option>
-              <option value="В пути">В пути</option>
-              <option value="В тени">В тени</option>
-              <option value="Активен">Активен</option>
-            </select>
+            <DictionarySelect
+              group="character_status"
+              id="status"
+              name="status"
+              required
+              defaultValue={character.status}
+            />
           </div>
 
           <div className="kjar-field">
             <label className="kjar-label" htmlFor="species">
-              Вид
+              Род
             </label>
-            <input
-              className="kjar-input"
+            <DictionarySelect
+              group="character_species"
               id="species"
               name="species"
-              type="text"
-              defaultValue={character.species || ""}
+              emptyLabel="Не указан"
+              defaultValue={character.species}
             />
           </div>
 
@@ -224,7 +239,7 @@ export default function EditCharacterPage() {
 
           <div className="kjar-field">
             <label className="kjar-label" htmlFor="description">
-              Полное описание
+              Описание
             </label>
             <textarea
               className="kjar-textarea"
@@ -239,8 +254,12 @@ export default function EditCharacterPage() {
             value={imageUrl || undefined}
             onChange={setImageUrl}
             folder="characters"
-            label="Изображение персонажа"
+            label="Референс кьяра"
           />
+
+          <CharacterCardEditor initial={character} onChange={setCard} />
+
+          <CharacterSheetEditor value={character.statsJson} onChange={setStats} />
 
           <div className="kjar-form-actions">
             <button

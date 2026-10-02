@@ -8,29 +8,29 @@
 
 ### Для Docker окружения (рекомендуется):
 
-`pnpm db:migrate:docker` работает нормально — используйте тот же способ для seed:
+`bun run db:migrate:docker` работает нормально — используйте тот же способ для seed:
 
 ```bash
 # Убедитесь, что контейнеры запущены
-pnpm dev
+bun run dev
 
 # В другом терминале запустите seed
-pnpm db:seed:docker
+bun run db:seed:docker
 ```
 
-Скрипт запускает seed **внутри контейнера API**, где доступен хост `db`. Перед seed при необходимости выполняется `pnpm install` (чтобы подтянуть зависимости вроде bcryptjs).
+Скрипт запускает seed **внутри контейнера API**, где доступен хост `db`. Перед seed при необходимости выполняется `bun install` (чтобы подтянуть зависимости вроде bcryptjs).
 
 ### Для локального окружения:
 
 ```bash
-# Убедитесь, что БД запущена (например, pnpm dev или только db контейнер) и миграции применены
-pnpm db:migrate  # или pnpm db:migrate:docker
+# Убедитесь, что БД запущена (например, bun run dev или только db контейнер) и миграции применены
+bun run db:migrate  # или bun run db:migrate:docker
 
 # Запустите seed
-pnpm db:seed
+bun run db:seed
 ```
 
-При локальном `pnpm db:seed` используется `SEED_LOCALHOST=1`: скрипт подменяет хост `db` на `localhost` в `DATABASE_URL`, если в `.env` указан Docker-вариант (`@db:5432`). При `pnpm db:seed:docker` подмена не выполняется — внутри контейнера хост `db` корректен. Менять `.env` не нужно.
+При локальном `bun run db:seed` используется `SEED_LOCALHOST=1`: скрипт подменяет хост `db` на `localhost` в `DATABASE_URL`, если в `.env` указан Docker-вариант (`@db:5432`). При `bun run db:seed:docker` подмена не выполняется — внутри контейнера хост `db` корректен. Менять `.env` не нужно.
 
 ## Что создаётся
 
@@ -108,7 +108,7 @@ pnpm db:seed
 
 1. **Через Drizzle Studio:**
    ```bash
-   pnpm db:studio
+   bun run db:studio
    ```
 
 2. **Через API:**

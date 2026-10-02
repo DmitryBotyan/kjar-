@@ -3,9 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { HoneypotField, useFormToken } from "../../../components/FormGuard";
+import type { DictionaryEntry } from "@/lib/dictionaries";
 
 interface NewThreadFormProps {
-  categories: string[];
+  categories: DictionaryEntry[];
   knownTags: string[];
 }
 
@@ -78,25 +79,19 @@ export function NewThreadForm({ categories, knownTags }: NewThreadFormProps) {
         <label className="kjar-label" htmlFor="thread-category">
           Раздел
         </label>
-        <input
-          className="kjar-input"
-          id="thread-category"
-          name="category"
-          type="text"
-          list="thread-categories"
-          placeholder="Выберите из списка или впишите свой"
-          maxLength={100}
-        />
-        <datalist id="thread-categories">
+        <select className="kjar-select" id="thread-category" name="category" defaultValue="">
+          <option value="">Без раздела</option>
           {categories.map((category) => (
-            <option key={category} value={category} />
+            <option key={category.code} value={category.code}>
+              {category.label}
+            </option>
           ))}
-        </datalist>
+        </select>
       </div>
 
       <div className="kjar-field">
         <label className="kjar-label" htmlFor="thread-author">
-          Имя или персонаж
+          Имя или кьяр
         </label>
         <input
           className="kjar-input"

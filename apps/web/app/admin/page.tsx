@@ -19,11 +19,9 @@ export default function AdminPage() {
   const [loginLoading, setLoginLoading] = useState(false);
   const [summary, setSummary] = useState<{ newContacts: number; hiddenComments: number } | null>(null);
 
-  // Проверяем токен при загрузке
   useEffect(() => {
     const token = localStorage.getItem("authToken");
     if (token) {
-      // Проверяем валидность токена через API
       fetch("/api/auth/me", {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -65,7 +63,6 @@ export default function AdminPage() {
     const username = formData.get("username") as string | null;
     const password = formData.get("password") as string | null;
 
-    // Проверяем, что поля заполнены
     if (!username || !password) {
       setLoginError("Заполните все поля");
       setLoginLoading(false);
@@ -90,12 +87,10 @@ export default function AdminPage() {
 
       const data = await response.json();
       
-      // Проверяем роль пользователя
       if (!["mod", "admin"].includes(data.data.user.role)) {
         throw new Error("Недостаточно прав для доступа к админке");
       }
 
-      // Сохраняем токен
       localStorage.setItem("authToken", data.data.token);
       setUser(data.data.user);
       setShowLogin(false);
@@ -236,7 +231,13 @@ export default function AdminPage() {
             Ивенты
           </Link>
           <Link href="/admin/characters" className="kjar-admin__nav-item">
-            Персонажи
+            Кьяры
+          </Link>
+          <Link href="/admin/normans" className="kjar-admin__nav-item">
+            Норманны
+          </Link>
+          <Link href="/admin/works" className="kjar-admin__nav-item">
+            Работы
           </Link>
           <Link href="/admin/categories" className="kjar-admin__nav-item">
             Категории
@@ -252,6 +253,9 @@ export default function AdminPage() {
           </Link>
           <Link href="/admin/contacts" className="kjar-admin__nav-item">
             Обращения
+          </Link>
+          <Link href="/admin/dictionaries" className="kjar-admin__nav-item">
+            Справочники
           </Link>
         </nav>
       </div>

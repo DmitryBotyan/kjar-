@@ -19,8 +19,6 @@ const corsOrigin = process.env.CORS_ORIGIN ?? "http://localhost:3000";
 app.use(express.json({ limit: "512kb" }));
 app.use(express.urlencoded({ extended: true, limit: "512kb" }));
 
-
-// CORS с безопасными настройками
 app.use(
   cors({
     origin: corsOrigin,

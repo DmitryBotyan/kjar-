@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { fetchFromAdminApi } from "@/lib/admin-api";
+import DictionarySelect from "@/components/admin/DictionarySelect";
 
 export default function EditArticlePage() {
   const router = useRouter();
@@ -23,7 +24,6 @@ export default function EditArticlePage() {
       return;
     }
 
-    // Загружаем статью и категории параллельно
     Promise.all([
       fetchFromAdminApi<any>(`/articles/${slug}`),
       fetchFromAdminApi<Array<any>>("/categories?limit=100"),
@@ -230,12 +230,13 @@ export default function EditArticlePage() {
             <label className="kjar-label" htmlFor="era">
               Эпоха
             </label>
-            <select className="kjar-select" id="era" name="era" defaultValue={article.era || ""}>
-              <option value="">Не указано</option>
-              <option value="first">Первая</option>
-              <option value="second">Вторая</option>
-              <option value="any">Любая</option>
-            </select>
+            <DictionarySelect
+              group="article_era"
+              id="era"
+              name="era"
+              emptyLabel="Не указано"
+              defaultValue={article.era}
+            />
           </div>
 
           <div className="kjar-form-actions">

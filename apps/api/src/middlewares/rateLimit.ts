@@ -59,7 +59,6 @@ export function rateLimit(
     const current = store[clientId];
 
     if (!current) {
-      // Первый запрос
       store[clientId] = {
         count: 1,
         resetTime: now + windowMs
@@ -86,7 +85,6 @@ export function rateLimit(
   };
 }
 
-// Очистка старых записей каждые 5 минут
 setInterval(() => {
   const now = Date.now();
   for (const [key, record] of Object.entries(store)) {

@@ -1,17 +1,14 @@
 import Link from "next/link";
-import { getTags, getThreads } from "@/lib/api";
+import { getTags } from "@/lib/api";
+import { getDictionary } from "@/lib/dictionaries";
 import { NewThreadForm } from "./NewThreadForm";
 
 export default async function NewDiscussionPage() {
-  // Разделы и теги берём из базы: списка в коде быть не должно
-  const [threadsResponse, tagsResponse] = await Promise.all([
-    getThreads({ limit: 200 }).catch(() => ({ data: [] as any[] })),
+  // Разделы — из справочника админки, теги — из базы тегов
+  const [categories, tagsResponse] = await Promise.all([
+    getDictionary("thread_category").catch(() => []),
     getTags().catch(() => ({ data: [] as any[] }))
   ]);
-
-  const categories = Array.from(
-    new Set(((threadsResponse.data as any[]) || []).map((thread) => thread.category).filter(Boolean))
-  ).sort() as string[];
 
   const knownTags = (((tagsResponse.data as any[]) || []).map((tag) => tag.name) as string[]).sort();
 

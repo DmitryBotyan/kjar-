@@ -35,13 +35,10 @@ const votePollSchema = z.object({
   voterKey: z.string().min(16).max(64).optional(),
 });
 
-// Получить опрос по ID поста
 router.get("/post/:postId", asyncHandler(getPollByPostId));
 
-// Проверить, проголосовал ли пользователь
 router.get("/post/:postId/vote", optionalAuth, asyncHandler(checkUserVote));
 
-// Создать опрос (только для модераторов)
 router.post(
   "/",
   authenticate,
@@ -50,7 +47,6 @@ router.post(
   asyncHandler(createPoll)
 );
 
-// Обновить опрос (только для модераторов)
 router.put(
   "/post/:postId",
   authenticate,

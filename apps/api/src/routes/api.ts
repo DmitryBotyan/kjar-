@@ -12,12 +12,16 @@ import uploadRouter from "./upload.js";
 import pollsRouter from "./polls.js";
 import commentsRouter from "./comments.js";
 import contactsRouter from "./contacts.js";
+import dictionariesRouter from "./dictionaries.js";
+import normansRouter from "./normans.js";
+import worksRouter from "./works.js";
+import { search } from "../controllers/search.js";
+import { asyncHandler } from "../middlewares/asyncHandler.js";
 import { rateLimit } from "../middlewares/rateLimit.js";
 import { issueFormToken } from "../middlewares/antiSpam.js";
 
 const router = Router();
 
-// Rate limiting для всех эндпоинтов
 router.use(rateLimit());
 
 router.get("/", getRoot);
@@ -30,7 +34,6 @@ router.get("/form-token", (_req, res) => {
   res.json({ data: { formToken: issueFormToken() } });
 });
 
-// Публичные эндпоинты (не требуют аутентификации)
 router.use("/auth", authRouter);
 router.use("/articles", articlesRouter);
 router.use("/characters", charactersRouter);
@@ -43,5 +46,9 @@ router.use("/upload", uploadRouter);
 router.use("/polls", pollsRouter);
 router.use("/comments", commentsRouter);
 router.use("/contacts", contactsRouter);
+router.use("/dictionaries", dictionariesRouter);
+router.use("/normans", normansRouter);
+router.use("/works", worksRouter);
+router.get("/search", asyncHandler(search));
 
 export default router;

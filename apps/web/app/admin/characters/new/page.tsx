@@ -4,12 +4,17 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import ImageUpload from "@/components/admin/ImageUpload";
+import CharacterSheetEditor from "@/components/admin/CharacterSheetEditor";
+import CharacterCardEditor, { type CharacterCardValue } from "@/components/admin/CharacterCardEditor";
+import DictionarySelect from "@/components/admin/DictionarySelect";
 
 export default function NewCharacterPage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [stats, setStats] = useState<Record<string, unknown>>({});
+  const [card, setCard] = useState<CharacterCardValue | null>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -27,6 +32,8 @@ export default function NewCharacterPage() {
       summary: formData.get("summary") || null,
       description: formData.get("description") || null,
       image: imageUrl,
+      statsJson: Object.keys(stats).length > 0 ? stats : null,
+      ...card,
     };
 
     const token = localStorage.getItem("authToken");
@@ -47,7 +54,7 @@ export default function NewCharacterPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error?.message || "Ошибка создания персонажа");
+        throw new Error(errorData.error?.message || "Ошибка создания кьяра");
       }
 
       router.push("/admin/characters");
@@ -56,7 +63,7 @@ export default function NewCharacterPage() {
         localStorage.removeItem("authToken");
         router.push("/admin");
       } else {
-        setError(err instanceof Error ? err.message : "Ошибка создания персонажа");
+        setError(err instanceof Error ? err.message : "Ошибка создания кьяра");
       }
     } finally {
       setSaving(false);
@@ -66,7 +73,7 @@ export default function NewCharacterPage() {
   return (
     <div className="kjar-admin">
       <div className="kjar-admin__header">
-        <h1 className="kjar-admin__title">Создать персонажа</h1>
+        <h1 className="kjar-admin__title">Создать кьяра</h1>
         <Link href="/admin/characters" className="kjar-button kjar-button--ghost">
           Назад
         </Link>
@@ -109,34 +116,25 @@ export default function NewCharacterPage() {
             <label className="kjar-label" htmlFor="role">
               Роль *
             </label>
-            <select className="kjar-select" id="role" name="role" required defaultValue="Игрок">
-              <option value="Игрок">Игрок</option>
-              <option value="НПС">НПС</option>
-            </select>
+            <DictionarySelect group="character_role" id="role" name="role" required />
           </div>
 
           <div className="kjar-field">
             <label className="kjar-label" htmlFor="status">
               Статус *
             </label>
-            <select className="kjar-select" id="status" name="status" required defaultValue="Активна">
-              <option value="Активна">Активна</option>
-              <option value="На посту">На посту</option>
-              <option value="В пути">В пути</option>
-              <option value="В тени">В тени</option>
-              <option value="Активен">Активен</option>
-            </select>
+            <DictionarySelect group="character_status" id="status" name="status" required />
           </div>
 
           <div className="kjar-field">
             <label className="kjar-label" htmlFor="species">
-              Вид
+              Род
             </label>
-            <input
-              className="kjar-input"
+            <DictionarySelect
+              group="character_species"
               id="species"
               name="species"
-              type="text"
+              emptyLabel="Не указан"
             />
           </div>
 
@@ -166,7 +164,7 @@ export default function NewCharacterPage() {
 
           <div className="kjar-field">
             <label className="kjar-label" htmlFor="description">
-              Полное описание
+              Описание
             </label>
             <textarea
               className="kjar-textarea"
@@ -180,8 +178,12 @@ export default function NewCharacterPage() {
             value={imageUrl || undefined}
             onChange={setImageUrl}
             folder="characters"
-            label="Изображение персонажа"
+            label="Референс кьяра"
           />
+
+          <CharacterCardEditor onChange={setCard} />
+
+          <CharacterSheetEditor value={null} onChange={setStats} />
 
           <div className="kjar-form-actions">
             <button
@@ -189,7 +191,7 @@ export default function NewCharacterPage() {
               className="kjar-button kjar-button--primary"
               disabled={saving}
             >
-              {saving ? "Создание..." : "Создать персонажа"}
+              {saving ? "Создание..." : "Создать кьяра"}
             </button>
             <Link href="/admin/characters" className="kjar-button kjar-button--ghost">
               Отмена

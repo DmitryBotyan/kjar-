@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { fetchFromAdminApi } from "@/lib/admin-api";
+import DictionarySelect from "@/components/admin/DictionarySelect";
 
 export default function NewArticlePage() {
   const router = useRouter();
@@ -202,12 +203,12 @@ export default function NewArticlePage() {
             <label className="kjar-label" htmlFor="era">
               Эпоха
             </label>
-            <select className="kjar-select" id="era" name="era" defaultValue="">
-              <option value="">Не указано</option>
-              <option value="first">Первая</option>
-              <option value="second">Вторая</option>
-              <option value="any">Любая</option>
-            </select>
+            <DictionarySelect
+              group="article_era"
+              id="era"
+              name="era"
+              emptyLabel="Не указано"
+            />
           </div>
 
           <div className="kjar-form-actions">

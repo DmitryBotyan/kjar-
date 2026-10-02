@@ -4,7 +4,7 @@
 
 ### 1. Настройте `.env` файл
 
-Файл `.env` создастся автоматически при первом запуске `pnpm dev`, но лучше настроить его сразу:
+Файл `.env` создастся автоматически при первом запуске `bun run dev`, но лучше настроить его сразу:
 
 ```bash
 # Скопируйте шаблон (если еще нет)
@@ -26,24 +26,24 @@ openssl rand -base64 32
 ```env
 DATABASE_URL=postgres://kjar:kjar_password@db:5432/kjar
 ```
-**Используйте:** `pnpm db:migrate:docker`
+**Используйте:** `bun run db:migrate:docker`
 
 #### ✅ Вариант 2: Локально
 ```env
 DATABASE_URL=postgres://kjar:kjar_password@localhost:5433/kjar
 ```
-**Используйте:** `pnpm db:migrate`
+**Используйте:** `bun run db:migrate`
 
 ### 3. Запустите проект
 
 ```bash
 # Запуск всех сервисов
-pnpm dev
+bun run dev
 
 # В другом терминале - примените миграции
-pnpm db:migrate:docker  # для Docker
+bun run db:migrate:docker  # для Docker
 # или
-pnpm db:migrate         # для локальной БД
+bun run db:migrate         # для локальной БД
 ```
 
 ### 4. Проверьте работу
@@ -51,7 +51,7 @@ pnpm db:migrate         # для локальной БД
 - Frontend: http://localhost:3000
 - API: http://localhost:3001
 - Adminer: http://localhost:8081
-- Drizzle Studio: `pnpm db:studio`
+- Drizzle Studio: `bun run db:studio`
 
 ---
 
@@ -59,8 +59,8 @@ pnpm db:migrate         # для локальной БД
 
 | Проблема | Решение |
 |----------|---------|
-| `ENOTFOUND db` | Используйте `pnpm db:migrate:docker` или измените `DATABASE_URL` на `localhost` |
-| `connection refused` | Запустите БД: `pnpm dev` или `docker compose up db` |
+| `ENOTFOUND db` | Используйте `bun run db:migrate:docker` или измените `DATABASE_URL` на `localhost` |
+| `connection refused` | Запустите БД: `bun run dev` или `docker compose up db` |
 | `password authentication failed` | Проверьте учетные данные в `.env` |
 
 ---
@@ -69,17 +69,17 @@ pnpm db:migrate         # для локальной БД
 
 ```bash
 # Генерация миграций (после изменения schema.ts)
-pnpm db:generate
+bun run db:generate
 
 # Применение миграций
-pnpm db:migrate:docker  # Docker
-pnpm db:migrate         # Локально
+bun run db:migrate:docker  # Docker
+bun run db:migrate         # Локально
 
 # Просмотр БД
-pnpm db:studio
+bun run db:studio
 
 # Быстрый push схемы (без миграций)
-pnpm db:push
+bun run db:push
 ```
 
 ---

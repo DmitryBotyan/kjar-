@@ -48,7 +48,6 @@ export async function authenticate(
       throw createError("Недействительный токен", 401, "INVALID_TOKEN");
     }
 
-    // Проверяем, что пользователь все еще существует
     const [user] = await db
       .select({
         id: users.id,

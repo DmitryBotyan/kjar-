@@ -18,10 +18,8 @@ const updateTagSchema = z.object({
   slug: z.string().min(1).optional(),
 });
 
-// Публичные эндпоинты
 router.get("/", asyncHandler(getTags));
 
-// Защищенные эндпоинты (требуют mod/admin)
 router.post("/", authenticate, requireMinRole("mod"), validateBody(createTagSchema), asyncHandler(createTag));
 router.put("/:slug", authenticate, requireMinRole("mod"), validateParams(slugSchema), validateBody(updateTagSchema), asyncHandler(updateTag));
 router.delete("/:slug", authenticate, requireMinRole("mod"), validateParams(slugSchema), asyncHandler(deleteTag));

@@ -38,11 +38,9 @@ const updateArticleSchema = z.object({
   status: z.enum(["draft", "published", "archived"]).optional(),
 });
 
-// Публичные эндпоинты
 router.get("/", optionalAuth, validateQuery(articlesQuerySchema), asyncHandler(getArticles));
 router.get("/:slug", optionalAuth, validateParams(slugSchema), asyncHandler(getArticleBySlug));
 
-// Защищенные эндпоинты (требуют mod/admin)
 router.post("/", authenticate, requireMinRole("mod"), validateBody(createArticleSchema), asyncHandler(createArticle));
 router.put("/:slug", authenticate, requireMinRole("mod"), validateParams(slugSchema), validateBody(updateArticleSchema), asyncHandler(updateArticle));
 router.delete("/:slug", authenticate, requireMinRole("mod"), validateParams(slugSchema), asyncHandler(deleteArticle));

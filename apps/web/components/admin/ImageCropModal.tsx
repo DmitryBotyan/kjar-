@@ -53,11 +53,9 @@ export default function ImageCropModal({
       throw new Error("No 2d context");
     }
 
-    // Устанавливаем размер canvas равным размеру обрезанной области
     canvas.width = pixelCrop.width;
     canvas.height = pixelCrop.height;
 
-    // Рисуем обрезанную часть изображения на canvas
     ctx.drawImage(
       image,
       pixelCrop.x,

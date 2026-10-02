@@ -1,6 +1,8 @@
 import Link from "next/link";
 import CharacterCard from "@/components/CharacterCard";
 import { getCharacters, getTags } from "@/lib/api";
+import { getDictionarySet } from "@/lib/dictionaries";
+import type { DictionaryEntry } from "@/lib/dictionaries";
 
 interface CharactersPageProps {
   searchParams: {
@@ -17,13 +19,13 @@ interface CharactersPageProps {
 export default async function CharactersPage({ searchParams }: CharactersPageProps) {
   let characters: any[] = [];
   let tags: any[] = [];
-  let roles: string[] = [];
-  let species: string[] = [];
-  let statuses: string[] = [];
+  let roles: DictionaryEntry[] = [];
+  let species: DictionaryEntry[] = [];
+  let statuses: DictionaryEntry[] = [];
   let total = 0;
 
   try {
-    const [charactersRes, tagsRes, facetsRes] = await Promise.all([
+    const [charactersRes, tagsRes, dictionaries] = await Promise.all([
       getCharacters({
         role: searchParams.role,
         status: searchParams.status,
@@ -34,28 +36,24 @@ export default async function CharactersPage({ searchParams }: CharactersPagePro
         offset: searchParams.offset ? parseInt(searchParams.offset) : 0
       }),
       getTags().catch(() => ({ data: [] })),
-      // Роли, роды и статусы берём из самой колоды, а не из списка в коде
-      getCharacters({ limit: 200 }).catch(() => ({ data: [] }))
+      getDictionarySet()
     ]);
 
     characters = charactersRes.data || [];
     total = charactersRes.total || characters.length;
     tags = tagsRes.data || [];
 
-    const all = (facetsRes.data as any[]) || [];
-    const uniq = (key: string) =>
-      Array.from(new Set(all.map((c: any) => c[key]).filter(Boolean))).sort() as string[];
-    roles = uniq("role");
-    species = uniq("species");
-    statuses = uniq("status");
+    roles = dictionaries.character_role;
+    species = dictionaries.character_species;
+    statuses = dictionaries.character_status;
   } catch (error) {
     console.error("Error loading characters:", error);
   }
 
-  // Сводка считается по фактическим ролям из базы
+  // Сводка: по каждой роли из справочника — сколько карт в текущей выборке
   const byRole = roles.map((role) => ({
-    role,
-    count: characters.filter((c: any) => c.role === role).length
+    role: role.label,
+    count: characters.filter((c: any) => c.role === role.code).length
   }));
 
   const stats = { total: total || characters.length, byRole };
@@ -65,7 +63,7 @@ export default async function CharactersPage({ searchParams }: CharactersPagePro
       <section className="kjar-characters__hero">
         <div className="kjar-characters__inner kjar-characters__hero-grid">
           <header className="kjar-characters__header">
-            <h1 className="kjar-characters__title">Колода персонажей</h1>
+            <h1 className="kjar-characters__title">Колода кьяров</h1>
             <p className="kjar-characters__lead">
               Каждая карта — человек, страж или тот, кого лес пустил обратно. Роль,
               род, поле деятельности и короткая заметка: достаточно, чтобы собрать
@@ -76,12 +74,12 @@ export default async function CharactersPage({ searchParams }: CharactersPagePro
                 {roles.map((role) => (
                   <Link
                     className={`kjar-chip${
-                      searchParams.role === role ? " kjar-chip--accent" : ""
+                      searchParams.role === role.code ? " kjar-chip--accent" : ""
                     }`}
-                    key={role}
-                    href={`/characters?role=${encodeURIComponent(role)}`}
+                    key={role.code}
+                    href={`/characters?role=${encodeURIComponent(role.code)}`}
                   >
-                    {role}
+                    {role.label}
                   </Link>
                 ))}
               </div>
@@ -108,7 +106,7 @@ export default async function CharactersPage({ searchParams }: CharactersPagePro
 
       <section className="kjar-characters__body">
         <div className="kjar-characters__inner kjar-characters__layout">
-          <aside className="kjar-characters__filters" aria-label="Фильтры персонажей">
+          <aside className="kjar-characters__filters" aria-label="Фильтры кьяров">
             <h2 className="kjar-characters__section-title">Фильтры</h2>
             <form className="kjar-characters__form" method="get" action="/characters">
               <div className="kjar-field">
@@ -137,8 +135,8 @@ export default async function CharactersPage({ searchParams }: CharactersPagePro
                 >
                   <option value="">Все роли</option>
                   {roles.map((role) => (
-                    <option key={role} value={role}>
-                      {role}
+                    <option key={role.code} value={role.code}>
+                      {role.label}
                     </option>
                   ))}
                 </select>
@@ -156,8 +154,8 @@ export default async function CharactersPage({ searchParams }: CharactersPagePro
                 >
                   <option value="">Любой род</option>
                   {species.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
+                    <option key={item.code} value={item.code}>
+                      {item.label}
                     </option>
                   ))}
                 </select>
@@ -175,8 +173,8 @@ export default async function CharactersPage({ searchParams }: CharactersPagePro
                 >
                   <option value="">Любой статус</option>
                   {statuses.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
+                    <option key={status.code} value={status.code}>
+                      {status.label}
                     </option>
                   ))}
                 </select>
@@ -214,7 +212,7 @@ export default async function CharactersPage({ searchParams }: CharactersPagePro
             </form>
           </aside>
 
-          <section className="kjar-characters__list" aria-label="Список персонажей">
+          <section className="kjar-characters__list" aria-label="Список кьяров">
             <div className="kjar-characters__list-head">
               <div>
                 <h2 className="kjar-characters__section-title">Карты</h2>

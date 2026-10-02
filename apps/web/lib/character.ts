@@ -1,4 +1,4 @@
-// Карта персонажа читает игровые данные из statsJson: там же лежат пол и номер,
+// Карта кьяра читает игровые данные из statsJson: там же лежат пол и номер,
 // поэтому служебные ключи отделяются от характеристик один раз и здесь.
 
 const GENDER_KEYS = ["пол", "gender", "sex"];
@@ -59,8 +59,21 @@ function asNumber(value: unknown): number | null {
   return null;
 }
 
+// jsonb не хранит порядок ключей, поэтому базовый набор идёт первым и всегда
+// в одном и том же виде, а всё остальное — по алфавиту. Сам набор задаётся
+// справочником character_meter в админке.
+function meterRank(label: string, order: string[]): number {
+  const index = order.indexOf(label.trim().toLowerCase());
+  return index === -1 ? order.length : index;
+}
+
 // Числовые характеристики рисуются шкалами, всё остальное — парами ключ-значение
-export function characterMeters(character: any): Meter[] {
+export function characterMeters(
+  character: any,
+  baseMeters?: Array<{ code: string }>
+): Meter[] {
+  const order = (baseMeters || []).map((meter) => meter.code.trim().toLowerCase());
+
   const entries = Object.entries(stats(character)).filter(
     ([key, value]) => !isServiceKey(key) && asNumber(value) !== null
   );
@@ -68,11 +81,16 @@ export function characterMeters(character: any): Meter[] {
   const values = entries.map(([, value]) => asNumber(value) as number);
   const max = Math.max(100, ...values, 1);
 
-  return entries.map(([key, value]) => ({
-    label: humanize(key),
-    value: asNumber(value) as number,
-    max
-  }));
+  return entries
+    .map(([key, value]) => ({
+      label: humanize(key),
+      value: asNumber(value) as number,
+      max
+    }))
+    .sort((a, b) => {
+      const rank = meterRank(a.label, order) - meterRank(b.label, order);
+      return rank !== 0 ? rank : a.label.localeCompare(b.label, "ru");
+    });
 }
 
 export function characterFacts(character: any): Array<[string, string]> {

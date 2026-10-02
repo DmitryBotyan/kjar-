@@ -61,8 +61,8 @@ export const articles = pgTable(
     slug: varchar("slug", { length: 255 }).notNull().unique(),
     title: text("title").notNull(),
     summary: text("summary"),
-    lead: text("lead"), // Вступление/лид
-    contentMd: text("content_md"), // Markdown контент
+    lead: text("lead"),
+    contentMd: text("content_md"),
     categoryId: integer("category_id").references(() => categories.id),
     era: varchar("era", { length: 64 }), // Первая, Вторая, Любая, Вне эпох
     factsJson: jsonb("facts_json"), // [{label: string, value: string}]
@@ -99,6 +99,21 @@ export const articleTags = pgTable(
 );
 
 // ===== Characters =====
+// Норманны, они же тьорны: владельцы кьяров
+export const normans = pgTable(
+  "normans",
+  {
+    id: serial("id").primaryKey(),
+    slug: varchar("slug", { length: 255 }).notNull().unique(),
+    name: varchar("name", { length: 200 }).notNull(),
+    summary: text("summary"),
+    description: text("description"),
+    image: varchar("image", { length: 500 }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow()
+  }
+);
+
 export const characters = pgTable(
   "characters",
   {
@@ -107,13 +122,19 @@ export const characters = pgTable(
     name: varchar("name", { length: 200 }).notNull(),
     role: varchar("role", { length: 50 }).notNull(), // Игрок, НПС
     status: varchar("status", { length: 50 }).notNull(), // Активна, На посту, В пути, В тени, Активен
-    field: varchar("field", { length: 200 }), // Поле деятельности
+    field: varchar("field", { length: 200 }),
     species: varchar("species", { length: 100 }), // Человек, Страж, Полукровка, Северный род
     summary: text("summary"),
-    description: text("description"), // Полное описание
-    statsJson: jsonb("stats_json"), // Статистика персонажа
-    relationsJson: jsonb("relations_json"), // Связи с другими персонажами
-    image: varchar("image", { length: 500 }), // Путь к изображению
+    description: text("description"),
+    statsJson: jsonb("stats_json"),
+    // Родство: [{ kind, name, slug? }], kind из справочника character_kinship
+    relationsJson: jsonb("relations_json"),
+    tjornId: integer("tjorn_id").references(() => normans.id, { onDelete: "set null" }),
+    favorite: varchar("favorite", { length: 300 }),
+    features: text("features"),
+    // [{ title, note? }]
+    achievementsJson: jsonb("achievements_json"),
+    image: varchar("image", { length: 500 }),
     createdBy: integer("created_by").references(() => users.id),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow()
@@ -122,7 +143,28 @@ export const characters = pgTable(
     slugIdx: index("characters_slug_idx").on(table.slug),
     roleIdx: index("characters_role_idx").on(table.role),
     statusIdx: index("characters_status_idx").on(table.status),
-    speciesIdx: index("characters_species_idx").on(table.species)
+    speciesIdx: index("characters_species_idx").on(table.species),
+    tjornIdx: index("characters_tjorn_idx").on(table.tjornId)
+  })
+);
+
+// Работы игроков по кьяру: присылаются без входа и ждут одобрения
+export const characterWorks = pgTable(
+  "character_works",
+  {
+    id: serial("id").primaryKey(),
+    characterId: integer("character_id")
+      .notNull()
+      .references(() => characters.id, { onDelete: "cascade" }),
+    authorName: varchar("author_name", { length: 100 }).notNull(),
+    title: varchar("title", { length: 200 }),
+    image: varchar("image", { length: 500 }).notNull(),
+    isApproved: boolean("is_approved").notNull().default(false),
+    createdAt: timestamp("created_at").notNull().defaultNow()
+  },
+  (table) => ({
+    characterIdx: index("character_works_character_idx").on(table.characterId),
+    approvedIdx: index("character_works_approved_idx").on(table.isApproved)
   })
 );
 
@@ -153,10 +195,10 @@ export const posts = pgTable(
     title: varchar("title", { length: 500 }).notNull(),
     summary: text("summary"),
     content: text("content"), // Markdown или HTML
-    image: varchar("image", { length: 500 }), // Путь к изображению в S3
+    image: varchar("image", { length: 500 }),
     publishedAt: timestamp("published_at"),
     // Поля для ивентов (особый вид постов)
-    isEvent: boolean("is_event").notNull().default(false), // Флаг, что это ивент
+    isEvent: boolean("is_event").notNull().default(false),
     eventType: varchar("event_type", { length: 50 }), // single, multi-stage
     eventFormat: varchar("event_format", { length: 100 }), // poll, riddle, puzzle, crossword, quest, creative, choice, word-search, image-search
     participationType: varchar("participation_type", { length: 50 }), // individual, mass
@@ -273,9 +315,9 @@ export const polls = pgTable(
       .notNull()
       .references(() => posts.id, { onDelete: "cascade" })
       .unique(), // Один опрос на один пост
-    showPercentages: boolean("show_percentages").notNull().default(false), // Показывать ли проценты
-    isEnded: boolean("is_ended").notNull().default(false), // Завершен ли опрос
-    allowMultiple: boolean("allow_multiple").notNull().default(false), // Разрешено ли выбирать несколько вариантов
+    showPercentages: boolean("show_percentages").notNull().default(false),
+    isEnded: boolean("is_ended").notNull().default(false),
+    allowMultiple: boolean("allow_multiple").notNull().default(false),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow()
   },
@@ -284,7 +326,6 @@ export const polls = pgTable(
   })
 );
 
-// ===== Poll Options (варианты ответов в опросе) =====
 export const pollOptions = pgTable(
   "poll_options",
   {
@@ -292,8 +333,8 @@ export const pollOptions = pgTable(
     pollId: integer("poll_id")
       .notNull()
       .references(() => polls.id, { onDelete: "cascade" }),
-    text: text("text").notNull(), // Текст варианта ответа
-    order: integer("order").notNull().default(0), // Порядок отображения
+    text: text("text").notNull(),
+    order: integer("order").notNull().default(0),
     createdAt: timestamp("created_at").notNull().defaultNow()
   },
   (table) => ({
@@ -340,7 +381,7 @@ export const threads = pgTable(
     id: serial("id").primaryKey(),
     slug: varchar("slug", { length: 255 }).notNull().unique(),
     title: varchar("title", { length: 500 }).notNull(),
-    excerpt: text("excerpt"), // Краткое описание
+    excerpt: text("excerpt"),
     category: varchar("category", { length: 100 }), // Лор, Ивенты, Исследования, Сообщество, Ритуалы, Редактура
     authorId: integer("author_id").references(() => users.id),
     authorName: varchar("author_name", { length: 200 }), // Имя автора (может быть из персонажа)
@@ -384,7 +425,7 @@ export const messages = pgTable(
       .notNull()
       .references(() => threads.id, { onDelete: "cascade" }),
     authorId: integer("author_id").references(() => users.id),
-    authorName: varchar("author_name", { length: 200 }).notNull(), // Имя автора
+    authorName: varchar("author_name", { length: 200 }).notNull(),
     role: varchar("role", { length: 100 }), // Автор темы, Хроникёр, Модератор, Участник, Редактор, Кузнец рун
     content: text("content").notNull(),
     isEdited: boolean("is_edited").notNull().default(false),
@@ -429,12 +470,12 @@ export const comments = pgTable(
   {
     id: serial("id").primaryKey(),
     targetType: varchar("target_type", { length: 50 }).notNull(), // post, event, article
-    targetId: integer("target_id").notNull(), // ID поста/ивента/статьи
-    authorName: varchar("author_name", { length: 100 }).notNull(), // Никнейм автора
-    content: text("content").notNull(), // Текст комментария
-    image: varchar("image", { length: 500 }), // URL изображения (S3)
-    parentId: integer("parent_id").references((): any => comments.id, { onDelete: "cascade" }), // Для ответов на комментарии
-    isApproved: boolean("is_approved").notNull().default(true), // Модерация (по умолчанию одобрен)
+    targetId: integer("target_id").notNull(),
+    authorName: varchar("author_name", { length: 100 }).notNull(),
+    content: text("content").notNull(),
+    image: varchar("image", { length: 500 }),
+    parentId: integer("parent_id").references((): any => comments.id, { onDelete: "cascade" }),
+    isApproved: boolean("is_approved").notNull().default(true),
     createdAt: timestamp("created_at").notNull().defaultNow()
   },
   (table) => ({
@@ -452,6 +493,8 @@ export const contactRequests = pgTable(
     name: varchar("name", { length: 200 }).notNull(),
     // Канал для ответа: почта или мессенджер, заполняет сам отправитель
     contact: varchar("contact", { length: 200 }).notNull(),
+    // Тип обращения из справочника contact_request_type
+    requestType: varchar("request_type", { length: 100 }),
     subject: varchar("subject", { length: 300 }).notNull(),
     message: text("message").notNull(),
     status: varchar("status", { length: 24 }).notNull().default("new"), // new, in_progress, done
@@ -459,7 +502,40 @@ export const contactRequests = pgTable(
   },
   (table) => ({
     statusIdx: index("contact_requests_status_idx").on(table.status),
+    requestTypeIdx: index("contact_requests_type_idx").on(table.requestType),
     createdAtIdx: index("contact_requests_created_at_idx").on(table.createdAt)
+  })
+);
+
+// ===== Dictionaries =====
+// Справочники значений, которые редактор выбирает в админке: роли и статусы
+// персонажей, типы и форматы ивентов, эпохи, разделы обсуждений. Раньше эти
+// наборы были расписаны в формах фронтенда, из-за чего подписи расходились
+// между админкой и сайтом. Теперь источник один — эта таблица.
+export const dictionaries = pgTable(
+  "dictionaries",
+  {
+    id: serial("id").primaryKey(),
+    // Группа справочника: character_role, character_status, character_species,
+    // character_meter, event_type, event_format, participation_type,
+    // article_era, thread_category, contact_request_type
+    group: varchar("group_key", { length: 64 }).notNull(),
+    // Код — то, что лежит в контентных таблицах (posts.event_type и подобных)
+    code: varchar("code", { length: 100 }).notNull(),
+    label: varchar("label", { length: 200 }).notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    // Снятая галочка убирает значение из новых форм, но не ломает старые записи
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow()
+  },
+  (table) => ({
+    groupIdx: index("dictionaries_group_idx").on(table.group),
+    sortIdx: index("dictionaries_sort_idx").on(table.group, table.sortOrder),
+    groupCodeUnique: unique("dictionaries_group_code_unique").on(
+      table.group,
+      table.code
+    )
   })
 );
 

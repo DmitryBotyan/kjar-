@@ -1,7 +1,3 @@
-/**
- * Утилиты для работы с API в админке
- * Использует токен из localStorage для аутентификации
- */
 
 const API_BASE_PATH = "/api";
 
@@ -32,9 +28,6 @@ function getBaseUrl(): string {
   return window.location.origin;
 }
 
-/**
- * Выполняет запрос к API с токеном из localStorage
- */
 export async function fetchFromAdminApi<T>(
   endpoint: string,
   options: RequestInit = {}

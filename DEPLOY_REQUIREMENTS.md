@@ -49,7 +49,7 @@ cd /opt/kjar && docker compose --env-file .env.production -f docker/docker-compo
 
 ```
 cd /opt/kjar && docker compose --env-file .env.production -f docker/docker-compose.prod.yml \
-  exec -T -e ADMIN_PASSWORD='пароль' api node --import tsx src/scripts/createAdmin.ts логин "$ADMIN_PASSWORD"
+  exec -T -e ADMIN_PASSWORD='пароль' api bun src/scripts/createAdmin.ts логин "$ADMIN_PASSWORD"
 ```
 
 Тем же скриптом меняется пароль существующего пользователя.
@@ -67,7 +67,7 @@ cd /opt/kjar && docker compose --env-file .env.production -f docker/docker-compo
 | Компонент | Что это | Память в простое (замер на dev) | Заметки |
 |---|---|---|---|
 | `web` | Next.js 14, Node 22 | ~590 МБ (dev) / ~250–350 МБ (prod) | в проде легче: нет watch и dev-оверлея |
-| `api` | Express + Drizzle, Node 22 | ~140 МБ | |
+| `api` | Express + Drizzle, bun | ~140 МБ | |
 | `db` | PostgreSQL 16 | ~25 МБ пустая / 150–400 МБ рабочая | растёт под кэш и соединения |
 | `minio` | S3-хранилище картинок | ~90 МБ | можно заменить внешним S3 и не держать вовсе |
 | `nginx` | реверс-прокси + TLS | ~20 МБ | ставится сверх compose |
@@ -266,7 +266,7 @@ free -h           # в строке Swap те же 2G
 | `.env.production.example` | шаблон боевых переменных, включая строгий лимит запросов |
 | `scripts/server-bootstrap.sh` | на сервере: swap, docker, ufw, каталог `/opt/kjar` |
 | `scripts/deploy.sh` | с локальной машины: rsync, сборка, миграции, запуск |
-| `.dockerignore` | без него `COPY . .` затирал модули симлинками pnpm |
+| `.dockerignore` | без него `COPY . .` затирал модули симлинками bun |
 
 Проверено на локальной машине: стек поднимается, миграции применяются, все девять
 маршрутов отдают 200, стили и статика на месте.
@@ -284,8 +284,8 @@ free -h           # в строке Swap те же 2G
 
 Три грабли, на которые напоролся при сборке (уже обойдены, но знать полезно):
 
-1. **pnpm + standalone.** Next копирует `node_modules` как есть, а pnpm кладёт туда
-   симлинки на `.pnpm`, которые в образе указывают в никуда. Лечится `node-linker=hoisted`
+1. **bun + standalone.** Next копирует `node_modules` как есть, а bun кладёт туда
+   симлинки на `.bun`, которые в образе указывают в никуда. Лечится `node-linker=hoisted`
    на этапе установки.
 2. **Отсутствие `.dockerignore`.** Локальные `node_modules` попадали в контекст и
    затирали установленные в образе.

@@ -2,9 +2,6 @@ import type { Request, Response } from "express";
 import { uploadFile, deleteFile, getPublicUrl, fileExists } from "../storage/s3.js";
 import { createError } from "../middlewares/errorHandler.js";
 
-/**
- * Загружает один файл
- */
 export async function uploadSingleFile(req: Request, res: Response) {
   try {
     if (!req.file) {
@@ -33,9 +30,6 @@ export async function uploadSingleFile(req: Request, res: Response) {
   }
 }
 
-/**
- * Загружает несколько файлов
- */
 export async function uploadMultipleFiles(req: Request, res: Response) {
   try {
     if (!req.files || (Array.isArray(req.files) && req.files.length === 0)) {
@@ -68,9 +62,6 @@ export async function uploadMultipleFiles(req: Request, res: Response) {
   }
 }
 
-/**
- * Удаляет файл
- */
 export async function deleteFileByKey(req: Request, res: Response) {
   try {
     const { key } = req.params;
@@ -105,9 +96,6 @@ export async function deleteFileByKey(req: Request, res: Response) {
   }
 }
 
-/**
- * Получает информацию о файле
- */
 export async function getFileInfo(req: Request, res: Response) {
   try {
     const { key } = req.params;

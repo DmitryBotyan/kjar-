@@ -68,7 +68,6 @@ export function validateParams<T extends z.ZodTypeAny>(schema: T) {
   };
 }
 
-// Схемы валидации для общих параметров
 export const paginationSchema = z.object({
   limit: z.string().regex(/^\d+$/).transform(Number).pipe(z.number().min(1).max(100)).default("50"),
   offset: z.string().regex(/^\d+$/).transform(Number).pipe(z.number().min(0)).default("0")

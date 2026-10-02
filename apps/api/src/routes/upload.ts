@@ -13,13 +13,11 @@ import { rateLimit } from "../middlewares/rateLimit.js";
 
 const router = Router();
 
-// Все эндпоинты требуют аутентификации
 router.use(authenticate);
 
 // Отдельный лимит на загрузку: 30 файлов в час с одного аккаунта
 const uploadLimit = rateLimit(30, 60 * 60 * 1000, "upload");
 
-// Загрузка одного файла
 router.post(
   "/single",
   uploadLimit,
@@ -27,7 +25,6 @@ router.post(
   asyncHandler(uploadSingleFile)
 );
 
-// Загрузка нескольких файлов
 router.post(
   "/multiple",
   uploadLimit,
@@ -35,11 +32,8 @@ router.post(
   asyncHandler(uploadMultipleFiles)
 );
 
-// Получение информации о файле
-// Чужие файлы по ключу смотрит и удаляет только модератор
 router.get("/:key", requireMinRole("mod"), asyncHandler(getFileInfo));
 
-// Удаление файла
 router.delete("/:key", requireMinRole("mod"), asyncHandler(deleteFileByKey));
 
 export default router;

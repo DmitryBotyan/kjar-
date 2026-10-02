@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { getThreads } from "@/lib/api";
+import { getDictionary, labelFor } from "@/lib/dictionaries";
+import type { DictionaryEntry } from "@/lib/dictionaries";
 
 interface DiscussionsPageProps {
   searchParams: {
@@ -13,7 +15,7 @@ interface DiscussionsPageProps {
 
 export default async function DiscussionsPage({ searchParams }: DiscussionsPageProps) {
   let threads: any[] = [];
-  let categories: string[] = [];
+  let categories: DictionaryEntry[] = [];
   let total = 0;
 
   try {
@@ -28,11 +30,8 @@ export default async function DiscussionsPage({ searchParams }: DiscussionsPageP
     threads = response.data || [];
     total = response.total || threads.length;
 
-    // Разделы берём из существующих тем
-    const facets = await getThreads({ limit: 200 }).catch(() => ({ data: [] }));
-    categories = Array.from(
-      new Set(((facets.data as any[]) || []).map((t: any) => t.category).filter(Boolean))
-    ).sort() as string[];
+    // Разделы — из справочника админки, а не из уже заведённых тем
+    categories = await getDictionary("thread_category").catch(() => []);
   } catch (error) {
     console.error("Error loading threads:", error);
   }
@@ -67,12 +66,12 @@ export default async function DiscussionsPage({ searchParams }: DiscussionsPageP
               {categories.map((category) => (
                 <Link
                   className={`kjar-chip${
-                    searchParams.category === category ? " kjar-chip--accent" : ""
+                    searchParams.category === category.code ? " kjar-chip--accent" : ""
                   }`}
-                  key={category}
-                  href={`/discussions?category=${encodeURIComponent(category)}`}
+                  key={category.code}
+                  href={`/discussions?category=${encodeURIComponent(category.code)}`}
                 >
-                  {category}
+                  {category.label}
                 </Link>
               ))}
             </div>
@@ -92,7 +91,9 @@ export default async function DiscussionsPage({ searchParams }: DiscussionsPageP
             <div className="kjar-forum__topics-head">
               <div>
                 <h2 className="kjar-forum__section-title">
-                  {searchParams.category ? searchParams.category : "Актуальные темы"}
+                  {searchParams.category
+                    ? labelFor(categories, searchParams.category)
+                    : "Актуальные темы"}
                 </h2>
                 <p className="kjar-forum__section-subtitle">
                   Показано {threads.length} из {total}
@@ -142,7 +143,9 @@ export default async function DiscussionsPage({ searchParams }: DiscussionsPageP
                             <span className="kjar-chip kjar-chip--accent">Закреплена</span>
                           )}
                           {thread.category && (
-                            <span className="kjar-chip">{thread.category}</span>
+                            <span className="kjar-chip">
+                              {labelFor(categories, thread.category)}
+                            </span>
                           )}
                           {thread.tags &&
                             thread.tags.slice(0, 3).map((tag: any) => (

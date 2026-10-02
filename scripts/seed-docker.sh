@@ -14,8 +14,8 @@ API_PS_OUTPUT=$(docker compose --env-file "$ROOT_DIR/.env" -f docker/docker-comp
 if ! echo "$API_PS_OUTPUT" | grep -qE "(Up|running)"; then
   echo "❌ Контейнер API не запущен"
   echo ""
-  echo "Запустите контейнеры: pnpm dev"
-  echo "Затем в другом терминале: pnpm db:seed:docker"
+  echo "Запустите контейнеры: bun run dev"
+  echo "Затем в другом терминале: bun run db:seed:docker"
   exit 1
 fi
 
@@ -28,7 +28,7 @@ if ! echo "$DB_PS_OUTPUT" | grep -qE "(Up|running)"; then
 fi
 
 echo "📦 Установка зависимостей..."
-docker compose --env-file "$ROOT_DIR/.env" -f docker/docker-compose.dev.yml exec -T api sh -c "cd /app && CI=true pnpm install --frozen-lockfile"
+docker compose --env-file "$ROOT_DIR/.env" -f docker/docker-compose.dev.yml exec -T api sh -c "cd /app && CI=true bun install --frozen-lockfile"
 
 echo "🌱 Запуск seed в Docker контейнере API..."
-docker compose --env-file "$ROOT_DIR/.env" -f docker/docker-compose.dev.yml exec -T api sh -c "cd /app && pnpm --filter @kjar/db seed"
+docker compose --env-file "$ROOT_DIR/.env" -f docker/docker-compose.dev.yml exec -T api sh -c "cd /app && bun run --filter @kjar/db seed"

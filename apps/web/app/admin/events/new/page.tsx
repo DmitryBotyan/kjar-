@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import ImageUpload from "@/components/admin/ImageUpload";
+import DictionarySelect from "@/components/admin/DictionarySelect";
 
 export default function NewEventPage() {
   const router = useRouter();
@@ -18,7 +19,6 @@ export default function NewEventPage() {
 
     const formData = new FormData(e.currentTarget);
     
-    // Преобразуем datetime-local в ISO формат
     const publishedAtValue = formData.get("publishedAt");
     let publishedAt: string | null = null;
     if (publishedAtValue && typeof publishedAtValue === "string" && publishedAtValue.trim() !== "") {
@@ -161,40 +161,36 @@ export default function NewEventPage() {
             <label className="kjar-label" htmlFor="eventType">
               Тип ивента
             </label>
-            <select className="kjar-select" id="eventType" name="eventType" defaultValue="">
-              <option value="">Не указано</option>
-              <option value="single">Одноэтапный</option>
-              <option value="multi-stage">Многоэтапный</option>
-            </select>
+            <DictionarySelect
+              group="event_type"
+              id="eventType"
+              name="eventType"
+              emptyLabel="Не указано"
+            />
           </div>
 
           <div className="kjar-field">
             <label className="kjar-label" htmlFor="eventFormat">
               Формат ивента
             </label>
-            <select className="kjar-select" id="eventFormat" name="eventFormat" defaultValue="">
-              <option value="">Не указано</option>
-              <option value="poll">Опрос</option>
-              <option value="riddle">Загадка</option>
-              <option value="puzzle">Головоломка</option>
-              <option value="crossword">Кроссворд</option>
-              <option value="quest">Квест</option>
-              <option value="creative">Творческий</option>
-              <option value="choice">Выбор</option>
-              <option value="word-search">Поиск слов</option>
-              <option value="image-search">Поиск изображений</option>
-            </select>
+            <DictionarySelect
+              group="event_format"
+              id="eventFormat"
+              name="eventFormat"
+              emptyLabel="Не указано"
+            />
           </div>
 
           <div className="kjar-field">
             <label className="kjar-label" htmlFor="participationType">
               Тип участия
             </label>
-            <select className="kjar-select" id="participationType" name="participationType" defaultValue="">
-              <option value="">Не указано</option>
-              <option value="individual">Индивидуальное</option>
-              <option value="mass">Массовое</option>
-            </select>
+            <DictionarySelect
+              group="participation_type"
+              id="participationType"
+              name="participationType"
+              emptyLabel="Не указано"
+            />
           </div>
 
           <div className="kjar-form-actions">

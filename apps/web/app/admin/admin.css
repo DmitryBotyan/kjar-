@@ -55,3 +55,144 @@ body.kjar-admin-body .kjar-footer {
   color: var(--ash);
   font-size: var(--t-xs);
 }
+
+/* Лист персонажа: паспорт карты и характеристики внутри общей формы */
+.kjar-sheet {
+  display: grid;
+  gap: var(--s4);
+  padding-top: var(--s3);
+  border-top: 1px solid var(--line);
+}
+
+.kjar-sheet__block {
+  display: grid;
+  gap: var(--s2);
+}
+
+.kjar-sheet__title {
+  margin: 0;
+  font-family: var(--display);
+  font-size: var(--t-m);
+  font-weight: 500;
+}
+
+.kjar-sheet__note {
+  margin: 0;
+  color: var(--ash);
+  font-size: var(--t-xs);
+}
+
+.kjar-sheet__passport {
+  display: grid;
+  gap: var(--s3);
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+}
+
+.kjar-sheet__rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--s2);
+}
+
+.kjar-sheet__row {
+  display: grid;
+  gap: var(--s2);
+  grid-template-columns: minmax(0, 1fr) 110px auto;
+  align-items: center;
+}
+
+@media (max-width: 600px) {
+  .kjar-sheet__row {
+    grid-template-columns: minmax(0, 1fr) 90px;
+  }
+
+  .kjar-sheet__row .kjar-button {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ===== Справочники ===== */
+
+.kjar-admin__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  margin-bottom: var(--s3);
+}
+
+/* Кнопка-чип: переключение группы без перезагрузки страницы */
+.kjar-admin__chips .kjar-chip {
+  gap: var(--s1);
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.kjar-admin__chips .kjar-chip--accent {
+  border-color: var(--gold);
+}
+
+.kjar-admin__chip-count {
+  color: var(--ash);
+  font-variant-numeric: tabular-nums;
+}
+
+.kjar-admin__note {
+  margin: 0 0 var(--s3);
+  color: var(--ash);
+  font-size: var(--t-xs);
+}
+
+.kjar-admin__inline-form {
+  display: grid;
+  gap: var(--s2);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 110px auto;
+  align-items: end;
+  margin-top: var(--s4);
+  padding-top: var(--s3);
+  border-top: 1px solid var(--line);
+}
+
+.kjar-input--narrow {
+  max-width: 110px;
+}
+
+@media (max-width: 720px) {
+  .kjar-admin__inline-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .kjar-input--narrow {
+    max-width: none;
+  }
+}
+
+.kjar-sheet__row--pair {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto;
+}
+
+.kjar-sheet__row--kin {
+  grid-template-columns: 140px minmax(0, 1fr) minmax(0, 1fr) auto;
+}
+
+@media (max-width: 600px) {
+  .kjar-sheet__row--pair,
+  .kjar-sheet__row--kin {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.kjar-admin__thumb {
+  display: block;
+  width: 72px;
+  height: 72px;
+  border-radius: var(--r-field);
+  object-fit: cover;
+}
+
+.kjar-sheet .kjar-button svg {
+  width: 16px;
+  height: 16px;
+}

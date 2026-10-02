@@ -1,27 +1,36 @@
 # Продакшн-образ. Собирается один раз, из него берутся два таргета: web и api.
 # Сборка: docker compose -f docker/docker-compose.prod.yml build
 
+# node:22-alpine, а не oven/bun: рантайм Next остаётся на Node, а Docker Hub
+# с российских адресов ограничивает анонимные загрузки. bun ставится из npm.
 FROM node:22-alpine AS base
-RUN corepack enable
+# Единственный внешний источник — реестр npm. Подменяется при сборке:
+#   docker build --build-arg NPM_REGISTRY=https://зеркало ...
+ARG NPM_REGISTRY=https://registry.npmjs.org
+ENV BUN_CONFIG_REGISTRY=$NPM_REGISTRY
+RUN npm i -g bun@1.3.8 --no-fund --no-audit --registry="$NPM_REGISTRY"
 WORKDIR /app
 ENV CI=true
 
 # ---------- зависимости ----------
-# node-linker=hoisted обязателен: standalone-сборка Next копирует node_modules как есть,
-# а симлинки pnpm указывают на .pnpm вне копируемого дерева и в образе ломаются
+# Плоская раскладка задана в bunfig.toml: standalone-сборка Next копирует
+# node_modules как есть, а симлинки изолированного линкера указывают на общее
+# хранилище вне копируемого дерева и в образе ломаются
 FROM base AS deps
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json bun.lock bunfig.toml ./
 COPY apps/web/package.json apps/web/package.json
 COPY apps/api/package.json apps/api/package.json
 COPY packages/db/package.json packages/db/package.json
-RUN printf "node-linker=hoisted\nshamefully-hoist=true\n" > .npmrc && pnpm install --frozen-lockfile
+RUN bun install --frozen-lockfile
 
 # ---------- сборка Next ----------
 FROM base AS web-builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN pnpm --filter @kjar/web build
+# Сам Next собирается под Node: bun run запускает бинарь с шебангом node как
+# есть, и standalone-выход не отличается от прежнего
+RUN bun run --filter @kjar/web build
 
 # ---------- рантайм Next ----------
 # standalone уже содержит нужные модули, остальное не тащим
@@ -42,19 +51,19 @@ EXPOSE 3000
 CMD ["node", "apps/web/server.js"]
 
 # ---------- рантайм API ----------
-# @kjar/db отдаёт исходники на TypeScript, поэтому api запускается через tsx:
-# это дешевле, чем городить бандлер ради одного пакета в монорепозитории
+# @kjar/db отдаёт исходники на TypeScript, и bun исполняет их напрямую:
+# отдельный шаг сборки и загрузчик tsx больше не нужны
 FROM base AS api
 ENV NODE_ENV=production
 COPY --from=deps /app/node_modules ./node_modules
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json bun.lock bunfig.toml ./
 COPY apps/api ./apps/api
 COPY packages/db ./packages/db
-# Ссылка на workspace-пакет: в hoisted-раскладке pnpm не создаёт её на этапе deps,
-# потому что исходников пакета там ещё нет
+# Ссылка на workspace-пакет: на этапе deps исходников пакета ещё нет,
+# поэтому ссылка там висит в пустоту и её нужно переставить
 RUN mkdir -p node_modules/@kjar && ln -sfn /app/packages/db node_modules/@kjar/db
 RUN addgroup -g 1001 -S nodejs && adduser -S api -u 1001 && chown -R api:nodejs /app
 USER api
 WORKDIR /app/apps/api
 EXPOSE 3001
-CMD ["node", "--import", "tsx", "src/index.ts"]
+CMD ["bun", "src/index.ts"]

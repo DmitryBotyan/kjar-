@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getThreadBySlug } from "@/lib/api";
+import { getDictionary, labelFor } from "@/lib/dictionaries";
 import { ReplyForm } from "./ReplyForm";
 
 type DiscussionPageProps = {
@@ -20,6 +21,7 @@ function formatDateTime(value?: string | null) {
 
 export default async function DiscussionThreadPage({ params }: DiscussionPageProps) {
   let thread: any = null;
+  const categories = await getDictionary("thread_category").catch(() => []);
 
   try {
     const response = await getThreadBySlug(params.slug);
@@ -33,6 +35,7 @@ export default async function DiscussionThreadPage({ params }: DiscussionPagePro
     notFound();
   }
 
+  const categoryLabel = labelFor(categories, thread.category);
   const messages: any[] = Array.isArray(thread.messages) ? thread.messages : [];
   const replies = Math.max(messages.length - 1, 0);
   const lastMessage = messages[messages.length - 1];
@@ -47,7 +50,7 @@ export default async function DiscussionThreadPage({ params }: DiscussionPagePro
           <h1 className="kjar-thread__title">{thread.title}</h1>
           {thread.excerpt && <p className="kjar-thread__lead">{thread.excerpt}</p>}
           <div className="kjar-thread__meta">
-            {thread.category && <span className="kjar-chip">{thread.category}</span>}
+            {categoryLabel && <span className="kjar-chip">{categoryLabel}</span>}
             {thread.tags &&
               thread.tags.map((tag: any) => (
                 <span className="kjar-chip" key={tag.id || tag.slug || tag}>

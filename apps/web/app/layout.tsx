@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { Menu, Search } from "lucide-react";
-import { alegreya, golos, norse } from "./fonts";
+import { Menu } from "lucide-react";
+import SearchBox from "@/components/SearchBox";
+import { alegreya, golos } from "./fonts";
+import "./norse.css";
 import "./globals.css";
 
 // Адрес сайта и почта редакции задаются окружением: в коде их быть не должно
@@ -28,6 +30,7 @@ const navigation = [
   { href: "/", label: "Главная" },
   { href: "/lore", label: "Свод" },
   { href: "/characters", label: "Звери" },
+  { href: "/normans", label: "Норманны" },
   { href: "/posts", label: "Посты" },
   { href: "/events", label: "События" },
   { href: "/discussions", label: "Важное" },
@@ -40,7 +43,7 @@ type RootLayoutProps = {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="ru" className={`${norse.variable} ${alegreya.variable} ${golos.variable}`}>
+    <html lang="ru" className={`${alegreya.variable} ${golos.variable}`}>
       <body>
         <header className="kjar-header">
           <div className="kjar-header__inner">
@@ -71,10 +74,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
             </nav>
 
             <div className="kjar-header__tools">
-              <Link className="kjar-search" href="/search" title="Поиск по миру">
-                <Search className="kjar-search__icon" aria-hidden="true" />
-                <span className="kjar-sr-only">Поиск по миру</span>
-              </Link>
+              <SearchBox />
 
               <details className="kjar-drawer">
                 <summary className="kjar-drawer__trigger">
@@ -136,6 +136,11 @@ export default function RootLayout({ children }: RootLayoutProps) {
                   <li>
                     <Link className="kjar-footer__link" href="/characters">
                       Колода зверей
+                    </Link>
+                  </li>
+                  <li>
+                    <Link className="kjar-footer__link" href="/normans">
+                      Норманны
                     </Link>
                   </li>
                   <li>

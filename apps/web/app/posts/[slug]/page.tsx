@@ -120,7 +120,7 @@ export default async function PostPage({ params }: PostPageProps) {
                 </li>
                 <li>
                   <Link className="kjar-row-link" href="/characters">
-                    <span className="kjar-row-link__title">Колода персонажей</span>
+                    <span className="kjar-row-link__title">Колода кьяров</span>
                     <span className="kjar-row-link__meta">карты</span>
                   </Link>
                 </li>

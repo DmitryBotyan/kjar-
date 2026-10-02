@@ -17,7 +17,6 @@ export default function MarkdownRenderer({
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
-          // Заголовки
           h1: ({ node, ...props }) => (
             <h1 className="kjar-markdown__h1" {...props} />
           ),
@@ -36,11 +35,9 @@ export default function MarkdownRenderer({
           h6: ({ node, ...props }) => (
             <h6 className="kjar-markdown__h6" {...props} />
           ),
-          // Параграфы
           p: ({ node, ...props }) => (
             <p className="kjar-markdown__p" {...props} />
           ),
-          // Списки
           ul: ({ node, ...props }) => (
             <ul className="kjar-markdown__ul" {...props} />
           ),
@@ -50,15 +47,12 @@ export default function MarkdownRenderer({
           li: ({ node, ...props }) => (
             <li className="kjar-markdown__li" {...props} />
           ),
-          // Ссылки
           a: ({ node, ...props }) => (
             <a className="kjar-markdown__a" {...props} />
           ),
-          // Изображения
           img: ({ node, ...props }) => (
             <img className="kjar-markdown__img" {...props} />
           ),
-          // Код
           code: ({ node, inline, ...props }: any) => {
             if (inline) {
               return <code className="kjar-markdown__code-inline" {...props} />;
@@ -68,15 +62,12 @@ export default function MarkdownRenderer({
           pre: ({ node, ...props }) => (
             <pre className="kjar-markdown__pre" {...props} />
           ),
-          // Блоки цитат
           blockquote: ({ node, ...props }) => (
             <blockquote className="kjar-markdown__blockquote" {...props} />
           ),
-          // Горизонтальная линия
           hr: ({ node, ...props }) => (
             <hr className="kjar-markdown__hr" {...props} />
           ),
-          // Таблицы
           table: ({ node, ...props }) => (
             <table className="kjar-markdown__table" {...props} />
           ),
@@ -95,7 +86,6 @@ export default function MarkdownRenderer({
           td: ({ node, ...props }) => (
             <td className="kjar-markdown__td" {...props} />
           ),
-          // Выделение текста
           strong: ({ node, ...props }) => (
             <strong className="kjar-markdown__strong" {...props} />
           ),

@@ -4,11 +4,14 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import DeleteConfirmModal from "@/components/admin/DeleteConfirmModal";
 import { adminRequest, useAdminGuard } from "@/lib/useAdminGuard";
+import { useDictionary } from "@/lib/useDictionaries";
+import { labelFor } from "@/lib/dictionaries";
 
 interface ContactRequest {
   id: number;
   name: string;
   contact: string;
+  requestType?: string | null;
   subject: string;
   message: string;
   status: string;
@@ -23,6 +26,7 @@ const STATUSES = [
 
 export default function AdminContactsPage() {
   const { requireToken, handleError } = useAdminGuard();
+  const { entries: requestTypes } = useDictionary("contact_request_type");
   const [requests, setRequests] = useState<ContactRequest[]>([]);
   // Со сводки на главной приходят по ссылке ?status=new — учитываем это
   const [filter, setFilter] = useState(() => {
@@ -130,6 +134,7 @@ export default function AdminContactsPage() {
                   <th>Дата</th>
                   <th>Имя</th>
                   <th>Связь</th>
+                  <th>Тип</th>
                   <th>Тема и сообщение</th>
                   <th>Статус</th>
                   <th>Действия</th>
@@ -141,6 +146,7 @@ export default function AdminContactsPage() {
                     <td>{new Date(request.createdAt).toLocaleString("ru-RU")}</td>
                     <td>{request.name}</td>
                     <td>{request.contact}</td>
+                    <td>{labelFor(requestTypes, request.requestType) || "—"}</td>
                     <td>
                       <strong>{request.subject}</strong>
                       <br />

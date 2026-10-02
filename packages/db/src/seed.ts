@@ -27,7 +27,6 @@ import {
   pollVotes
 } from "./schema.js";
 
-// Загружаем переменные окружения из .env файла в корне проекта
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const rootDir = resolve(__dirname, "../../..");
@@ -41,7 +40,7 @@ if (!connectionString) {
   process.exit(1);
 }
 
-// При локальном запуске (pnpm db:seed) хост "db" недоступен — используем localhost.
+// При локальном запуске (bun run db:seed) хост "db" недоступен — используем localhost.
 // При seed:docker подмена не нужна: внутри контейнера localhost = сам контейнер, БД в "db".
 if (process.env.SEED_LOCALHOST === "1" && (connectionString.includes("@db:") || connectionString.includes("@db/"))) {
   // Снаружи БД видна на DB_PORT (внутри сети docker — всегда 5432)
@@ -82,7 +81,6 @@ async function seed() {
     await db.delete(categories);
     await db.delete(users);
 
-    // 1. Создаём пользователей
     console.log("👥 Создание пользователей...");
     const passwordHash = await bcrypt.hash("password123", SALT_ROUNDS);
     
@@ -133,7 +131,6 @@ async function seed() {
 
     console.log(`✅ Создано ${5} пользователей`);
 
-    // 2. Создаём категории
     console.log("📁 Создание категорий...");
     const [categoryGeo] = await db
       .insert(categories)
@@ -173,7 +170,6 @@ async function seed() {
 
     console.log(`✅ Создано ${4} категорий`);
 
-    // 3. Создаём теги
     console.log("🏷️  Создание тегов...");
     const tagData = [
       { slug: "north", name: "Север" },
@@ -191,7 +187,6 @@ async function seed() {
     const insertedTags = await db.insert(tags).values(tagData).returning();
     console.log(`✅ Создано ${insertedTags.length} тегов`);
 
-    // 4. Создаём статьи (Articles)
     console.log("📚 Создание статей...");
     const [article1] = await db
       .insert(articles)
@@ -295,7 +290,6 @@ async function seed() {
       })
       .returning();
 
-    // Связываем статьи с тегами
     await db.insert(articleTags).values([
       { articleId: article1.id, tagId: insertedTags[0].id }, // Север
       { articleId: article1.id, tagId: insertedTags[3].id }, // Туман
@@ -306,7 +300,6 @@ async function seed() {
 
     console.log(`✅ Создано ${4} статей`);
 
-    // 5. Создаём персонажей
     console.log("👤 Создание персонажей...");
     const [char1] = await db
       .insert(characters)
@@ -438,7 +431,6 @@ async function seed() {
       })
       .returning();
 
-    // Связываем персонажей с тегами
     await db.insert(characterTags).values([
       { characterId: char1.id, tagId: insertedTags[0].id }, // Север
       { characterId: char1.id, tagId: insertedTags[6].id }, // Навигация
@@ -450,7 +442,6 @@ async function seed() {
 
     console.log(`✅ Создано ${6} персонажей`);
 
-    // 6. Создаём посты
     console.log("📰 Создание постов...");
     const [post1] = await db
       .insert(posts)
@@ -493,7 +484,6 @@ async function seed() {
       })
       .returning();
 
-    // Связываем посты с тегами
     await db.insert(postTags).values([
       { postId: post1.id, tagId: insertedTags[5].id }, // Экспедиции
       { postId: post1.id, tagId: insertedTags[1].id }, // Руны
@@ -502,7 +492,6 @@ async function seed() {
 
     console.log(`✅ Создано ${2} поста`);
 
-    // 6.1. Создаём ивенты (посты с isEvent = true)
     console.log("🎉 Создание ивентов...");
     const [eventPost1] = await db
       .insert(posts)
@@ -718,7 +707,6 @@ async function seed() {
       })
       .returning();
 
-    // Связываем ивенты с тегами
     await db.insert(postTags).values([
       { postId: eventPost1.id, tagId: insertedTags[4].id }, // Ритуалы
       { postId: eventPost1.id, tagId: insertedTags[1].id }, // Руны
@@ -731,7 +719,6 @@ async function seed() {
 
     console.log(`✅ Создано ${5} ивентов`);
 
-    // 6.5. Создаём опрос для ивента с форматом "poll"
     console.log("📊 Создание опроса...");
     const [poll1] = await db
       .insert(polls)
@@ -756,7 +743,6 @@ async function seed() {
       .values(pollOptionsData)
       .returning();
 
-    // Добавляем несколько тестовых голосов
     await db.insert(pollVotes).values([
       { pollId: poll1.id, optionId: insertedPollOptions[0].id, userId: user1.id }, // Туманная Грань
       { pollId: poll1.id, optionId: insertedPollOptions[1].id, userId: user2.id }, // Северные врата
@@ -767,7 +753,6 @@ async function seed() {
 
     console.log(`✅ Создан опрос с ${insertedPollOptions.length} вариантами ответов и 5 голосами`);
 
-    // 7. Создаём события
     console.log("📅 Создание событий...");
     const [event1] = await db
       .insert(events)
@@ -816,7 +801,6 @@ async function seed() {
       })
       .returning();
 
-    // Связываем события с тегами
     await db.insert(eventTags).values([
       { eventId: event1.id, tagId: insertedTags[4].id }, // Ритуалы
       { eventId: event1.id, tagId: insertedTags[7].id }, // Стражи
@@ -826,7 +810,6 @@ async function seed() {
       { eventId: event3.id, tagId: insertedTags[9].id }, // Редактура
     ]);
 
-    // Добавляем участников событий
     await db.insert(eventParticipants).values([
       {
         eventId: event1.id,
@@ -853,7 +836,6 @@ async function seed() {
 
     console.log(`✅ Создано ${3} события`);
 
-    // 8. Создаём обсуждения (Threads)
     console.log("💬 Создание обсуждений...");
     const [thread1] = await db
       .insert(threads)
@@ -897,14 +879,12 @@ async function seed() {
       })
       .returning();
 
-    // Связываем обсуждения с тегами
     await db.insert(threadTags).values([
       { threadId: thread1.id, tagId: insertedTags[1].id }, // Руны
       { threadId: thread2.id, tagId: insertedTags[5].id }, // Экспедиции
       { threadId: thread3.id, tagId: insertedTags[3].id }, // Туман
     ]);
 
-    // Создаём сообщения в обсуждениях
     await db.insert(messages).values([
       {
         threadId: thread1.id,

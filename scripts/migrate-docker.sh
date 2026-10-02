@@ -36,7 +36,7 @@ if ! echo "$API_PS_OUTPUT" | grep -qE "(Up|running)"; then
   echo "❌ Контейнер API не запущен"
   echo ""
   echo "Запустите контейнеры командой:"
-  echo "  pnpm dev"
+  echo "  bun run dev"
   echo ""
   echo "Или только базу данных:"
   echo "  docker compose --env-file .env -f docker/docker-compose.dev.yml up -d db"
@@ -57,9 +57,11 @@ echo "🔄 Применение миграций в Docker контейнере.
 
 # Устанавливаем зависимости, если их нет (как в run-dev.sh)
 echo "📦 Проверка зависимостей..."
-docker compose --env-file "$ROOT_DIR/.env" -f docker/docker-compose.dev.yml exec -T api sh -c "if [ ! -d /app/node_modules/.pnpm ]; then pnpm install --frozen-lockfile; fi"
+docker compose --env-file "$ROOT_DIR/.env" -f docker/docker-compose.dev.yml exec -T api sh -c "if [ ! -d /app/node_modules/@kjar ]; then bun install --frozen-lockfile; fi"
 
-# Применяем миграции через drizzle-kit migrate
-# drizzle-kit загружает .env из корня проекта автоматически
+# Миграции применяет собственный раннер на drizzle-orm, а не drizzle-kit:
+# drizzle-kit читает свой конфиг через esbuild и на смонтированном томе
+# спотыкается об EAGAIN, тогда как bun разбирает TypeScript сам.
+# .env подхватывается из корня проекта
 echo "🚀 Запуск миграций..."
-docker compose --env-file "$ROOT_DIR/.env" -f docker/docker-compose.dev.yml exec -T api sh -c "cd /app/packages/db && pnpm drizzle-kit migrate"
+docker compose --env-file "$ROOT_DIR/.env" -f docker/docker-compose.dev.yml exec -T api sh -c "cd /app/packages/db && bun run migrate:direct"

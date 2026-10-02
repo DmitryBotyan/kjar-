@@ -23,7 +23,6 @@ export default function Comments({ targetType, targetId }: CommentsProps) {
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
 
-  // Форма
   const [authorName, setAuthorName] = useState("");
   const [content, setContent] = useState("");
   const [image, setImage] = useState<string | null>(null);
@@ -34,14 +33,12 @@ export default function Comments({ targetType, targetId }: CommentsProps) {
   const [website, setWebsite] = useState("");
   const { formToken, refresh: refreshFormToken } = useFormToken();
 
-  // Ответ на комментарий
   const [replyTo, setReplyTo] = useState<Comment | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadComments();
-    // Загружаем имя из localStorage
     const savedName = localStorage.getItem("commentAuthorName");
     if (savedName) {
       setAuthorName(savedName);
@@ -67,26 +64,22 @@ export default function Comments({ targetType, targetId }: CommentsProps) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Проверяем размер (макс 5MB)
     if (file.size > 5 * 1024 * 1024) {
       setError("Изображение слишком большое (максимум 5MB)");
       return;
     }
 
-    // Проверяем тип
     if (!file.type.startsWith("image/")) {
       setError("Можно загружать только изображения");
       return;
     }
 
-    // Показываем превью
     const reader = new FileReader();
     reader.onload = (e) => {
       setImagePreview(e.target?.result as string);
     };
     reader.readAsDataURL(file);
 
-    // Загружаем на сервер
     setUploading(true);
     setError(null);
 
@@ -160,12 +153,9 @@ export default function Comments({ targetType, targetId }: CommentsProps) {
 
       const data = await response.json();
       
-      // Сохраняем имя в localStorage
       localStorage.setItem("commentAuthorName", authorName.trim());
 
-      // Добавляем комментарий в список
       if (replyTo) {
-        // Добавляем ответ к родительскому комментарию
         setComments((prev) =>
           prev.map((c) =>
             c.id === replyTo.id
@@ -174,12 +164,10 @@ export default function Comments({ targetType, targetId }: CommentsProps) {
           )
         );
       } else {
-        // Добавляем новый корневой комментарий
         setComments((prev) => [data.data, ...prev]);
         setTotal((prev) => prev + 1);
       }
 
-      // Очищаем форму
       setContent("");
       setImage(null);
       setImagePreview(null);
@@ -250,7 +238,6 @@ export default function Comments({ targetType, targetId }: CommentsProps) {
         </h3>
       </div>
 
-      {/* Список комментариев */}
       <div className="kjar-comments__list">
         {loading ? (
           <div className="kjar-comments__loading">Загрузка комментариев...</div>
@@ -263,7 +250,6 @@ export default function Comments({ targetType, targetId }: CommentsProps) {
         )}
       </div>
 
-      {/* Форма комментария */}
       <form className="kjar-comments__form" onSubmit={handleSubmit}>
         {replyTo && (
           <div className="kjar-comments__reply-to">

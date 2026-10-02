@@ -59,7 +59,7 @@ export function ReplyForm({ slug }: { slug: string }) {
 
       <div className="kjar-field">
         <label className="kjar-label" htmlFor={`reply-author-${slug}`}>
-          Имя или персонаж
+          Имя или кьяр
         </label>
         <input
           className="kjar-input"

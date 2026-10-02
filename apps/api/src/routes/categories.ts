@@ -20,10 +20,8 @@ const updateCategorySchema = z.object({
   description: z.string().optional().nullable(),
 });
 
-// Публичные эндпоинты
 router.get("/", asyncHandler(getCategories));
 
-// Защищенные эндпоинты (требуют mod/admin)
 router.post("/", authenticate, requireMinRole("mod"), validateBody(createCategorySchema), asyncHandler(createCategory));
 router.put("/:slug", authenticate, requireMinRole("mod"), validateParams(slugSchema), validateBody(updateCategorySchema), asyncHandler(updateCategory));
 router.delete("/:slug", authenticate, requireMinRole("mod"), validateParams(slugSchema), asyncHandler(deleteCategory));

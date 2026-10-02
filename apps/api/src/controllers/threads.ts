@@ -3,6 +3,7 @@ import { eq, desc, and, or, ilike, sql, inArray } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { threads, threadTags, tags, messages } from "@kjar/db";
 import { createError } from "../middlewares/errorHandler.js";
+import { assertDictionaryValue } from "./dictionaries.js";
 import type { AuthRequest } from "../middlewares/auth.js";
 import { uniqueSlug } from "../utils/slug.js";
 
@@ -69,7 +70,6 @@ export async function getThreads(req: Request, res: Response) {
       .limit(Number(limit))
       .offset(Number(offset));
 
-    // Получаем количество сообщений для каждого треда
     const threadIds = results.map((r) => r.id);
     const messageCounts = new Map<number, number>();
 
@@ -128,7 +128,6 @@ export async function getThreadBySlug(req: Request, res: Response) {
       throw createError("Обсуждение не найдено", 404, "THREAD_NOT_FOUND");
     }
 
-    // Получаем теги
     const threadTagsList = await db
       .select({
         tag: tags
@@ -137,7 +136,6 @@ export async function getThreadBySlug(req: Request, res: Response) {
       .innerJoin(tags, eq(threadTags.tagId, tags.id))
       .where(eq(threadTags.threadId, thread.id));
 
-    // Получаем сообщения
     const threadMessages = await db
       .select()
       .from(messages)
@@ -173,6 +171,10 @@ export async function createThread(req: AuthRequest, res: Response) {
     content: string;
     tags?: string[];
   };
+
+  // Раздел обсуждения — из справочника thread_category: раньше его вписывали
+  // вручную, и разделы плодились опечатками.
+  await assertDictionaryValue("thread_category", category?.trim(), "Раздел обсуждения");
 
   const slug = await uniqueSlug(title, async (candidate) => {
     const [taken] = await db
@@ -281,6 +283,8 @@ export async function updateThread(req: AuthRequest, res: Response) {
     isLocked?: boolean;
     isPinned?: boolean;
   };
+
+  await assertDictionaryValue("thread_category", data.category?.trim(), "Раздел обсуждения");
 
   const [thread] = await db
     .select({ id: threads.id })

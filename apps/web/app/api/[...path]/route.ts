@@ -27,7 +27,6 @@ const getApiBaseUrl = () => {
 
 const API_BASE_URL = getApiBaseUrl();
 
-// Next.js 14 - params не Promise
 type RouteContext = {
   params: { path: string[] };
 };
@@ -58,7 +57,6 @@ async function proxyRequest(
   method: string
 ) {
   try {
-    // Собираем путь к API
     let apiPath = pathSegments.join("/");
     if (apiPath.startsWith("api/v1/")) {
       apiPath = apiPath.substring(7);
@@ -67,27 +65,22 @@ async function proxyRequest(
     }
     apiPath = `/${apiPath}`;
     
-    // Получаем query параметры
     const searchParams = request.nextUrl.searchParams;
     const queryString = searchParams.toString();
     const url = `${API_BASE_URL}${apiPath}${queryString ? `?${queryString}` : ""}`;
 
-    // Получаем Content-Type исходного запроса
     const contentType = request.headers.get("content-type") || "";
     const isMultipart = contentType.includes("multipart/form-data");
 
-    // Получаем тело запроса
     let body: string | ArrayBuffer | undefined;
     if (method !== "GET" && method !== "HEAD") {
       try {
         if (isMultipart) {
-          // Для multipart/form-data читаем как ArrayBuffer
           const arrayBuffer = await request.arrayBuffer();
           if (arrayBuffer && arrayBuffer.byteLength > 0) {
             body = arrayBuffer;
           }
         } else {
-          // Для остальных типов читаем как текст
           const rawBody = await request.text();
           if (rawBody && rawBody.length > 0) {
             body = rawBody;
@@ -98,7 +91,6 @@ async function proxyRequest(
       }
     }
 
-    // Собираем заголовки
     const headers: Record<string, string> = {};
     request.headers.forEach((value, key) => {
       const lowerKey = key.toLowerCase();
@@ -107,13 +99,12 @@ async function proxyRequest(
         lowerKey !== "connection" &&
         lowerKey !== "content-length" &&
         lowerKey !== "transfer-encoding" &&
-        lowerKey !== "content-type" // Исключаем Content-Type, установим его отдельно
+        lowerKey !== "content-type"
       ) {
         headers[key] = value;
       }
     });
 
-    // Устанавливаем Content-Type и Content-Length
     if (body) {
       if (isMultipart) {
         // Для multipart сохраняем оригинальный Content-Type с boundary
@@ -122,7 +113,6 @@ async function proxyRequest(
           headers["Content-Length"] = body.byteLength.toString();
         }
       } else {
-        // Для остальных типов устанавливаем application/json
         headers["Content-Type"] = "application/json";
         if (typeof body === "string") {
           headers["Content-Length"] = new TextEncoder().encode(body).length.toString();
@@ -130,8 +120,6 @@ async function proxyRequest(
       }
     }
 
-    // Выполняем запрос к Express API
-    // Для ArrayBuffer используем Uint8Array для совместимости
     let requestBody: BodyInit | undefined;
     if (body instanceof ArrayBuffer) {
       // Конвертируем ArrayBuffer в Uint8Array для совместимости с fetch
@@ -146,7 +134,6 @@ async function proxyRequest(
       body: requestBody,
     });
 
-    // Читаем ответ
     const responseText = await response.text();
     let jsonData: unknown;
     
@@ -156,7 +143,6 @@ async function proxyRequest(
       jsonData = responseText;
     }
 
-    // Формируем заголовки ответа
     const responseHeaders = new Headers();
     response.headers.forEach((value, key) => {
       const lowerKey = key.toLowerCase();

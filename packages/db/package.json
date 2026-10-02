@@ -15,11 +15,11 @@
   "scripts": {
     "generate": "drizzle-kit generate",
     "migrate": "drizzle-kit migrate",
-    "migrate:node": "tsx src/migrate.ts",
     "push": "drizzle-kit push",
     "studio": "drizzle-kit studio",
     "introspect": "drizzle-kit introspect",
-    "seed": "tsx src/seed.ts"
+    "seed": "bun src/seed.ts",
+    "migrate:direct": "bun src/migrate.ts"
   },
   "dependencies": {
     "bcryptjs": "2.4.3",
@@ -30,7 +30,6 @@
   "devDependencies": {
     "@types/bcryptjs": "2.4.6",
     "drizzle-kit": "0.24.0",
-    "typescript": "5.5.3",
-    "tsx": "4.15.6"
+    "typescript": "5.5.3"
   }
 }

@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { getArticles, getCategories, getTags } from "@/lib/api";
+import { getDictionary, labelFor } from "@/lib/dictionaries";
+import type { DictionaryEntry } from "@/lib/dictionaries";
 
 interface LoreIndexPageProps {
   searchParams: {
@@ -18,7 +20,7 @@ export default async function LoreIndexPage({ searchParams }: LoreIndexPageProps
   let articles: any[] = [];
   let categories: any[] = [];
   let tags: any[] = [];
-  let eras: string[] = [];
+  let eras: DictionaryEntry[] = [];
   let total = 0;
 
   try {
@@ -34,17 +36,15 @@ export default async function LoreIndexPage({ searchParams }: LoreIndexPageProps
       }),
       getCategories().catch(() => ({ data: [] })),
       getTags().catch(() => ({ data: [] })),
-      // Справочник эпох собираем из самих статей, а не из списка в коде
-      getArticles({ status: "published", limit: 200 }).catch(() => ({ data: [] }))
+      // Эпохи — из справочника админки, включая те, по которым статей пока нет
+      getDictionary("article_era").catch(() => [])
     ]);
 
     articles = articlesRes.data || [];
     total = articlesRes.total || articles.length;
     categories = categoriesRes.data || [];
     tags = tagsRes.data || [];
-    eras = Array.from(
-      new Set(((erasRes.data as any[]) || []).map((a: any) => a.era).filter(Boolean))
-    ).sort();
+    eras = erasRes;
   } catch (error) {
     console.error("[Lore Page] Error loading articles:", error);
   }
@@ -57,7 +57,7 @@ export default async function LoreIndexPage({ searchParams }: LoreIndexPageProps
             <h1 className="kjar-lore__title">Энциклопедия мира</h1>
             <p className="kjar-lore__lead">
               Земли, эпохи, ремёсла и обряды KJÁR. Статьи собраны так, чтобы за один
-              вечер можно было понять, где стоит ваш персонаж и чьё имя лучше не
+              вечер можно было понять, где стоит ваш кьяр и чьё имя лучше не
               называть вслух.
             </p>
             {eras.length > 0 && (
@@ -65,12 +65,12 @@ export default async function LoreIndexPage({ searchParams }: LoreIndexPageProps
                 {eras.map((era) => (
                   <Link
                     className={`kjar-chip${
-                      searchParams.era === era ? " kjar-chip--accent" : ""
+                      searchParams.era === era.code ? " kjar-chip--accent" : ""
                     }`}
-                    key={era}
-                    href={`/lore?era=${encodeURIComponent(era)}`}
+                    key={era.code}
+                    href={`/lore?era=${encodeURIComponent(era.code)}`}
                   >
-                    {era}
+                    {era.label}
                   </Link>
                 ))}
               </div>
@@ -129,8 +129,8 @@ export default async function LoreIndexPage({ searchParams }: LoreIndexPageProps
                 >
                   <option value="">Любая эпоха</option>
                   {eras.map((era) => (
-                    <option key={era} value={era}>
-                      {era}
+                    <option key={era.code} value={era.code}>
+                      {era.label}
                     </option>
                   ))}
                 </select>
@@ -218,7 +218,7 @@ export default async function LoreIndexPage({ searchParams }: LoreIndexPageProps
                         {article.era && (
                           <div>
                             <dt>Эпоха</dt>
-                            <dd>{article.era}</dd>
+                            <dd>{labelFor(eras, article.era)}</dd>
                           </div>
                         )}
                       </dl>

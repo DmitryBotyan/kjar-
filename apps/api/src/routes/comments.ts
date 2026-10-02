@@ -25,10 +25,8 @@ const createCommentSchema = z.object({
   parentId: z.union([z.string(), z.number()]).nullable().optional(),
 });
 
-// Все комментарии для модерации (только для модераторов)
 router.get("/", authenticate, requireMinRole("mod"), asyncHandler(getAllComments));
 
-// Получить комментарии (публичный)
 router.get(
   "/:targetType/:targetId",
   asyncHandler(getComments)
@@ -39,7 +37,6 @@ router.get(
 const commentLimit = rateLimit(10, 10 * 60 * 1000, "comment");
 const commentUploadLimit = rateLimit(10, 60 * 60 * 1000, "comment-upload");
 
-// Создать комментарий: публично, но с защитой формы
 router.post(
   "/:targetType/:targetId",
   commentLimit,
@@ -48,7 +45,6 @@ router.post(
   asyncHandler(createComment)
 );
 
-// Загрузить изображение для комментария (публичный)
 router.post(
   "/upload",
   commentUploadLimit,
@@ -56,7 +52,6 @@ router.post(
   asyncHandler(uploadCommentImage)
 );
 
-// Скрыть или вернуть комментарий (только для модераторов)
 router.patch(
   "/:commentId",
   authenticate,
@@ -65,7 +60,6 @@ router.patch(
   asyncHandler(updateCommentApproval)
 );
 
-// Удалить комментарий (только для модераторов)
 router.delete(
   "/:commentId",
   authenticate,

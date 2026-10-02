@@ -29,7 +29,6 @@ export async function register(req: Request, res: Response) {
   try {
     const { username, password } = registerSchema.parse(req.body);
 
-    // Проверяем, существует ли пользователь
     const [existingUser] = await db
       .select({ id: users.id })
       .from(users)
@@ -40,16 +39,14 @@ export async function register(req: Request, res: Response) {
       throw createError("Пользователь с таким логином уже существует", 409, "USER_EXISTS");
     }
 
-    // Хешируем пароль
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
-    // Создаем пользователя
     const [newUser] = await db
       .insert(users)
       .values({
         username,
         passwordHash,
-        role: "user" // По умолчанию роль "user"
+        role: "user"
       })
       .returning({
         id: users.id,
@@ -57,7 +54,6 @@ export async function register(req: Request, res: Response) {
         role: users.role
       });
 
-    // Генерируем токен
     const token = generateToken(newUser.id, newUser.username, newUser.role);
 
     res.status(201).json({
@@ -83,7 +79,6 @@ export async function login(req: Request, res: Response) {
   try {
     const { username, password } = loginSchema.parse(req.body);
 
-    // Находим пользователя
     const [user] = await db
       .select({
         id: users.id,
@@ -99,13 +94,11 @@ export async function login(req: Request, res: Response) {
       throw createError("Неверный логин или пароль", 401, "INVALID_CREDENTIALS");
     }
 
-    // Проверяем пароль
     const isValidPassword = await bcrypt.compare(password, user.passwordHash);
     if (!isValidPassword) {
       throw createError("Неверный логин или пароль", 401, "INVALID_CREDENTIALS");
     }
 
-    // Генерируем токен
     const token = generateToken(user.id, user.username, user.role);
 
     res.json({
@@ -157,5 +150,4 @@ export async function getMe(req: AuthRequest, res: Response) {
   }
 }
 
-// Экспортируем схемы для использования в роутах
 export { registerSchema, loginSchema };

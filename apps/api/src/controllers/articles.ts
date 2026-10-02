@@ -7,6 +7,7 @@ import type { AuthRequest } from "../middlewares/auth.js";
 import { validateQuery, paginationSchema, slugSchema } from "../middlewares/validate.js";
 import { z } from "zod";
 import { slugify } from "../utils/slug.js";
+import { assertDictionaryValue } from "./dictionaries.js";
 
 const articlesQuerySchema = paginationSchema.extend({
   category: z.string().optional(),
@@ -78,7 +79,6 @@ export async function getArticles(req: AuthRequest, res: Response) {
             inArray(articles.id, articleIds.map((a) => a.articleId))
           );
         } else {
-          // Если нет статей с таким тегом, возвращаем пустой результат
           return res.json({ data: [], total: 0 });
         }
       }
@@ -110,7 +110,6 @@ export async function getArticles(req: AuthRequest, res: Response) {
       .from(articles)
       .where(whereClause);
 
-    // Получаем категории для статей
     const categoryIds = [
       ...new Set(results.map((r) => r.categoryId).filter((id): id is number => id !== null))
     ];
@@ -149,7 +148,6 @@ export async function getArticles(req: AuthRequest, res: Response) {
 
 export async function getArticleBySlug(req: AuthRequest, res: Response) {
   try {
-    // Параметры уже валидированы middleware
     const { slug } = req.params as { slug: string };
 
     const [article] = await db
@@ -167,7 +165,6 @@ export async function getArticleBySlug(req: AuthRequest, res: Response) {
       throw createError("Статья не найдена", 404, "ARTICLE_NOT_FOUND");
     }
 
-    // Получаем категорию
     let category = null;
     if (article.categoryId) {
       [category] = await db
@@ -177,7 +174,6 @@ export async function getArticleBySlug(req: AuthRequest, res: Response) {
         .limit(1);
     }
 
-    // Получаем теги
     const articleTagsList = await db
       .select({
         tag: tags
@@ -216,7 +212,6 @@ export async function createArticle(req: AuthRequest, res: Response) {
       throw createError("Недостаточно прав", 403, "FORBIDDEN");
     }
 
-    // Данные уже валидированы middleware
     const data = req.body as {
       title: string;
       slug?: string;
@@ -224,14 +219,16 @@ export async function createArticle(req: AuthRequest, res: Response) {
       lead?: string;
       contentMd?: string;
       categoryId?: number | null;
-      era?: "first" | "second" | "any" | null;
+      era?: string | null;
       status?: "draft" | "published" | "archived";
     };
     
-    // Генерируем slug если не указан
+    // Эпоха — из справочника article_era. Раньше админка писала латиницей
+    // ("first"), а сид — кириллицей, и на /lore одна эпоха давала два фильтра.
+    await assertDictionaryValue("article_era", data.era, "Эпоха");
+
     let slug = data.slug || slugify(data.title);
     
-    // Проверяем уникальность slug
     const existing = await db
       .select({ id: articles.id })
       .from(articles)
@@ -239,7 +236,6 @@ export async function createArticle(req: AuthRequest, res: Response) {
       .limit(1);
 
     if (existing.length > 0) {
-      // Добавляем суффикс если slug уже существует
       let counter = 1;
       let newSlug = `${slug}-${counter}`;
       while (true) {
@@ -297,7 +293,6 @@ export async function updateArticle(req: AuthRequest, res: Response) {
     }
 
     const { slug } = req.params as { slug: string };
-    // Данные уже валидированы middleware
     const data = req.body as {
       title?: string;
       slug?: string;
@@ -305,11 +300,14 @@ export async function updateArticle(req: AuthRequest, res: Response) {
       lead?: string | null;
       contentMd?: string | null;
       categoryId?: number | null;
-      era?: "first" | "second" | "any" | null;
+      era?: string | null;
       status?: "draft" | "published" | "archived";
     };
 
-    // Проверяем существование статьи
+    // Эпоха — из справочника article_era. Раньше админка писала латиницей
+    // ("first"), а сид — кириллицей, и на /lore одна эпоха давала два фильтра.
+    await assertDictionaryValue("article_era", data.era, "Эпоха");
+
     const [existing] = await db
       .select()
       .from(articles)
@@ -320,7 +318,6 @@ export async function updateArticle(req: AuthRequest, res: Response) {
       throw createError("Статья не найдена", 404, "ARTICLE_NOT_FOUND");
     }
 
-    // Если меняется slug, проверяем уникальность
     let newSlug = data.slug || existing.slug;
     if (data.slug && data.slug !== existing.slug) {
       const check = await db
@@ -334,7 +331,6 @@ export async function updateArticle(req: AuthRequest, res: Response) {
       }
     }
 
-    // Если меняется title и slug не указан, генерируем новый slug
     if (data.title && !data.slug) {
       newSlug = slugify(data.title);
       if (newSlug !== existing.slug) {
@@ -345,7 +341,6 @@ export async function updateArticle(req: AuthRequest, res: Response) {
           .limit(1);
         
         if (check.length > 0 && check[0].id !== existing.id) {
-          // Добавляем суффикс
           let counter = 1;
           let candidate = `${newSlug}-${counter}`;
           while (true) {
@@ -405,7 +400,6 @@ export async function deleteArticle(req: AuthRequest, res: Response) {
       throw createError("Недостаточно прав", 403, "FORBIDDEN");
     }
 
-    // Параметры уже валидированы middleware
     const { slug } = req.params as { slug: string };
 
     const [existing] = await db

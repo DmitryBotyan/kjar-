@@ -8,11 +8,8 @@ import {
 } from "lucide-react";
 import CharacterCard from "@/components/CharacterCard";
 import { getArticles, getCharacters, getEvents, getPosts, getThreads } from "@/lib/api";
-import {
-  EVENT_TYPE_LABELS,
-  PARTICIPATION_LABELS,
-  labelFor
-} from "@/lib/labels";
+import { getDictionarySet, labelFor } from "@/lib/dictionaries";
+import type { DictionarySet } from "@/lib/dictionaries";
 
 function formatDate(value?: string | null) {
   if (!value) return null;
@@ -29,15 +26,17 @@ export default async function HomePage() {
   let characters: any[] = [];
   let threads: any[] = [];
   let articles: any[] = [];
+  let dictionaries: DictionarySet | null = null;
 
   try {
-    const [postsRes, eventsRes, charactersRes, threadsRes, articlesRes] =
+    const [postsRes, eventsRes, charactersRes, threadsRes, articlesRes, dictionarySet] =
       await Promise.all([
         getPosts({ limit: 4, offset: 0 }),
         getEvents({ limit: 1, offset: 0 }),
         getCharacters({ limit: 8, offset: 0 }),
         getThreads({ limit: 3, offset: 0 }),
-        getArticles({ status: "published", limit: 3, offset: 0 })
+        getArticles({ status: "published", limit: 3, offset: 0 }),
+        getDictionarySet()
       ]);
 
     posts = postsRes.data || [];
@@ -45,6 +44,7 @@ export default async function HomePage() {
     characters = charactersRes.data || [];
     threads = threadsRes.data || [];
     articles = articlesRes.data || [];
+    dictionaries = dictionarySet;
   } catch (error) {
     console.error("Error loading homepage data:", error);
   }
@@ -53,7 +53,6 @@ export default async function HomePage() {
 
   return (
     <div>
-      {/* ================= Герой ================= */}
       <section className="kjar-hero">
         <div className="kjar-hero__bg" aria-hidden="true" />
         <div className="kjar-hero__scrim" aria-hidden="true" />
@@ -82,7 +81,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ================= Быстрые входы ================= */}
       <section className="kjar-shortcuts">
         <div className="kjar-shortcuts__inner">
           <ul className="kjar-shortcuts__list">
@@ -114,7 +112,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ================= Текущий ивент ================= */}
       {featuredEvent && (
         <section className="kjar-updates kjar-section--tight">
           <div className="kjar-updates__inner">
@@ -133,12 +130,12 @@ export default async function HomePage() {
                 <div className="kjar-chips">
                   {featuredEvent.eventType && (
                     <span className="kjar-chip kjar-chip--accent">
-                      {labelFor(EVENT_TYPE_LABELS, featuredEvent.eventType)}
+                      {labelFor(dictionaries?.event_type, featuredEvent.eventType)}
                     </span>
                   )}
                   {featuredEvent.participationType && (
                     <span className="kjar-chip">
-                      {labelFor(PARTICIPATION_LABELS, featuredEvent.participationType)}
+                      {labelFor(dictionaries?.participation_type, featuredEvent.participationType)}
                     </span>
                   )}
                   {featuredEvent.publishedAt && (
@@ -167,7 +164,6 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* ================= Посты ================= */}
       <section className="kjar-updates">
         <div className="kjar-updates__inner">
           <div className="kjar-section__head">
@@ -215,7 +211,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ================= Колода персонажей ================= */}
       {characters.length > 0 && (
         <section className="kjar-updates">
           <div className="kjar-updates__inner">
@@ -242,7 +237,6 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* ================= Энциклопедия и обсуждения ================= */}
       <section className="kjar-updates">
         <div className="kjar-updates__inner">
           <div className="kjar-section__head">
@@ -270,7 +264,9 @@ export default async function HomePage() {
                       >
                         <span className="kjar-row-link__title">{article.title}</span>
                         {article.era && (
-                          <span className="kjar-row-link__meta">{article.era}</span>
+                          <span className="kjar-row-link__meta">
+                            {labelFor(dictionaries?.article_era, article.era)}
+                          </span>
                         )}
                       </Link>
                     </li>
@@ -301,7 +297,7 @@ export default async function HomePage() {
                       >
                         <span className="kjar-row-link__title">{thread.title}</span>
                         <span className="kjar-row-link__meta">
-                          {thread.category || "тема"}
+                          {labelFor(dictionaries?.thread_category, thread.category) || "тема"}
                         </span>
                       </Link>
                     </li>

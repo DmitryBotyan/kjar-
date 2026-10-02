@@ -4,9 +4,6 @@ import { db } from "../db/index.js";
 import { comments } from "@kjar/db";
 import { createError } from "../middlewares/errorHandler.js";
 
-/**
- * Получить комментарии для сущности
- */
 export async function getComments(req: Request, res: Response) {
   try {
     const { targetType, targetId } = req.params;
@@ -17,7 +14,6 @@ export async function getComments(req: Request, res: Response) {
       throw createError("Неверный тип сущности", 400);
     }
 
-    // Получаем только корневые комментарии (без parentId)
     const rootComments = await db
       .select()
       .from(comments)
@@ -33,7 +29,6 @@ export async function getComments(req: Request, res: Response) {
       .limit(limit)
       .offset(offset);
 
-    // Получаем все ответы для этих комментариев
     const commentIds = rootComments.map((c) => c.id);
     let replies: typeof rootComments = [];
     
@@ -52,7 +47,6 @@ export async function getComments(req: Request, res: Response) {
         .orderBy(comments.createdAt);
     }
 
-    // Группируем ответы по родительским комментариям
     const repliesMap = new Map<number, typeof replies>();
     for (const reply of replies) {
       if (reply.parentId) {
@@ -62,13 +56,11 @@ export async function getComments(req: Request, res: Response) {
       }
     }
 
-    // Формируем результат с вложенными ответами
     const commentsWithReplies = rootComments.map((comment) => ({
       ...comment,
       replies: repliesMap.get(comment.id) || [],
     }));
 
-    // Получаем общее количество
     const [{ count }] = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(comments)
@@ -96,9 +88,6 @@ export async function getComments(req: Request, res: Response) {
   }
 }
 
-/**
- * Создать комментарий
- */
 export async function createComment(req: Request, res: Response) {
   try {
     const { targetType, targetId } = req.params;
@@ -124,7 +113,6 @@ export async function createComment(req: Request, res: Response) {
       throw createError("Комментарий слишком длинный (максимум 5000 символов)", 400);
     }
 
-    // Проверяем, существует ли родительский комментарий (если указан)
     if (parentId) {
       const parentComment = await db
         .select()
@@ -157,7 +145,7 @@ export async function createComment(req: Request, res: Response) {
         content: content.trim(),
         image: image || null,
         parentId: parentId ? parseInt(parentId) : null,
-        isApproved: true, // По умолчанию одобряем (можно изменить на модерацию)
+        isApproved: true,
       })
       .returning();
 
@@ -176,9 +164,6 @@ export async function createComment(req: Request, res: Response) {
   }
 }
 
-/**
- * Удалить комментарий (только для модераторов)
- */
 export async function deleteComment(req: Request, res: Response) {
   try {
     const { commentId } = req.params;
@@ -207,16 +192,12 @@ export async function deleteComment(req: Request, res: Response) {
   }
 }
 
-/**
- * Загрузить изображение для комментария
- */
 export async function uploadCommentImage(req: Request, res: Response) {
   try {
     if (!req.file) {
       throw createError("Файл не был загружен", 400);
     }
 
-    // Импортируем функцию загрузки из storage
     const { uploadFile } = await import("../storage/s3.js");
     const result = await uploadFile(req.file, "comments");
 
@@ -266,9 +247,6 @@ export async function getAllComments(req: Request, res: Response) {
   res.json({ data, total: Number(total?.count || 0), limit, offset });
 }
 
-/**
- * Скрыть или вернуть комментарий (только для модераторов)
- */
 export async function updateCommentApproval(req: Request, res: Response) {
   const commentId = parseInt(req.params.commentId);
   const { isApproved } = req.body as { isApproved: boolean };

@@ -35,9 +35,6 @@ export interface UploadResult {
   contentType: string;
 }
 
-/**
- * Загружает файл в S3
- */
 export async function uploadFile(
   file: Express.Multer.File,
   folder: string = "uploads"
@@ -68,9 +65,6 @@ export async function uploadFile(
   };
 }
 
-/**
- * Загружает файл напрямую (без multer)
- */
 export async function uploadBuffer(
   buffer: Buffer,
   fileName: string,
@@ -102,9 +96,6 @@ export async function uploadBuffer(
   };
 }
 
-/**
- * Получает подписанный URL для временного доступа к файлу
- */
 export async function getSignedUrlForFile(
   key: string,
   expiresIn: number = 3600
@@ -117,9 +108,6 @@ export async function getSignedUrlForFile(
   return await getSignedUrl(s3Client, command, { expiresIn });
 }
 
-/**
- * Проверяет существование файла
- */
 export async function fileExists(key: string): Promise<boolean> {
   try {
     await s3Client.send(
@@ -134,9 +122,6 @@ export async function fileExists(key: string): Promise<boolean> {
   }
 }
 
-/**
- * Удаляет файл из S3
- */
 export async function deleteFile(key: string): Promise<void> {
   await s3Client.send(
     new DeleteObjectCommand({
@@ -146,9 +131,6 @@ export async function deleteFile(key: string): Promise<void> {
   );
 }
 
-/**
- * Получает публичный URL файла
- */
 export function getPublicUrl(key: string): string {
   return `${PUBLIC_URL}/${BUCKET}/${key}`;
 }

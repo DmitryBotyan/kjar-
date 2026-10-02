@@ -1,23 +1,30 @@
 import type { Response } from "express";
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { contactRequests } from "@kjar/db";
 import { createError } from "../middlewares/errorHandler.js";
+import { assertDictionaryValue } from "./dictionaries.js";
 import type { AuthRequest } from "../middlewares/auth.js";
 
 export async function createContactRequest(req: AuthRequest, res: Response) {
-  const { name, contact, subject, message } = req.body as {
+  const { name, contact, requestType, subject, message } = req.body as {
     name: string;
     contact: string;
+    requestType?: string | null;
     subject: string;
     message: string;
   };
+
+  // Тип обращения раньше приклеивался к теме префиксом и в админке не
+  // фильтровался. Теперь это отдельное поле из справочника.
+  await assertDictionaryValue("contact_request_type", requestType, "Тип обращения");
 
   const [created] = await db
     .insert(contactRequests)
     .values({
       name: name.trim(),
       contact: contact.trim(),
+      requestType: requestType?.trim() || null,
       subject: subject.trim(),
       message: message.trim()
     })
@@ -27,9 +34,16 @@ export async function createContactRequest(req: AuthRequest, res: Response) {
 }
 
 export async function getContactRequests(req: AuthRequest, res: Response) {
-  const { status, limit = "50", offset = "0" } = req.query as Record<string, string>;
+  const { status, requestType, limit = "50", offset = "0" } = req.query as Record<
+    string,
+    string
+  >;
 
-  const whereClause = status ? eq(contactRequests.status, status) : undefined;
+  const conditions = [
+    ...(status ? [eq(contactRequests.status, status)] : []),
+    ...(requestType ? [eq(contactRequests.requestType, requestType)] : [])
+  ];
+  const whereClause = conditions.length ? and(...conditions) : undefined;
 
   const data = await db
     .select()

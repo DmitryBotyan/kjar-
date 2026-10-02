@@ -121,13 +121,13 @@ export default async function CharactersPage({
 
 ```bash
 # Запуск dev сервера
-pnpm dev
+bun run dev
 
 # Сборка для продакшена
-pnpm build
+bun build
 
 # Запуск продакшен сервера
-pnpm start
+bun start
 ```
 
 **Важно:** Убедитесь, что Express API запущен на порту 3001 перед запуском Next.js.

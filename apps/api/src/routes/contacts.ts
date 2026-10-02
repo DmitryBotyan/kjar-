@@ -18,6 +18,7 @@ const router = Router();
 const createSchema = z.object({
   name: z.string().trim().min(2, "Укажите имя").max(200),
   contact: z.string().trim().min(3, "Оставьте способ связи").max(200),
+  requestType: z.string().trim().max(100).optional().nullable(),
   subject: z.string().trim().min(3, "Коротко обозначьте тему").max(300),
   message: z.string().trim().min(10, "Опишите вопрос подробнее").max(10000)
 });
@@ -31,7 +32,6 @@ const contactLimit = rateLimit(5, 60 * 60 * 1000, "contact");
 
 router.post("/", contactLimit, antiSpam, validateBody(createSchema), asyncHandler(createContactRequest));
 
-// Обращения видны только модераторам и админам
 router.get("/", authenticate, requireMinRole("mod"), asyncHandler(getContactRequests));
 router.patch(
   "/:id",

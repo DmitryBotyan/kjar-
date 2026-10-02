@@ -113,8 +113,9 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/kjar.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./nginx/proxy_params.conf:/etc/nginx/conf.d/proxy_params.conf:ro
+      # Каталог, а не отдельные файлы: rsync подменяет файл новым, и смонтированный
+      # по одному файлу конфиг остаётся в контейнере старым до пересоздания
+      - ./nginx:/etc/nginx/conf.d:ro
       - certbot_www:/var/www/certbot:ro
       - certbot_conf:/etc/letsencrypt:ro
     depends_on:
@@ -136,7 +137,7 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL}
     working_dir: /app/packages/db
-    entrypoint: ["node", "--import", "tsx", "src/migrate.ts"]
+    entrypoint: ["bun", "src/migrate.ts"]
     depends_on:
       db:
         condition: service_healthy

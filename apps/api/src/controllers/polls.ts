@@ -5,9 +5,6 @@ import { polls, pollOptions, pollVotes, posts } from "@kjar/db";
 import { createError } from "../middlewares/errorHandler.js";
 import { AuthRequest } from "../middlewares/auth.js";
 
-/**
- * Получить опрос по ID поста
- */
 export async function getPollByPostId(req: Request, res: Response) {
   try {
     const { postId } = req.params;
@@ -22,14 +19,12 @@ export async function getPollByPostId(req: Request, res: Response) {
       return res.json({ data: null });
     }
 
-    // Получаем варианты ответов
     const options = await db
       .select()
       .from(pollOptions)
       .where(eq(pollOptions.pollId, poll[0].id))
       .orderBy(pollOptions.order);
 
-    // Получаем количество голосов для каждого варианта
     const votesCount = await db
       .select({
         optionId: pollVotes.optionId,
@@ -67,9 +62,6 @@ export async function getPollByPostId(req: Request, res: Response) {
   }
 }
 
-/**
- * Проверить, проголосовал ли пользователь
- */
 export async function checkUserVote(req: AuthRequest, res: Response) {
   try {
     const { postId } = req.params;
@@ -113,9 +105,6 @@ export async function checkUserVote(req: AuthRequest, res: Response) {
   }
 }
 
-/**
- * Создать опрос
- */
 export async function createPoll(req: AuthRequest, res: Response) {
   try {
     if (!req.user) {
@@ -128,7 +117,6 @@ export async function createPoll(req: AuthRequest, res: Response) {
       throw createError("Необходимо указать postId и варианты ответов", 400);
     }
 
-    // Проверяем, что пост существует и это ивент с форматом poll
     const post = await db
       .select()
       .from(posts)
@@ -143,7 +131,6 @@ export async function createPoll(req: AuthRequest, res: Response) {
       throw createError("Пост должен быть ивентом с форматом 'poll'", 400);
     }
 
-    // Проверяем, что опрос еще не создан
     const existingPoll = await db
       .select()
       .from(polls)
@@ -154,7 +141,6 @@ export async function createPoll(req: AuthRequest, res: Response) {
       throw createError("Опрос для этого поста уже существует", 400);
     }
 
-    // Создаем опрос
     const [newPoll] = await db
       .insert(polls)
       .values({
@@ -165,7 +151,6 @@ export async function createPoll(req: AuthRequest, res: Response) {
       })
       .returning();
 
-    // Создаем варианты ответов
     const pollOptionsData = options.map((text: string, index: number) => ({
       pollId: newPoll.id,
       text,
@@ -184,9 +169,6 @@ export async function createPoll(req: AuthRequest, res: Response) {
   }
 }
 
-/**
- * Обновить опрос
- */
 export async function updatePoll(req: AuthRequest, res: Response) {
   try {
     if (!req.user) {
@@ -217,12 +199,9 @@ export async function updatePoll(req: AuthRequest, res: Response) {
       .set(updateData)
       .where(eq(polls.id, poll[0].id));
 
-    // Если переданы новые варианты ответов, обновляем их
     if (Array.isArray(options)) {
-      // Удаляем старые варианты
       await db.delete(pollOptions).where(eq(pollOptions.pollId, poll[0].id));
 
-      // Создаем новые
       const pollOptionsData = options.map((text: string, index: number) => ({
         pollId: poll[0].id,
         text,
@@ -248,9 +227,6 @@ export async function updatePoll(req: AuthRequest, res: Response) {
   }
 }
 
-/**
- * Проголосовать в опросе
- */
 export async function votePoll(req: AuthRequest, res: Response) {
   try {
     const { postId } = req.params;
@@ -282,7 +258,6 @@ export async function votePoll(req: AuthRequest, res: Response) {
       throw createError("Опрос завершен", 400);
     }
 
-    // Проверяем, что вариант ответа существует
     const option = await db
       .select()
       .from(pollOptions)
@@ -293,7 +268,6 @@ export async function votePoll(req: AuthRequest, res: Response) {
       throw createError("Вариант ответа не найден", 404);
     }
 
-    // Проверяем, не голосовал ли уже пользователь
     const existingVote = await db
       .select()
       .from(pollVotes)
@@ -321,7 +295,6 @@ export async function votePoll(req: AuthRequest, res: Response) {
         );
     }
 
-    // Создаем новый голос
     await db.insert(pollVotes).values({
       pollId: poll[0].id,
       optionId: parseInt(optionId),
@@ -329,7 +302,6 @@ export async function votePoll(req: AuthRequest, res: Response) {
       voterKey: userId ? null : (voterKey as string),
     });
 
-    // Получаем обновленный опрос с результатами
     const updatedPoll = await db
       .select()
       .from(polls)

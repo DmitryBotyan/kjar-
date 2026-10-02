@@ -72,13 +72,11 @@ export default function ImageUpload({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Проверка типа файла
     if (!file.type.startsWith("image/")) {
       setError("Выберите файл изображения");
       return;
     }
 
-    // Проверка размера (10MB)
     if (file.size > 10 * 1024 * 1024) {
       setError("Размер файла не должен превышать 10MB");
       return;
@@ -86,19 +84,16 @@ export default function ImageUpload({
 
     setError(null);
 
-    // Создаем URL для предпросмотра и показываем модальное окно кадрирования
     const fileUrl = URL.createObjectURL(file);
     setSelectedFileUrl(fileUrl);
     setShowCropModal(true);
   };
 
   const handleCropComplete = async (croppedImageBlob: Blob) => {
-    // Создаем File из Blob для загрузки
     const file = new File([croppedImageBlob], "cropped-image.jpg", {
       type: "image/jpeg",
     });
 
-    // Освобождаем URL объекта
     if (selectedFileUrl) {
       URL.revokeObjectURL(selectedFileUrl);
       setSelectedFileUrl(null);

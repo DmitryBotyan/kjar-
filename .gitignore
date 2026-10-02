@@ -5,7 +5,7 @@ node_modules
 .next
 /dist
 /build
-.pnpm-store
+.bun-cache
 .cursor
 *.tsbuildinfo
 .env.production

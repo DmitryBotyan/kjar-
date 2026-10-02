@@ -10,7 +10,6 @@ type AdminLayoutClientProps = {
 
 export default function AdminLayoutClient({ children }: AdminLayoutClientProps) {
   useEffect(() => {
-    // Скрываем header и footer для админки
     const header = document.querySelector(".kjar-header");
     const footer = document.querySelector(".kjar-footer");
     
@@ -21,11 +20,9 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
       (footer as HTMLElement).style.display = "none";
     }
     
-    // Добавляем класс к body для стилей админки
     document.body.classList.add("kjar-admin-body");
 
     return () => {
-      // Восстанавливаем при размонтировании
       if (header) {
         (header as HTMLElement).style.display = "";
       }

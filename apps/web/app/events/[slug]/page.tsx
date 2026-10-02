@@ -4,12 +4,7 @@ import { getEventBySlug } from "@/lib/api";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import Poll from "@/components/Poll";
 import Comments from "@/components/Comments";
-import {
-  EVENT_FORMAT_LABELS,
-  EVENT_TYPE_LABELS,
-  PARTICIPATION_LABELS,
-  labelFor
-} from "@/lib/labels";
+import { getDictionarySet, labelFor } from "@/lib/dictionaries";
 
 type EventPageProps = {
   params: { slug: string };
@@ -27,6 +22,7 @@ function formatDate(value?: string | null) {
 
 export default async function EventPage({ params }: EventPageProps) {
   let event: any = null;
+  const dictionaries = await getDictionarySet().catch(() => null);
 
   try {
     const response = await getEventBySlug(params.slug);
@@ -40,9 +36,12 @@ export default async function EventPage({ params }: EventPageProps) {
     notFound();
   }
 
-  const typeLabel = labelFor(EVENT_TYPE_LABELS, event.eventType);
-  const participationLabel = labelFor(PARTICIPATION_LABELS, event.participationType);
-  const formatLabel = labelFor(EVENT_FORMAT_LABELS, event.eventFormat);
+  const typeLabel = labelFor(dictionaries?.event_type, event.eventType);
+  const participationLabel = labelFor(
+    dictionaries?.participation_type,
+    event.participationType
+  );
+  const formatLabel = labelFor(dictionaries?.event_format, event.eventFormat);
 
   const renderStages = (stages: any) => {
     if (!stages || !Array.isArray(stages) || stages.length === 0) return null;

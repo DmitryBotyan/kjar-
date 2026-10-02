@@ -1,9 +1,12 @@
 import { ContactForm } from "./ContactForm";
+import { getDictionary } from "@/lib/dictionaries";
 
 // Адрес редакции задаётся в окружении: в разных установках он разный
 const CONTACT_EMAIL = process.env.CONTACT_EMAIL || "hello@kjar.ru";
 
-export default function ContactsPage() {
+export default async function ContactsPage() {
+  const requestTypes = await getDictionary("contact_request_type").catch(() => []);
+
   return (
     <div className="kjar-contacts">
       <section className="kjar-contacts__hero">
@@ -59,7 +62,7 @@ export default function ContactsPage() {
           </aside>
 
           <section className="kjar-contacts__form" aria-label="Форма обращения">
-            <ContactForm />
+            <ContactForm requestTypes={requestTypes} />
           </section>
         </div>
       </section>

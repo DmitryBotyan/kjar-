@@ -2,18 +2,16 @@
 
 import { useState } from "react";
 import { HoneypotField, useFormToken } from "../../components/FormGuard";
+import type { DictionaryEntry } from "@/lib/dictionaries";
 
-const REQUEST_TYPES = [
-  { value: "Вопрос", label: "Вопрос" },
-  { value: "Заявка на роль", label: "Заявка на роль" },
-  { value: "Предложение по лору", label: "Предложение по лору" },
-  { value: "Поддержка", label: "Поддержка" }
-];
+type ContactFormProps = {
+  requestTypes: DictionaryEntry[];
+};
 
-export function ContactForm() {
+export function ContactForm({ requestTypes }: ContactFormProps) {
   const { formToken, refresh } = useFormToken();
   const [website, setWebsite] = useState("");
-  const [type, setType] = useState(REQUEST_TYPES[0].value);
+  const [type, setType] = useState(requestTypes[0]?.code || "");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
@@ -33,7 +31,8 @@ export function ContactForm() {
         body: JSON.stringify({
           name: String(values.get("name") || ""),
           contact: String(values.get("contact") || ""),
-          subject: `${type}: ${String(values.get("subject") || "")}`,
+          requestType: type || null,
+          subject: String(values.get("subject") || ""),
           message: String(values.get("message") || ""),
           website,
           formToken
@@ -141,8 +140,8 @@ export function ContactForm() {
             value={type}
             onChange={(event) => setType(event.target.value)}
           >
-            {REQUEST_TYPES.map((option) => (
-              <option key={option.value} value={option.value}>
+            {requestTypes.map((option) => (
+              <option key={option.code} value={option.code}>
                 {option.label}
               </option>
             ))}

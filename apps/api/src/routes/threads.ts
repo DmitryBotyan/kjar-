@@ -65,7 +65,6 @@ router.post(
   asyncHandler(createMessage)
 );
 
-// Модерация обсуждений
 router.patch(
   "/:slug",
   authenticate,

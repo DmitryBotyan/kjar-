@@ -68,7 +68,6 @@ export default function AdminPostsPage() {
         throw new Error(errorData.error?.message || "Ошибка удаления поста");
       }
 
-      // Обновляем список постов
       setPosts(posts.filter((p) => p.id !== deleteModal.post.id));
       setDeleteModal({ isOpen: false, post: null });
     } catch (err) {

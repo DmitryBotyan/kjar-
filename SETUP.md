@@ -4,7 +4,7 @@
 
 ### 1. Переменные окружения (`.env`)
 
-Создайте файл `.env` в корне проекта (если его нет, он создастся автоматически при запуске `pnpm dev`).
+Создайте файл `.env` в корне проекта (если его нет, он создастся автоматически при запуске `bun run dev`).
 
 #### Вариант A: Для работы с Docker (рекомендуется)
 
@@ -53,7 +53,7 @@ DATABASE_URL=postgres://your_user:your_password@localhost:5432/your_database
 # Linux/Mac
 openssl rand -base64 32
 
-# Или через Node.js
+# Или своим раннером, без drizzle-kit
 node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
 
@@ -62,21 +62,21 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 #### Сценарий 1: Полностью через Docker (рекомендуется)
 
 1. Используйте `DATABASE_URL` с хостом `db`
-2. Запускайте миграции через: `pnpm db:migrate:docker`
-3. Убедитесь, что контейнеры запущены: `pnpm dev`
+2. Запускайте миграции через: `bun run db:migrate:docker`
+3. Убедитесь, что контейнеры запущены: `bun run dev`
 
 #### Сценарий 2: Гибридный (Docker для БД, локально для кода)
 
 1. Запустите только БД: `docker compose -f docker/docker-compose.dev.yml up db`
 2. Измените `DATABASE_URL` на `postgres://kjar:kjar_password@localhost:5433/kjar`
-3. Запускайте миграции локально: `pnpm db:migrate`
+3. Запускайте миграции локально: `bun run db:migrate`
 
 #### Сценарий 3: Полностью локально
 
 1. Установите PostgreSQL локально
 2. Создайте базу данных и пользователя
 3. Настройте `DATABASE_URL` на локальное подключение
-4. Используйте `pnpm db:migrate` для миграций
+4. Используйте `bun run db:migrate` для миграций
 
 ### 4. Первоначальная настройка БД
 
@@ -84,13 +84,13 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 
 ```bash
 # 1. Запустите Docker контейнеры
-pnpm dev
+bun run dev
 
 # 2. В другом терминале примените миграции
-pnpm db:migrate:docker
+bun run db:migrate:docker
 
 # Или если используете локальную БД:
-pnpm db:migrate
+bun run db:migrate
 ```
 
 ### 5. Проверка подключения
@@ -99,7 +99,7 @@ pnpm db:migrate
 
 ```bash
 # Drizzle Studio (веб-интерфейс)
-pnpm db:studio
+bun run db:studio
 
 # Или через Adminer (если запущен через Docker)
 # Откройте http://localhost:8081
@@ -123,7 +123,7 @@ pnpm db:studio
 #### Проблема: `ENOTFOUND db`
 **Причина:** Пытаетесь подключиться к хосту `db` локально  
 **Решение:** 
-- Используйте `pnpm db:migrate:docker` для Docker окружения
+- Используйте `bun run db:migrate:docker` для Docker окружения
 - Или измените `DATABASE_URL` на `localhost` для локальной работы
 
 #### Проблема: `connection refused` на `localhost:5433`
@@ -141,24 +141,24 @@ pnpm db:studio
 1. **Разработка:**
    ```bash
    # Запустите все сервисы
-   pnpm dev
+   bun run dev
    
    # В другом терминале - миграции
-   pnpm db:migrate:docker
+   bun run db:migrate:docker
    ```
 
 2. **Изменение схемы:**
    ```bash
    # 1. Измените packages/db/src/schema.ts
    # 2. Сгенерируйте миграцию
-   pnpm db:generate
+   bun run db:generate
    # 3. Примените миграцию
-   pnpm db:migrate:docker
+   bun run db:migrate:docker
    ```
 
 3. **Просмотр данных:**
    ```bash
-   pnpm db:studio
+   bun run db:studio
    # Откроется на http://localhost:4983
    ```
 
@@ -171,9 +171,67 @@ pnpm db:studio
 - [ ] Изменен `JWT_SECRET` на случайную строку
 - [ ] Выбран способ работы с БД (Docker/локально/гибрид)
 - [ ] Настроен правильный `DATABASE_URL` для выбранного способа
-- [ ] Запущены контейнеры: `pnpm dev`
-- [ ] Применены миграции: `pnpm db:migrate:docker` или `pnpm db:migrate`
-- [ ] Проверено подключение через `pnpm db:studio` или Adminer
+- [ ] Запущены контейнеры: `bun run dev`
+- [ ] Применены миграции: `bun run db:migrate:docker` или `bun run db:migrate`
+- [ ] Проверено подключение через `bun run db:studio` или Adminer
+
+---
+
+## 🌐 Если зависимости не качаются (доступ из РФ)
+
+Проект собирается так, чтобы внешних источников было как можно меньше.
+Сейчас их ровно два, и оба — обязательные:
+
+| Источник | Что оттуда берётся | Кто к нему ходит |
+|---|---|---|
+| `registry.npmjs.org` | все пакеты **и сам bun** (`@oven/bun-linux-*-musl`) | сборка образов, `bun install` |
+| `ghcr.io` | готовые образы `kjar-web` и `kjar-api` | только боевой сервер |
+
+Готовый образ `oven/bun` намеренно не используется: он лежит только на
+Docker Hub, а тот с российских адресов отдаёт `429` на анонимные загрузки.
+bun ставится из npm поверх `node:22-alpine`, поэтому Docker Hub нужен лишь
+для базовых образов (`node`, `postgres`, `nginx`, `minio`).
+
+### Docker Hub отдаёт 429 или таймаут
+
+На сервере зеркало уже прописывает `scripts/server-bootstrap.sh`. На рабочей
+машине его нужно добавить руками — в Docker Desktop это
+*Settings → Docker Engine*:
+
+```json
+{
+  "registry-mirrors": ["https://dockerhub.timeweb.cloud", "https://mirror.gcr.io"]
+}
+```
+
+После сохранения Docker перезапустится сам.
+
+### Реестр npm недоступен
+
+Адрес реестра вынесен в аргумент сборки, файлы править не нужно:
+
+```bash
+docker compose --env-file .env -f docker/docker-compose.dev.yml \
+  build --build-arg NPM_REGISTRY=https://зеркало
+
+# то же самое для локального bun вне контейнера
+BUN_CONFIG_REGISTRY=https://зеркало bun install
+```
+
+Постоянный вариант — дописать в `bunfig.toml`:
+
+```toml
+[install]
+registry = "https://зеркало"
+```
+
+### Проверить, что именно не открывается
+
+```bash
+curl -sI https://registry.npmjs.org/bun | head -1
+curl -sI https://ghcr.io/v2/ | head -1
+docker pull node:22-alpine
+```
 
 ---
 

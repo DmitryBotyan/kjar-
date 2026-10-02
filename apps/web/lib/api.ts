@@ -1,12 +1,4 @@
-/**
- * Утилита для выполнения запросов к Express API на сервере Next.js
- * Все запросы выполняются на сервере через Next.js API прокси, клиент не имеет прямого доступа к API
- * 
- * Используем относительные пути - они будут проксироваться через /app/api/[...path]/route.ts
- */
 
-// В Server Components Next.js автоматически создаёт абсолютный URL из относительного
-// Используем относительный путь, чтобы запросы шли через Next.js прокси
 const API_BASE_PATH = "/api";
 
 export interface ApiResponse<T> {
@@ -24,10 +16,6 @@ export interface ApiError {
   };
 }
 
-/**
- * Выполняет запрос к Express API на сервере через Next.js прокси
- * Использует абсолютный URL к Next.js прокси, который затем проксирует запрос к Express API
- */
 export async function fetchFromApi<T>(
   endpoint: string,
   options: RequestInit = {}
@@ -50,7 +38,6 @@ export async function fetchFromApi<T>(
       "Content-Type": "application/json",
       ...options.headers,
     },
-    // Не кэшируем по умолчанию, чтобы всегда получать актуальные данные
     cache: options.cache || "no-store",
   });
 
@@ -77,9 +64,6 @@ export async function fetchFromApi<T>(
   return jsonData;
 }
 
-/**
- * Получить список статей
- */
 export async function getArticles(params?: {
   category?: string;
   status?: string;
@@ -104,16 +88,10 @@ export async function getArticles(params?: {
   return fetchFromApi<Array<any>>(`/articles${queryString ? `?${queryString}` : ""}`);
 }
 
-/**
- * Получить статью по slug
- */
 export async function getArticleBySlug(slug: string) {
   return fetchFromApi<any>(`/articles/${slug}`);
 }
 
-/**
- * Получить список персонажей
- */
 export async function getCharacters(params?: {
   role?: string;
   status?: string;
@@ -137,16 +115,10 @@ export async function getCharacters(params?: {
   return fetchFromApi<Array<any>>(`/characters${queryString ? `?${queryString}` : ""}`);
 }
 
-/**
- * Получить персонажа по slug
- */
 export async function getCharacterBySlug(slug: string) {
   return fetchFromApi<any>(`/characters/${slug}`);
 }
 
-/**
- * Получить список постов
- */
 export async function getPosts(params?: {
   tag?: string;
   search?: string;
@@ -167,16 +139,10 @@ export async function getPosts(params?: {
   return fetchFromApi<Array<any>>(`/posts${queryString ? `?${queryString}` : ""}`);
 }
 
-/**
- * Получить пост по slug
- */
 export async function getPostBySlug(slug: string) {
   return fetchFromApi<any>(`/posts/${slug}`);
 }
 
-/**
- * Получить список ивентов (постов с isEvent = true)
- */
 export async function getEvents(params?: {
   eventType?: string;
   eventFormat?: string;
@@ -200,16 +166,10 @@ export async function getEvents(params?: {
   return fetchFromApi<Array<any>>(`/events${queryString ? `?${queryString}` : ""}`);
 }
 
-/**
- * Получить ивент по slug
- */
 export async function getEventBySlug(slug: string) {
   return fetchFromApi<any>(`/events/${slug}`);
 }
 
-/**
- * Получить список обсуждений
- */
 export async function getThreads(params?: {
   category?: string;
   tag?: string;
@@ -231,23 +191,22 @@ export async function getThreads(params?: {
   return fetchFromApi<Array<any>>(`/threads${queryString ? `?${queryString}` : ""}`);
 }
 
-/**
- * Получить обсуждение по slug
- */
 export async function getThreadBySlug(slug: string) {
   return fetchFromApi<any>(`/threads/${slug}`);
 }
 
-/**
- * Получить список категорий
- */
 export async function getCategories() {
   return fetchFromApi<Array<any>>("/categories");
 }
 
-/**
- * Получить список тегов
- */
 export async function getTags() {
   return fetchFromApi<Array<any>>("/tags");
+}
+
+export async function getNormans() {
+  return fetchFromApi<Array<any>>("/normans");
+}
+
+export async function getNormanBySlug(slug: string) {
+  return fetchFromApi<any>(`/normans/${slug}`);
 }

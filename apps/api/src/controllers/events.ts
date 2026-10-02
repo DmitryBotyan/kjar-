@@ -4,16 +4,13 @@ import { db } from "../db/index.js";
 import { posts, postTags, tags } from "@kjar/db";
 import { createError } from "../middlewares/errorHandler.js";
 
-/**
- * Получить список ивентов (постов с isEvent = true)
- */
 export async function getEvents(req: Request, res: Response) {
   try {
     const { eventType, eventFormat, participationType, tag, search, limit = "50", offset = "0" } = req.query;
 
     const conditions = [
       isNotNull(posts.publishedAt),
-      eq(posts.isEvent, true) // Только ивенты
+      eq(posts.isEvent, true)
     ];
 
     if (eventType) {
@@ -71,7 +68,6 @@ export async function getEvents(req: Request, res: Response) {
         content: posts.content,
         image: posts.image,
         publishedAt: posts.publishedAt,
-        // Поля для ивентов
         isEvent: posts.isEvent,
         eventType: posts.eventType,
         eventFormat: posts.eventFormat,
@@ -108,9 +104,6 @@ export async function getEvents(req: Request, res: Response) {
   }
 }
 
-/**
- * Получить ивент по slug
- */
 export async function getEventBySlug(req: Request, res: Response) {
   try {
     const { slug } = req.params;
@@ -128,7 +121,6 @@ export async function getEventBySlug(req: Request, res: Response) {
       throw createError("Ивент не найден", 404, "EVENT_NOT_FOUND");
     }
 
-    // Получаем теги
     const eventTagsList = await db
       .select({
         tag: tags

@@ -22,7 +22,6 @@ export default function EditTagPage() {
       return;
     }
 
-    // Получаем тег из списка
     fetchFromAdminApi<Array<any>>("/tags")
       .then((response) => {
         const found = response.data.find((t: any) => t.slug === slug);

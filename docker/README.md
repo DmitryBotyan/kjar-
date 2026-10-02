@@ -51,7 +51,7 @@ docker pull adminer:latest
 
 1. Установите зависимости локально:
 ```bash
-pnpm install
+bun install
 ```
 
 2. Запустите только базу данных в Docker:
@@ -62,10 +62,10 @@ docker compose -f docker/docker-compose.dev.yml up -d db
 3. Запустите API и Web локально:
 ```bash
 # В одном терминале
-pnpm --filter @kjar/api dev
+bun run --filter @kjar/api dev
 
 # В другом терминале
-pnpm --filter @kjar/web dev
+bun run --filter @kjar/web dev
 ```
 
 Не забудьте изменить `DATABASE_URL` в `.env` на `postgres://kjar:kjar_password@localhost:5433/kjar`

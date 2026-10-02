@@ -1,14 +1,91 @@
 import type { Request, Response } from "express";
 import { eq, desc, and, or, ilike, sql, inArray } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { characters, characterTags, tags } from "@kjar/db";
+import { characters, characterTags, characterWorks, normans, tags } from "@kjar/db";
 import { createError } from "../middlewares/errorHandler.js";
 import type { AuthRequest } from "../middlewares/auth.js";
 import { slugify } from "../utils/slug.js";
+import { assertDictionaryValue } from "./dictionaries.js";
+
+type Kin = { kind: string; name: string; slug: string | null };
+type Achievement = { title: string; note: string | null };
+
+function text(value: unknown, max: number): string {
+  return typeof value === "string" ? value.trim().slice(0, max) : "";
+}
+
+// Старые карточки хранили связи как { type, name } или как объект «тип: имя»
+export function normalizeKinship(raw: unknown): Kin[] {
+  const rows: unknown[] = Array.isArray(raw)
+    ? raw
+    : raw && typeof raw === "object"
+      ? Object.entries(raw as Record<string, unknown>).map(([kind, name]) => ({ kind, name }))
+      : [];
+
+  return rows
+    .map((row: any) => ({
+      kind: text(row?.kind ?? row?.type, 100),
+      name: text(row?.name ?? row?.title, 200),
+      slug: text(row?.slug, 255) || null
+    }))
+    .filter((row) => row.kind && (row.name || row.slug))
+    .slice(0, 60);
+}
+
+function normalizeAchievements(raw: unknown): Achievement[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((row: any) => ({ title: text(row?.title, 200), note: text(row?.note, 1000) || null }))
+    .filter((row) => row.title)
+    .slice(0, 100);
+}
+
+async function assertNorman(id: number | null | undefined) {
+  if (id === null || id === undefined) return;
+  const [found] = await db.select({ id: normans.id }).from(normans).where(eq(normans.id, id)).limit(1);
+  if (!found) {
+    throw createError("Тьорн не найден", 400, "NORMAN_NOT_FOUND");
+  }
+}
+
+type CharacterInput = {
+  name?: string;
+  slug?: string;
+  role?: string;
+  status?: string;
+  field?: string | null;
+  species?: string | null;
+  summary?: string | null;
+  description?: string | null;
+  image?: string | null;
+  statsJson?: any;
+  relationsJson?: any;
+  tjornId?: number | null;
+  favorite?: string | null;
+  features?: string | null;
+  achievementsJson?: any;
+};
+
+// Поля карточки, которые пишутся одинаково при создании и правке
+function cardFields(data: CharacterInput) {
+  const kin = data.relationsJson === undefined ? undefined : normalizeKinship(data.relationsJson);
+  const achievements =
+    data.achievementsJson === undefined ? undefined : normalizeAchievements(data.achievementsJson);
+
+  return {
+    ...(kin !== undefined && { relationsJson: kin.length > 0 ? kin : null }),
+    ...(achievements !== undefined && {
+      achievementsJson: achievements.length > 0 ? achievements : null
+    }),
+    ...(data.tjornId !== undefined && { tjornId: data.tjornId }),
+    ...(data.favorite !== undefined && { favorite: data.favorite?.trim() || null }),
+    ...(data.features !== undefined && { features: data.features?.trim() || null })
+  };
+}
 
 export async function getCharacters(req: Request, res: Response) {
   try {
-    const { role, status, species, tag, search, limit = "50", offset = "0" } = req.query;
+    const { role, status, species, tag, search, tjorn, limit = "50", offset = "0" } = req.query;
 
     const conditions = [];
 
@@ -22,6 +99,10 @@ export async function getCharacters(req: Request, res: Response) {
 
     if (species) {
       conditions.push(eq(characters.species, species as string));
+    }
+
+    if (tjorn) {
+      conditions.push(eq(characters.tjornId, Number(tjorn)));
     }
 
     if (search) {
@@ -68,6 +149,8 @@ export async function getCharacters(req: Request, res: Response) {
         field: characters.field,
         species: characters.species,
         summary: characters.summary,
+        // Пол и номер лежат в statsJson и нужны плашке карты в списке колоды
+        statsJson: characters.statsJson,
         image: characters.image,
         createdAt: characters.createdAt,
         updatedAt: characters.updatedAt
@@ -91,7 +174,7 @@ export async function getCharacters(req: Request, res: Response) {
     });
   } catch (error) {
     throw createError(
-      "Ошибка при получении персонажей",
+      "Ошибка при получении кьяров",
       500,
       "FETCH_CHARACTERS_ERROR",
       { originalError: error instanceof Error ? error.message : String(error) }
@@ -110,10 +193,9 @@ export async function getCharacterBySlug(req: Request, res: Response) {
       .limit(1);
 
     if (!character) {
-      throw createError("Персонаж не найден", 404, "CHARACTER_NOT_FOUND");
+      throw createError("Кьяр не найден", 404, "CHARACTER_NOT_FOUND");
     }
 
-    // Получаем теги
     const characterTagsList = await db
       .select({
         tag: tags
@@ -122,9 +204,50 @@ export async function getCharacterBySlug(req: Request, res: Response) {
       .innerJoin(tags, eq(characterTags.tagId, tags.id))
       .where(eq(characterTags.characterId, character.id));
 
+    const [tjorn] = character.tjornId
+      ? await db
+          .select({ slug: normans.slug, name: normans.name, image: normans.image })
+          .from(normans)
+          .where(eq(normans.id, character.tjornId))
+          .limit(1)
+      : [];
+
+    const kin = normalizeKinship(character.relationsJson);
+    const kinSlugs = kin.map((row) => row.slug).filter((slug): slug is string => !!slug);
+    const linked = kinSlugs.length
+      ? await db
+          .select({
+            slug: characters.slug,
+            name: characters.name,
+            image: characters.image,
+            statsJson: characters.statsJson
+          })
+          .from(characters)
+          .where(inArray(characters.slug, kinSlugs))
+      : [];
+
+    const works = await db
+      .select({
+        id: characterWorks.id,
+        authorName: characterWorks.authorName,
+        title: characterWorks.title,
+        image: characterWorks.image,
+        createdAt: characterWorks.createdAt
+      })
+      .from(characterWorks)
+      .where(and(eq(characterWorks.characterId, character.id), eq(characterWorks.isApproved, true)))
+      .orderBy(desc(characterWorks.createdAt));
+
     res.json({
       data: {
         ...character,
+        relationsJson: kin,
+        kin: kin.map((row) => ({
+          ...row,
+          card: linked.find((card) => card.slug === row.slug) || null
+        })),
+        tjorn: tjorn || null,
+        works,
         tags: characterTagsList.map((ct) => ct.tag)
       }
     });
@@ -133,7 +256,7 @@ export async function getCharacterBySlug(req: Request, res: Response) {
       throw error;
     }
     throw createError(
-      "Ошибка при получении персонажа",
+      "Ошибка при получении кьяра",
       500,
       "FETCH_CHARACTER_ERROR",
       { originalError: error instanceof Error ? error.message : String(error) }
@@ -151,24 +274,17 @@ export async function createCharacter(req: AuthRequest, res: Response) {
       throw createError("Недостаточно прав", 403, "FORBIDDEN");
     }
 
-    const data = req.body as {
-      name: string;
-      slug?: string;
-      role: string;
-      status: string;
-      field?: string | null;
-      species?: string | null;
-      summary?: string | null;
-      description?: string | null;
-      image?: string | null;
-      statsJson?: any;
-      relationsJson?: any;
-    };
+    const data = req.body as CharacterInput & { name: string; role: string; status: string };
 
-    // Генерируем slug если не указан
+    // Роль, статус и род берутся из справочников: иначе на сайте появляются
+    // фильтры-двойники вроде «Активна» и «Активен» из разных форм.
+    await assertDictionaryValue("character_role", data.role, "Роль кьяра");
+    await assertDictionaryValue("character_status", data.status, "Статус кьяра");
+    await assertDictionaryValue("character_species", data.species, "Род кьяра");
+    await assertNorman(data.tjornId);
+
     let slug = data.slug || slugify(data.name);
 
-    // Проверяем уникальность slug
     const existing = await db
       .select({ id: characters.id })
       .from(characters)
@@ -176,7 +292,6 @@ export async function createCharacter(req: AuthRequest, res: Response) {
       .limit(1);
 
     if (existing.length > 0) {
-      // Добавляем суффикс если slug уже существует
       let counter = 1;
       let newSlug = `${slug}-${counter}`;
       while (true) {
@@ -207,7 +322,7 @@ export async function createCharacter(req: AuthRequest, res: Response) {
         description: data.description || null,
         image: data.image || null,
         statsJson: data.statsJson || null,
-        relationsJson: data.relationsJson || null,
+        ...cardFields(data),
         createdBy: req.user.id,
       })
       .returning();
@@ -218,7 +333,7 @@ export async function createCharacter(req: AuthRequest, res: Response) {
       throw error;
     }
     throw createError(
-      "Ошибка при создании персонажа",
+      "Ошибка при создании кьяра",
       500,
       "CREATE_CHARACTER_ERROR",
       { originalError: error instanceof Error ? error.message : String(error) }
@@ -237,21 +352,13 @@ export async function updateCharacter(req: AuthRequest, res: Response) {
     }
 
     const { slug } = req.params as { slug: string };
-    const data = req.body as {
-      name?: string;
-      slug?: string;
-      role?: string;
-      status?: string;
-      field?: string | null;
-      species?: string | null;
-      summary?: string | null;
-      description?: string | null;
-      image?: string | null;
-      statsJson?: any;
-      relationsJson?: any;
-    };
+    const data = req.body as CharacterInput;
 
-    // Проверяем существование персонажа
+    await assertDictionaryValue("character_role", data.role, "Роль кьяра");
+    await assertDictionaryValue("character_status", data.status, "Статус кьяра");
+    await assertDictionaryValue("character_species", data.species, "Род кьяра");
+    await assertNorman(data.tjornId);
+
     const [existing] = await db
       .select()
       .from(characters)
@@ -259,10 +366,9 @@ export async function updateCharacter(req: AuthRequest, res: Response) {
       .limit(1);
 
     if (!existing) {
-      throw createError("Персонаж не найден", 404, "CHARACTER_NOT_FOUND");
+      throw createError("Кьяр не найден", 404, "CHARACTER_NOT_FOUND");
     }
 
-    // Если меняется slug, проверяем уникальность
     let newSlug = data.slug || existing.slug;
     if (data.slug && data.slug !== existing.slug) {
       const check = await db
@@ -276,7 +382,6 @@ export async function updateCharacter(req: AuthRequest, res: Response) {
       }
     }
 
-    // Если меняется name и slug не указан, генерируем новый slug
     if (data.name && !data.slug) {
       newSlug = slugify(data.name);
       if (newSlug !== existing.slug) {
@@ -287,7 +392,6 @@ export async function updateCharacter(req: AuthRequest, res: Response) {
           .limit(1);
         
         if (check.length > 0 && check[0].id !== existing.id) {
-          // Добавляем суффикс
           let counter = 1;
           let candidate = `${newSlug}-${counter}`;
           while (true) {
@@ -320,7 +424,7 @@ export async function updateCharacter(req: AuthRequest, res: Response) {
         ...(data.description !== undefined && { description: data.description }),
         ...(data.image !== undefined && { image: data.image }),
         ...(data.statsJson !== undefined && { statsJson: data.statsJson }),
-        ...(data.relationsJson !== undefined && { relationsJson: data.relationsJson }),
+        ...cardFields(data),
         updatedAt: new Date(),
       })
       .where(eq(characters.id, existing.id))
@@ -332,7 +436,7 @@ export async function updateCharacter(req: AuthRequest, res: Response) {
       throw error;
     }
     throw createError(
-      "Ошибка при обновлении персонажа",
+      "Ошибка при обновлении кьяра",
       500,
       "UPDATE_CHARACTER_ERROR",
       { originalError: error instanceof Error ? error.message : String(error) }
@@ -359,7 +463,7 @@ export async function deleteCharacter(req: AuthRequest, res: Response) {
       .limit(1);
 
     if (!existing) {
-      throw createError("Персонаж не найден", 404, "CHARACTER_NOT_FOUND");
+      throw createError("Кьяр не найден", 404, "CHARACTER_NOT_FOUND");
     }
 
     await db.delete(characters).where(eq(characters.id, existing.id));
@@ -370,7 +474,7 @@ export async function deleteCharacter(req: AuthRequest, res: Response) {
       throw error;
     }
     throw createError(
-      "Ошибка при удалении персонажа",
+      "Ошибка при удалении кьяра",
       500,
       "DELETE_CHARACTER_ERROR",
       { originalError: error instanceof Error ? error.message : String(error) }

@@ -22,7 +22,6 @@ export default function EditCategoryPage() {
       return;
     }
 
-    // Получаем категорию из списка
     fetchFromAdminApi<Array<any>>("/categories")
       .then((response) => {
         const found = response.data.find((c: any) => c.slug === slug);

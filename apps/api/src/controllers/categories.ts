@@ -37,10 +37,8 @@ export async function createCategory(req: AuthRequest, res: Response) {
       description?: string | null;
     };
 
-    // Генерируем slug если не указан
     let slug = data.slug || slugify(data.name);
 
-    // Проверяем уникальность slug
     const existing = await db
       .select({ id: categories.id })
       .from(categories)
@@ -48,7 +46,6 @@ export async function createCategory(req: AuthRequest, res: Response) {
       .limit(1);
 
     if (existing.length > 0) {
-      // Добавляем суффикс если slug уже существует
       let counter = 1;
       let newSlug = `${slug}-${counter}`;
       while (true) {
@@ -106,7 +103,6 @@ export async function updateCategory(req: AuthRequest, res: Response) {
       description?: string | null;
     };
 
-    // Проверяем существование категории
     const [existing] = await db
       .select()
       .from(categories)
@@ -117,7 +113,6 @@ export async function updateCategory(req: AuthRequest, res: Response) {
       throw createError("Категория не найдена", 404, "CATEGORY_NOT_FOUND");
     }
 
-    // Если меняется slug, проверяем уникальность
     let newSlug = data.slug || existing.slug;
     if (data.slug && data.slug !== existing.slug) {
       const check = await db
@@ -131,7 +126,6 @@ export async function updateCategory(req: AuthRequest, res: Response) {
       }
     }
 
-    // Если меняется name и slug не указан, генерируем новый slug
     if (data.name && !data.slug) {
       newSlug = slugify(data.name);
       if (newSlug !== existing.slug) {
@@ -142,7 +136,6 @@ export async function updateCategory(req: AuthRequest, res: Response) {
           .limit(1);
         
         if (check.length > 0 && check[0].id !== existing.id) {
-          // Добавляем суффикс
           let counter = 1;
           let candidate = `${newSlug}-${counter}`;
           while (true) {

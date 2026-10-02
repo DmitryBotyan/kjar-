@@ -1,16 +1,24 @@
-# Используем node:22-alpine с явным указанием версии для кэширования
+# Базовый образ остаётся node:22-alpine: он уже используется проектом, а bun
+# ставится поверх из npm. Готовый образ oven/bun лежит только на Docker Hub,
+# который с российских адресов отдаёт 429 на анонимные загрузки, — лишняя
+# точка отказа там, где её можно не заводить.
 FROM node:22-alpine
 
-# Устанавливаем рабочую директорию
 WORKDIR /app
 
+# Единственный внешний источник — реестр npm. Если он недоступен, подменяется
+# без правки файла:  docker compose build --build-arg NPM_REGISTRY=https://зеркало
+ARG NPM_REGISTRY=https://registry.npmjs.org
+ENV BUN_CONFIG_REGISTRY=$NPM_REGISTRY
+
+# Бинарь bun приходит npm-пакетом @oven/bun-linux-<arch>-musl, то есть всё
+# качается из реестра npm. Ни Docker Hub, ни GitHub Releases не нужны.
+RUN npm i -g bun@1.3.8 --no-fund --no-audit --registry="$NPM_REGISTRY"
+
 # Копируем файлы зависимостей для лучшего кэширования слоев
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json bun.lock bunfig.toml ./
 COPY apps/web/package.json apps/web/package.json
 COPY apps/api/package.json apps/api/package.json
 COPY packages/db/package.json packages/db/package.json
 
-# Включаем corepack и устанавливаем зависимости
-RUN corepack enable && \
-    pnpm config set ignore-scripts false && \
-    pnpm install --frozen-lockfile --ignore-scripts=false
+RUN bun install --frozen-lockfile

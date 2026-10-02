@@ -6,9 +6,9 @@
 
 ### Генерация миграций
 ```bash
-pnpm db:generate
+bun run db:generate
 # или
-pnpm --filter @kjar/db generate
+bun run --filter @kjar/db generate
 ```
 Генерирует SQL файлы миграций на основе изменений в схеме.
 
@@ -16,7 +16,7 @@ pnpm --filter @kjar/db generate
 
 **Для Docker окружения (рекомендуется):**
 ```bash
-pnpm db:migrate:docker
+bun run db:migrate:docker
 ```
 Скрипт автоматически:
 - Проверяет и создаёт `.env.example` и `.env` (если их нет)
@@ -29,37 +29,37 @@ pnpm db:migrate:docker
 **Для локального окружения:**
 ```bash
 # Через drizzle-kit
-pnpm db:migrate
+bun run db:migrate
 
-# Через Node.js скрипт (альтернатива)
-pnpm db:migrate:node
+# Свой раннер на drizzle-orm, без drizzle-kit (альтернатива)
+bun run db:migrate:node
 ```
 
 > **Примечание:** 
-> - Для Docker используйте `pnpm db:migrate:docker` (требует запущенные контейнеры)
-> - Для локальной БД измените `DATABASE_URL` в `.env` на `postgres://user:password@localhost:5432/dbname` и используйте `pnpm db:migrate`
+> - Для Docker используйте `bun run db:migrate:docker` (требует запущенные контейнеры)
+> - Для локальной БД измените `DATABASE_URL` в `.env` на `postgres://user:password@localhost:5432/dbname` и используйте `bun run db:migrate`
 
 ### Push схемы в БД (без создания файлов)
 ```bash
-pnpm db:push
+bun run db:push
 # или
-pnpm --filter @kjar/db push
+bun run --filter @kjar/db push
 ```
 Полезно для быстрого прототипирования. Не создаёт файлы миграций.
 
 ### Drizzle Studio
 ```bash
-pnpm db:studio
+bun run db:studio
 # или
-pnpm --filter @kjar/db studio
+bun run --filter @kjar/db studio
 ```
 Открывает веб-интерфейс для просмотра и редактирования данных в БД.
 
 ### Интроспекция БД
 ```bash
-pnpm db:introspect
+bun run db:introspect
 # или
-pnpm --filter @kjar/db introspect
+bun run --filter @kjar/db introspect
 ```
 Генерирует схему Drizzle на основе существующей структуры БД.
 
@@ -75,7 +75,7 @@ DATABASE_URL=postgres://user:password@localhost:5432/dbname
 ## Структура
 
 - `src/schema.ts` - схема базы данных (таблицы, связи)
-- `src/migrate.ts` - скрипт для применения миграций через Node.js
+- `src/migrate.ts` - скрипт для применения миграций напрямую через drizzle-orm
 - `src/migrate-kit.ts` - обёртка для drizzle-kit migrate с загрузкой .env
 - `src/index.ts` - экспорт схемы
 - `migrations/` - папка с SQL файлами миграций (создаётся автоматически)
@@ -87,13 +87,13 @@ DATABASE_URL=postgres://user:password@localhost:5432/dbname
 1. **Измените схему** в `src/schema.ts`
 2. **Сгенерируйте миграцию:**
    ```bash
-   pnpm db:generate
+   bun run db:generate
    ```
 3. **Примените миграцию:**
    ```bash
    # Для Docker окружения
-   pnpm db:migrate:docker
+   bun run db:migrate:docker
    
    # Для локального окружения
-   pnpm db:migrate
+   bun run db:migrate
    ```

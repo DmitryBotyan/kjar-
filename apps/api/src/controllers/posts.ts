@@ -5,6 +5,7 @@ import { posts, postTags, tags } from "@kjar/db";
 import { createError } from "../middlewares/errorHandler.js";
 import type { AuthRequest } from "../middlewares/auth.js";
 import { slugify } from "../utils/slug.js";
+import { assertDictionaryValue } from "./dictionaries.js";
 
 export async function getPosts(req: Request, res: Response) {
   try {
@@ -18,7 +19,6 @@ export async function getPosts(req: Request, res: Response) {
       const isEventBool = isEvent === "true" || isEvent === "1";
       conditions.push(eq(posts.isEvent, isEventBool));
     } else {
-      // Если параметр isEvent не указан, показываем только обычные посты (не ивенты)
       conditions.push(eq(posts.isEvent, false));
     }
 
@@ -64,7 +64,6 @@ export async function getPosts(req: Request, res: Response) {
         summary: posts.summary,
         image: posts.image,
         publishedAt: posts.publishedAt,
-        // Поля для ивентов
         isEvent: posts.isEvent,
         eventType: posts.eventType,
         eventFormat: posts.eventFormat,
@@ -115,7 +114,6 @@ export async function getPostBySlug(req: Request, res: Response) {
       throw createError("Пост не найден", 404, "POST_NOT_FOUND");
     }
 
-    // Получаем теги
     const postTagsList = await db
       .select({
         tag: tags
@@ -166,10 +164,18 @@ export async function createPost(req: AuthRequest, res: Response) {
       participationType?: string | null;
     };
 
-    // Генерируем slug если не указан
+    // Тип, формат и участие ивента — из справочников, чтобы подписи в админке
+    // и на сайте не расходились.
+    await assertDictionaryValue("event_type", data.eventType, "Тип ивента");
+    await assertDictionaryValue("event_format", data.eventFormat, "Формат ивента");
+    await assertDictionaryValue(
+      "participation_type",
+      data.participationType,
+      "Тип участия"
+    );
+
     let slug = data.slug || slugify(data.title);
 
-    // Проверяем уникальность slug
     const existing = await db
       .select({ id: posts.id })
       .from(posts)
@@ -177,7 +183,6 @@ export async function createPost(req: AuthRequest, res: Response) {
       .limit(1);
 
     if (existing.length > 0) {
-      // Добавляем суффикс если slug уже существует
       let counter = 1;
       let newSlug = `${slug}-${counter}`;
       while (true) {
@@ -250,7 +255,14 @@ export async function updatePost(req: AuthRequest, res: Response) {
       participationType?: string | null;
     };
 
-    // Проверяем существование поста
+    await assertDictionaryValue("event_type", data.eventType, "Тип ивента");
+    await assertDictionaryValue("event_format", data.eventFormat, "Формат ивента");
+    await assertDictionaryValue(
+      "participation_type",
+      data.participationType,
+      "Тип участия"
+    );
+
     const [existing] = await db
       .select()
       .from(posts)
@@ -261,7 +273,6 @@ export async function updatePost(req: AuthRequest, res: Response) {
       throw createError("Пост не найден", 404, "POST_NOT_FOUND");
     }
 
-    // Если меняется slug, проверяем уникальность
     let newSlug = data.slug || existing.slug;
     if (data.slug && data.slug !== existing.slug) {
       const check = await db
@@ -275,7 +286,6 @@ export async function updatePost(req: AuthRequest, res: Response) {
       }
     }
 
-    // Если меняется title и slug не указан, генерируем новый slug
     if (data.title && !data.slug) {
       newSlug = slugify(data.title);
       if (newSlug !== existing.slug) {
@@ -286,7 +296,6 @@ export async function updatePost(req: AuthRequest, res: Response) {
           .limit(1);
         
         if (check.length > 0 && check[0].id !== existing.id) {
-          // Добавляем суффикс
           let counter = 1;
           let candidate = `${newSlug}-${counter}`;
           while (true) {

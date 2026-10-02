@@ -68,7 +68,6 @@ export default function AdminArticlesPage() {
         throw new Error(errorData.error?.message || "Ошибка удаления статьи");
       }
 
-      // Обновляем список статей
       setArticles(articles.filter((a) => a.id !== deleteModal.article.id));
       setDeleteModal({ isOpen: false, article: null });
     } catch (err) {

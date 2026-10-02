@@ -1,10 +1,7 @@
 import Link from "next/link";
 import { getEvents } from "@/lib/api";
-import {
-  EVENT_FORMAT_LABELS as FORMATS,
-  EVENT_TYPE_LABELS as TYPES,
-  PARTICIPATION_LABELS as PARTICIPATION
-} from "@/lib/labels";
+import { getDictionarySet, labelFor } from "@/lib/dictionaries";
+import type { DictionaryEntry } from "@/lib/dictionaries";
 
 interface EventsPageProps {
   searchParams: {
@@ -30,9 +27,11 @@ function formatDate(value?: string | null) {
 
 export default async function EventsPage({ searchParams }: EventsPageProps) {
   let events: any[] = [];
-  let formats: string[] = [];
-  let types: string[] = [];
-  let participations: string[] = [];
+  // Варианты фильтров — весь справочник, а не только то, что уже встречалось
+  // в постах: иначе новый формат не выбрать, пока по нему нет ни одного ивента.
+  let formats: DictionaryEntry[] = [];
+  let types: DictionaryEntry[] = [];
+  let participations: DictionaryEntry[] = [];
   let total = 0;
 
   try {
@@ -49,14 +48,10 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
     events = response.data || [];
     total = response.total || events.length;
 
-    // Варианты фильтров — из того, что реально есть в базе
-    const facets = await getEvents({ limit: 200 }).catch(() => ({ data: [] }));
-    const all = (facets.data as any[]) || [];
-    const uniq = (key: string) =>
-      Array.from(new Set(all.map((e: any) => e[key]).filter(Boolean))).sort() as string[];
-    formats = uniq("eventFormat");
-    types = uniq("eventType");
-    participations = uniq("participationType");
+    const dictionaries = await getDictionarySet();
+    formats = dictionaries.event_format;
+    types = dictionaries.event_type;
+    participations = dictionaries.participation_type;
   } catch (error) {
     console.error("Error loading events:", error);
   }
@@ -79,12 +74,12 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
                 {types.map((type) => (
                   <Link
                     className={`kjar-chip${
-                      searchParams.eventType === type ? " kjar-chip--accent" : ""
+                      searchParams.eventType === type.code ? " kjar-chip--accent" : ""
                     }`}
-                    key={type}
-                    href={`/events?eventType=${encodeURIComponent(type)}`}
+                    key={type.code}
+                    href={`/events?eventType=${encodeURIComponent(type.code)}`}
                   >
-                    {TYPES[type] || type}
+                    {type.label}
                   </Link>
                 ))}
               </div>
@@ -102,9 +97,9 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
                 {latest.publishedAt && <span>{formatDate(latest.publishedAt)}</span>}
                 {latest.eventType && (
                   <span>
-                    {TYPES[latest.eventType] || latest.eventType}
+                    {labelFor(types, latest.eventType)}
                     {latest.participationType
-                      ? ` · ${PARTICIPATION[latest.participationType] || latest.participationType}`
+                      ? ` · ${labelFor(participations, latest.participationType)}`
                       : ""}
                   </span>
                 )}
@@ -151,8 +146,8 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
                 >
                   <option value="">Все типы</option>
                   {types.map((type) => (
-                    <option key={type} value={type}>
-                      {TYPES[type] || type}
+                    <option key={type.code} value={type.code}>
+                      {type.label}
                     </option>
                   ))}
                 </select>
@@ -169,9 +164,9 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
                   defaultValue={searchParams.eventFormat || ""}
                 >
                   <option value="">Все форматы</option>
-                  {formats.map((value) => (
-                    <option key={value} value={value}>
-                      {FORMATS[value] || value}
+                  {formats.map((format) => (
+                    <option key={format.code} value={format.code}>
+                      {format.label}
                     </option>
                   ))}
                 </select>
@@ -188,9 +183,9 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
                   defaultValue={searchParams.participationType || ""}
                 >
                   <option value="">Любое</option>
-                  {participations.map((value) => (
-                    <option key={value} value={value}>
-                      {PARTICIPATION[value] || value}
+                  {participations.map((participation) => (
+                    <option key={participation.code} value={participation.code}>
+                      {participation.label}
                     </option>
                   ))}
                 </select>
@@ -254,9 +249,9 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
                             {event.title}
                           </Link>
                         </h3>
-                        {event.eventFormat && FORMATS[event.eventFormat] && (
+                        {event.eventFormat && (
                           <span className="kjar-event-card__status">
-                            {FORMATS[event.eventFormat]}
+                            {labelFor(formats, event.eventFormat)}
                           </span>
                         )}
                       </div>
@@ -275,7 +270,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
                         {event.eventType && (
                           <div>
                             <dt>Тип</dt>
-                            <dd>{TYPES[event.eventType] || event.eventType}</dd>
+                            <dd>{labelFor(types, event.eventType)}</dd>
                           </div>
                         )}
                       </dl>
