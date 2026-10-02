@@ -87,10 +87,12 @@ jobs:
           # Поэтому при заданном SSH_JUMP идём через перевалочный сервер тем же
           # ключом. Пустой секрет — соединяемся напрямую.
           JUMP="${{ secrets.SSH_JUMP }}"
+          # Адрес из секрета тоже чистим: пробел или точка на конце ломают DNS
+          HOST=$(printf '%s' "${{ secrets.SSH_HOST }}" | tr -d '[:space:]' | sed 's/\.$//')
 
           {
             echo "Host target"
-            echo "  HostName ${{ secrets.SSH_HOST }}"
+            echo "  HostName $HOST"
             echo "  User ${{ secrets.SSH_USER }}"
             echo "  Port ${{ secrets.SSH_PORT || 22 }}"
             echo "  IdentityFile ~/.ssh/id_ed25519"
