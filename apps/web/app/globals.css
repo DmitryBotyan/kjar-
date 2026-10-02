@@ -3405,29 +3405,6 @@ button.kjar-character__reference[disabled] {
   font-weight: 500;
 }
 
-.kjar-admin__nav {
-  margin-block: var(--s3);
-}
-
-.kjar-admin__nav-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--s3);
-}
-
-.kjar-admin__nav-item {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  color: var(--ash);
-  text-decoration: none;
-  transition: color 0.15s ease;
-}
-
-.kjar-admin__nav-item:hover {
-  color: var(--gold);
-}
-
 .kjar-admin__content {
   display: grid;
   gap: var(--s3);
@@ -3444,23 +3421,6 @@ button.kjar-character__reference[disabled] {
 .kjar-admin__welcome {
   margin: 0;
   color: var(--ash);
-}
-
-.kjar-admin__summary {
-  display: grid;
-  gap: var(--s2);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.kjar-admin__summary a {
-  color: var(--gold);
-  text-decoration: none;
-}
-
-.kjar-admin__summary a:hover {
-  text-decoration: underline;
 }
 
 .kjar-admin__table-wrap {

@@ -77,11 +77,6 @@ export default function AdminThreadsPage() {
     <div className="kjar-admin">
       <div className="kjar-admin__header">
         <h1 className="kjar-admin__title">Обсуждения</h1>
-        <div className="kjar-admin__header-actions">
-          <Link href="/admin" className="kjar-button kjar-button--ghost">
-            Назад
-          </Link>
-        </div>
       </div>
 
       <div className="kjar-admin__content">

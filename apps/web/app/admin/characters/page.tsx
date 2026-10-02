@@ -94,10 +94,7 @@ export default function AdminCharactersPage() {
     <div className="kjar-admin">
       <div className="kjar-admin__header">
         <h1 className="kjar-admin__title">Управление кьярами</h1>
-        <div>
-          <Link href="/admin" className="kjar-button kjar-button--ghost">
-            Назад
-          </Link>
+        <div className="kjar-admin__header-actions">
           <Link href="/admin/characters/new" className="kjar-button kjar-button--primary">
             Добавить кьяра
           </Link>

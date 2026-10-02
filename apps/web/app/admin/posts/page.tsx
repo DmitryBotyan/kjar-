@@ -94,10 +94,7 @@ export default function AdminPostsPage() {
     <div className="kjar-admin">
       <div className="kjar-admin__header">
         <h1 className="kjar-admin__title">Управление постами</h1>
-        <div>
-          <Link href="/admin" className="kjar-button kjar-button--ghost">
-            Назад
-          </Link>
+        <div className="kjar-admin__header-actions">
           <Link href="/admin/posts/new" className="kjar-button kjar-button--primary">
             Добавить пост
           </Link>

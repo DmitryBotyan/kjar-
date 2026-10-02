@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import DeleteConfirmModal from "@/components/admin/DeleteConfirmModal";
 import { adminRequest, useAdminGuard } from "@/lib/useAdminGuard";
 
@@ -87,11 +86,6 @@ export default function AdminCommentsPage() {
     <div className="kjar-admin">
       <div className="kjar-admin__header">
         <h1 className="kjar-admin__title">Комментарии</h1>
-        <div className="kjar-admin__header-actions">
-          <Link href="/admin" className="kjar-button kjar-button--ghost">
-            Назад
-          </Link>
-        </div>
       </div>
 
       <div className="kjar-admin__content">

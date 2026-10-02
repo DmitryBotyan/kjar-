@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import DeleteConfirmModal from "@/components/admin/DeleteConfirmModal";
 import ImageUpload from "@/components/admin/ImageUpload";
 import { adminRequest, useAdminGuard } from "@/lib/useAdminGuard";
@@ -129,9 +128,6 @@ export default function AdminNormansPage() {
               Добавить тьорна
             </button>
           )}
-          <Link href="/admin" className="kjar-button kjar-button--ghost">
-            Назад
-          </Link>
         </div>
       </div>
 

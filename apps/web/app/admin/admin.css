@@ -51,11 +51,6 @@ body.kjar-admin-body .kjar-footer {
   gap: var(--s2);
 }
 
-.kjar-admin__user-info {
-  color: var(--ash);
-  font-size: var(--t-xs);
-}
-
 /* Лист персонажа: паспорт карты и характеристики внутри общей формы */
 .kjar-sheet {
   display: grid;
@@ -195,4 +190,231 @@ body.kjar-admin-body .kjar-footer {
 .kjar-sheet .kjar-button svg {
   width: 16px;
   height: 16px;
+}
+
+/* ===== Кабинет: разделы слева, содержимое справа ===== */
+
+.kjar-cabinet {
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.kjar-cabinet__side {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow-y: auto;
+  border-right: 1px solid var(--line);
+  background: var(--peat);
+}
+
+.kjar-cabinet__brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s2);
+  padding: var(--s3);
+  border-bottom: 1px solid var(--line);
+}
+
+.kjar-cabinet__logo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  color: var(--ink);
+  font-family: var(--rune);
+  font-size: var(--t-l);
+  letter-spacing: 0.04em;
+  text-decoration: none;
+}
+
+.kjar-cabinet__toggle {
+  display: none;
+  padding: var(--s2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-field);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.kjar-cabinet__toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+.kjar-cabinet__nav {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--s2);
+  padding: var(--s3) var(--s2);
+}
+
+.kjar-cabinet__group {
+  display: grid;
+  gap: var(--s1);
+}
+
+.kjar-cabinet__group-title {
+  margin: 0;
+  padding: 0 var(--s2);
+  color: var(--ash);
+  font-size: var(--t-xs);
+}
+
+.kjar-cabinet__link {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  width: 100%;
+  min-height: 36px;
+  padding: 0 var(--s2);
+  border: 0;
+  border-radius: var(--r-field);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--t-s);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.kjar-cabinet__link svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--ash);
+}
+
+.kjar-cabinet__link:hover {
+  background: var(--line);
+}
+
+.kjar-cabinet__link.is-active {
+  background: var(--plate);
+  color: var(--gold);
+}
+
+.kjar-cabinet__link.is-active svg {
+  color: var(--gold);
+}
+
+.kjar-cabinet__badge {
+  margin-left: auto;
+  min-width: 22px;
+  padding: 0 var(--s1);
+  border-radius: var(--s3);
+  background: var(--gold);
+  color: var(--bark);
+  font-size: var(--t-xs);
+  text-align: center;
+}
+
+.kjar-cabinet__account {
+  display: grid;
+  gap: var(--s1);
+  margin-top: auto;
+  padding-top: var(--s3);
+  border-top: 1px solid var(--line);
+}
+
+.kjar-cabinet__user {
+  display: grid;
+  margin: 0 0 var(--s2);
+  padding: 0 var(--s2);
+  color: var(--ink);
+}
+
+.kjar-cabinet__user span {
+  color: var(--ash);
+  font-size: var(--t-xs);
+}
+
+.kjar-cabinet__main {
+  min-width: 0;
+}
+
+.kjar-cabinet__main .kjar-admin {
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .kjar-cabinet {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+  }
+
+  .kjar-cabinet__side {
+    z-index: 30;
+    height: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .kjar-cabinet__toggle {
+    display: inline-flex;
+  }
+
+  .kjar-cabinet__brand {
+    border-bottom: 0;
+  }
+
+  .kjar-cabinet__nav {
+    display: none;
+    max-height: calc(100vh - 66px);
+    overflow-y: auto;
+    border-top: 1px solid var(--line);
+  }
+
+  .kjar-cabinet--menu .kjar-cabinet__nav {
+    display: flex;
+  }
+}
+
+/* ===== Обзор ===== */
+
+.kjar-overview {
+  display: grid;
+  gap: var(--s3);
+}
+
+.kjar-overview__queue {
+  display: grid;
+  gap: var(--s2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kjar-overview__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s3);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.kjar-overview__item:hover {
+  color: var(--gold);
+}
+
+.kjar-overview__count {
+  min-width: 40px;
+  color: var(--gold);
+  font-family: var(--rune);
+  font-size: var(--t-l);
+}
+
+body.kjar-admin-body .kjar-cookie {
+  display: none;
+}
+
+.kjar-cabinet .kjar-admin__header {
+  margin-bottom: var(--s4);
 }
