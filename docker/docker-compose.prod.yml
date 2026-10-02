@@ -74,7 +74,7 @@ services:
         condition: service_healthy
 
   minio:
-    image: minio/minio:latest
+    image: pgsty/minio:latest
     restart: always
     command: server /data
     environment:
@@ -90,7 +90,7 @@ services:
 
   # Разовое создание бакета и публичного доступа на чтение
   minio-setup:
-    image: minio/mc:latest
+    image: pgsty/mc:latest
     depends_on:
       minio:
         condition: service_healthy

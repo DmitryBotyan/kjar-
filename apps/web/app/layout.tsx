@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { Menu, Search } from "lucide-react";
+import { alegreya, golos, norse } from "./fonts";
 import "./globals.css";
 
 // Адрес сайта и почта редакции задаются окружением: в коде их быть не должно
@@ -39,7 +40,7 @@ type RootLayoutProps = {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="ru">
+    <html lang="ru" className={`${norse.variable} ${alegreya.variable} ${golos.variable}`}>
       <body>
         <header className="kjar-header">
           <div className="kjar-header__inner">

@@ -1,26 +1,7 @@
-@import url("https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,500;0,700;1,400&family=Golos+Text:wght@400;500;600&display=swap");
-
 /* ==========================================================================
    KJÁR. Все значения взяты из DESIGN.md в корне проекта.
    Ничего вне токенов ниже в файле быть не должно.
    ========================================================================== */
-
-/* Рунический гротеск для вордмарка, навигации, заголовков и плашек карт */
-@font-face {
-  font-family: "Norse";
-  src: url("/fonts/Norse-Regular.ttf") format("truetype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Norse";
-  src: url("/fonts/Norse-Bold.ttf") format("truetype");
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
 
 :root {
   /* Палитра «лес»: поверхности почти нейтральные, зелень остаётся акцентом */
@@ -36,9 +17,10 @@
   --rust: #cc6a48;
 
   /* Гарнитуры */
-  --rune: "Norse", "Alegreya", Georgia, serif;
-  --display: "Alegreya", Georgia, serif;
-  --body: "Golos Text", system-ui, sans-serif;
+  /* Сами шрифты подключает app/fonts.ts, здесь только их переменные */
+  --rune: var(--font-norse), var(--font-alegreya), Georgia, serif;
+  --display: var(--font-alegreya), Georgia, serif;
+  --body: var(--font-golos), system-ui, sans-serif;
 
   /* Кегль: 13 / 16 / 20 / 28 / 44 / 72 */
   --t-xs: 0.8125rem;
