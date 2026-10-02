@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { Menu } from "lucide-react";
 import SearchBox from "@/components/SearchBox";
+import CookieNotice from "@/components/CookieNotice";
 import { alegreya, golos } from "./fonts";
 import "./norse.css";
 import "./globals.css";
@@ -200,6 +201,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
             <span>Мир, который звучит тишиной</span>
           </div>
         </footer>
+        <CookieNotice />
       </body>
     </html>
   );
