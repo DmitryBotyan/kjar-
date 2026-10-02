@@ -416,5 +416,14 @@ body.kjar-admin-body .kjar-cookie {
 }
 
 .kjar-cabinet .kjar-admin__header {
-  margin-bottom: var(--s4);
+  margin-bottom: var(--s3);
+}
+
+.kjar-cabinet .kjar-admin__empty {
+  gap: var(--s3);
+  padding-top: 0;
+}
+
+.kjar-admin__empty p {
+  margin: 0;
 }
