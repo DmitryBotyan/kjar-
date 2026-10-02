@@ -22,6 +22,10 @@ import { issueFormToken } from "../middlewares/antiSpam.js";
 
 const router = Router();
 
+// Подсказки поиска запрашиваются по мере набора: у них свой лимит,
+// чтобы поиск не съедал общий
+router.get("/search", rateLimit(60, 60 * 1000, "search"), asyncHandler(search));
+
 router.use(rateLimit());
 
 router.get("/", getRoot);
@@ -49,6 +53,5 @@ router.use("/contacts", contactsRouter);
 router.use("/dictionaries", dictionariesRouter);
 router.use("/normans", normansRouter);
 router.use("/works", worksRouter);
-router.get("/search", asyncHandler(search));
 
 export default router;

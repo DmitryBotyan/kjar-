@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
 
 interface RateLimitStore {
   [key: string]: {
@@ -34,6 +35,20 @@ function isInternalRequest(req: Request): boolean {
   return !req.headers["x-forwarded-for"];
 }
 
+// Редакция работает в админке часами, и каждый раздел делает несколько
+// запросов: общий лимит для посетителей выбирался за пару минут. Токен
+// проверяется подписью, так что выдать себя за модератора без него нельзя.
+function isStaff(req: Request): boolean {
+  const header = req.headers.authorization;
+  if (!header?.startsWith("Bearer ") || !process.env.JWT_SECRET) return false;
+  try {
+    const payload = jwt.verify(header.slice(7), process.env.JWT_SECRET) as jwt.JwtPayload;
+    return payload.role === "mod" || payload.role === "admin";
+  } catch {
+    return false;
+  }
+}
+
 export function rateLimit(
   maxRequests: number = MAX_REQUESTS,
   windowMs: number = WINDOW_MS,
@@ -42,7 +57,7 @@ export function rateLimit(
   // У каждого лимитера свой счётчик: точечный лимит на вход не должен
   // расходовать общий лимит и наоборот
   return (req: Request, res: Response, next: NextFunction): void => {
-    if (isInternalRequest(req)) {
+    if (isInternalRequest(req) || (bucket === "global" && isStaff(req))) {
       next();
       return;
     }

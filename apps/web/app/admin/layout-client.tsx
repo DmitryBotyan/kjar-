@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -117,9 +117,12 @@ export default function AdminLayoutClient({ children }: { children: ReactNode })
     }
   }, [pathname, state]);
 
+  const countsAt = useRef(0);
+
   const loadCounts = useCallback(() => {
     const token = localStorage.getItem("authToken");
-    if (!token) return;
+    if (!token || Date.now() - countsAt.current < 60_000) return;
+    countsAt.current = Date.now();
     const headers = { Authorization: `Bearer ${token}` };
     const read = (url: string) =>
       fetch(url, { headers, cache: "no-store" })
@@ -172,6 +175,7 @@ export default function AdminLayoutClient({ children }: { children: ReactNode })
   };
 
   const logout = () => {
+    countsAt.current = 0;
     localStorage.removeItem("authToken");
     setUser(null);
     setCounts(null);
