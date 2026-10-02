@@ -2,7 +2,736 @@
 + echo '=== состояние сервера ==='
 === состояние сервера ===
 + ssh target 'hostname; docker --version; free -m | head -2; df -h / | tail -1'
-ssh: Could not resolve hostname 217.149.23.183.: Name or service not known
+Warning: Permanently added '217.149.23.183' (ED25519) to the list of known hosts.
+msk-1-vm-sffi
+Docker version 29.8.2, build 7fc2dff
+               total        used        free      shared  buff/cache   available
+Mem:            1900         707         226          19        1178        1193
+/dev/sda1        38G  7.1G   31G  19% /
++ echo '=== код проекта ==='
+=== код проекта ===
++ rsync -az --delete --exclude node_modules --exclude .next --exclude .git --exclude '*.tsbuildinfo' --exclude .env --exclude .env.production ./ target:/opt/kjar/
++ ssh target 'find /opt/kjar -type f | wc -l'
+169
++ echo '=== боевые переменные ==='
+=== боевые переменные ===
++ printf '%s\n' 'POSTGRES_USER=kjar
+POSTGRES_PASSWORD=4d58e7abab1d76038c044e5bec15b583629541a6bec58c3c
+POSTGRES_DB=kjar
+DATABASE_URL=postgres://kjar:4d58e7abab1d76038c044e5bec15b583629541a6bec58c3c@db:5432/kjar
+JWT_SECRET=195f60e05ceab4699ff9e06f096d311ce914fb76b2bb858bdb8b167e575c8846
+JWT_EXPIRES_IN=7d
+BCRYPT_SALT_ROUNDS=12
+CORS_ORIGIN=https://kjar.ru
+NEXT_PUBLIC_SITE_URL=https://kjar.ru
+CONTACT_EMAIL=hello@kjar.ru
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX=100
+S3_ENDPOINT=http://minio:9000
+S3_ACCESS_KEY=eac5af2deccef564d192
+S3_SECRET_KEY=7faa75805375516cc0b16680124f6c2f133b43d27e8aea49
+S3_BUCKET=kjar
+S3_REGION=ru-1
+S3_PUBLIC_URL=https://kjar.ru/s3/kjar'
++ ssh target 'umask 077 && cat > /opt/kjar/.env.production'
++ ssh target 'grep -c = /opt/kjar/.env.production'
+18
++ echo '=== вход в реестр и получение образов ==='
+=== вход в реестр и получение образов ===
++ ssh target 'docker login ghcr.io -u DmitryBotyan --password-stdin'
++ echo ghs_15368_eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhdXRobmQiLCJjdHgiOiI0VE5ITGE3UWlnT2x6T1hiX2hjdzV0NGU1NkllYkhIaUszZC1UZTI3LTdidTlTWmxCcUJRbWNFIiwiZXhwIjoxNzkwOTQ3ODY1LCJpYXQiOjE3OTA5NDQyNjUsImlzcyI6ImdpdGh1YiIsImp0aSI6IjNmOWU0ZjM1LTQzYTctNDJlNS05MTQ4LTJmMDViNjA3MDIyMiIsInZlciI6M30.BuxVw9uwkwL9hzs8EpC_apUDzYC_6vXqrqSjjsq-2SzJ2dXkGMfwqyQ9kx6uEsfOk6s9-ysY2GCB1uW4LNjH6Q
+Login Succeeded
 
-прогон: 37006233984
-результат: failure
+WARNING! Your credentials are stored unencrypted in '/root/.docker/config.json'.
+Configure a credential helper to remove this warning. See
+https://docs.docker.com/go/credential-store/
+
++ ssh target 'cd /opt/kjar && docker compose --env-file .env.production -f docker/docker-compose.prod.yml pull api web'
+ Image ghcr.io/dmitrybotyan/kjar-api:latest Pulling 
+ Image ghcr.io/dmitrybotyan/kjar-web:latest Pulling 
+ 158d7f9e808b Pulling fs layer 0B
+ 649f8966f9af Pulling fs layer 0B
+ 3233dc7a4892 Pulling fs layer 0B
+ 09f576f3e80c Pulling fs layer 0B
+ f7f2d304681a Pulling fs layer 0B
+ f5be0bddf3bb Pulling fs layer 0B
+ e554276b05e6 Pulling fs layer 0B
+ d39db1cf9caa Pulling fs layer 0B
+ 4f4fb700ef54 Pulling fs layer 0B
+ f7f2d304681a Pulling fs layer 0B
+ e554276b05e6 Pulling fs layer 0B
+ 092bd07fb4da Pulling fs layer 0B
+ d39db1cf9caa Pulling fs layer 0B
+ 600332a7cea2 Pulling fs layer 0B
+ 3233dc7a4892 Pulling fs layer 0B
+ 6c8909757692 Pulling fs layer 0B
+ abb6d5c92671 Pulling fs layer 0B
+ 065c866c9237 Pulling fs layer 0B
+ 0470446f998a Pulling fs layer 0B
+ d24bfd8b43bd Pulling fs layer 0B
+ 4f4fb700ef54 Already exists 0B
+ 4f4fb700ef54 Pull complete 0B
+ d39db1cf9caa Download complete 0B
+ d39db1cf9caa Download complete 0B
+ 3233dc7a4892 Download complete 0B
+ 3233dc7a4892 Download complete 0B
+ f7f2d304681a Downloading 1.049MB
+ 649f8966f9af Downloading 4.194MB
+ f7f2d304681a Downloading 4.194MB
+ f7f2d304681a Downloading 4.194MB
+ f7f2d304681a Downloading 7.34MB
+ 649f8966f9af Download complete 0B
+ 158d7f9e808b Download complete 0B
+ f7f2d304681a Downloading 8.389MB
+ f7f2d304681a Downloading 10.49MB
+ f7f2d304681a Downloading 11.53MB
+ f7f2d304681a Downloading 15.73MB
+ f7f2d304681a Downloading 16.78MB
+ f5be0bddf3bb Download complete 0B
+ f7f2d304681a Downloading 20.97MB
+ f7f2d304681a Downloading 20.97MB
+ 09f576f3e80c Download complete 0B
+ f7f2d304681a Downloading 20.97MB
+ f7f2d304681a Downloading 20.97MB
+ f7f2d304681a Downloading 20.97MB
+ f7f2d304681a Downloading 20.97MB
+ e554276b05e6 Downloading 1.049MB
+ f7f2d304681a Downloading 22.02MB
+ e554276b05e6 Download complete 0B
+ 0470446f998a Downloading 176B
+ f7f2d304681a Downloading 22.02MB
+ e554276b05e6 Download complete 0B
+ f7f2d304681a Downloading 23.07MB
+ f7f2d304681a Downloading 23.07MB
+ 0470446f998a Download complete 0B
+ f7f2d304681a Downloading 25.17MB
+ f7f2d304681a Downloading 26.21MB
+ f7f2d304681a Downloading 27.26MB
+ f7f2d304681a Downloading 27.26MB
+ f7f2d304681a Downloading 30.41MB
+ f7f2d304681a Downloading 30.41MB
+ 092bd07fb4da Download complete 0B
+ f7f2d304681a Downloading 32.51MB
+ f7f2d304681a Downloading 32.51MB
+ 600332a7cea2 Downloading 43.4kB
+ f7f2d304681a Downloading 35.65MB
+ f7f2d304681a Downloading 36.7MB
+ 600332a7cea2 Download complete 0B
+ f7f2d304681a Downloading 38.8MB
+ f7f2d304681a Downloading 39.85MB
+ f7f2d304681a Downloading 42.99MB
+ f7f2d304681a Downloading 44.04MB
+ f7f2d304681a Downloading 48.23MB
+ f7f2d304681a Downloading 48.59MB
+ 6c8909757692 Downloading 184.3kB
+ abb6d5c92671 Download complete 0B
+ f7f2d304681a Downloading 53.48MB
+ 6c8909757692 Downloading 2.097MB
+ f7f2d304681a Downloading 54.53MB
+ f7f2d304681a Download complete 0B
+ f7f2d304681a Extracting 1B
+ f7f2d304681a Download complete 0B
+ 6c8909757692 Downloading 3.146MB
+ f7f2d304681a Extracting 1B
+ 6c8909757692 Downloading 5.243MB
+ 065c866c9237 Download complete 0B
+ f7f2d304681a Extracting 1B
+ f7f2d304681a Extracting 1B
+ f7f2d304681a Extracting 1B
+ 6c8909757692 Downloading 6.291MB
+ f7f2d304681a Extracting 1B
+ 6c8909757692 Downloading 8.389MB
+ f7f2d304681a Extracting 1B
+ f7f2d304681a Extracting 1B
+ f7f2d304681a Extracting 1B
+ 6c8909757692 Downloading 9.437MB
+ f7f2d304681a Extracting 1B
+ f7f2d304681a Extracting 1B
+ 6c8909757692 Downloading 10.49MB
+ f7f2d304681a Extracting 1B
+ 6c8909757692 Downloading 11.53MB
+ f7f2d304681a Extracting 1B
+ f7f2d304681a Extracting 1B
+ 6c8909757692 Downloading 12.58MB
+ f7f2d304681a Extracting 1B
+ f7f2d304681a Extracting 1B
+ 6c8909757692 Downloading 14.68MB
+ f7f2d304681a Extracting 1B
+ f7f2d304681a Extracting 1B
+ 6c8909757692 Downloading 15.73MB
+ f7f2d304681a Extracting 1B
+ f7f2d304681a Extracting 1B
+ 6c8909757692 Downloading 16.78MB
+ d24bfd8b43bd Downloading 1.049MB
+ f7f2d304681a Extracting 2B
+ f7f2d304681a Extracting 2B
+ 6c8909757692 Downloading 18.87MB
+ d24bfd8b43bd Downloading 1.049MB
+ f7f2d304681a Extracting 2B
+ f7f2d304681a Extracting 2B
+ 6c8909757692 Downloading 19.92MB
+ d24bfd8b43bd Downloading 1.049MB
+ f7f2d304681a Extracting 2B
+ f7f2d304681a Extracting 2B
+ 6c8909757692 Downloading 22.02MB
+ d24bfd8b43bd Downloading 1.049MB
+ f7f2d304681a Extracting 2B
+ f7f2d304681a Extracting 2B
+ 6c8909757692 Downloading 23.07MB
+ d24bfd8b43bd Downloading 2.097MB
+ f7f2d304681a Extracting 2B
+ f7f2d304681a Extracting 2B
+ 6c8909757692 Downloading 24.12MB
+ d24bfd8b43bd Downloading 2.097MB
+ f7f2d304681a Extracting 2B
+ f7f2d304681a Extracting 2B
+ f7f2d304681a Extracting 2B
+ 6c8909757692 Downloading 25.17MB
+ d24bfd8b43bd Downloading 2.097MB
+ f7f2d304681a Extracting 2B
+ 6c8909757692 Downloading 26.21MB
+ d24bfd8b43bd Downloading 3.146MB
+ f7f2d304681a Extracting 2B
+ f7f2d304681a Extracting 2B
+ d24bfd8b43bd Downloading 3.146MB
+ 6c8909757692 Downloading 27.26MB
+ f7f2d304681a Extracting 2B
+ f7f2d304681a Extracting 2B
+ d24bfd8b43bd Downloading 4.194MB
+ 6c8909757692 Downloading 28.31MB
+ f7f2d304681a Extracting 2B
+ f7f2d304681a Extracting 2B
+ 6c8909757692 Downloading 29.36MB
+ d24bfd8b43bd Downloading 4.194MB
+ f7f2d304681a Extracting 3B
+ f7f2d304681a Extracting 3B
+ 6c8909757692 Downloading 31.46MB
+ d24bfd8b43bd Downloading 5.243MB
+ f7f2d304681a Extracting 3B
+ f7f2d304681a Extracting 3B
+ d24bfd8b43bd Downloading 5.243MB
+ 6c8909757692 Downloading 31.46MB
+ f7f2d304681a Extracting 3B
+ f7f2d304681a Extracting 3B
+ 6c8909757692 Downloading 31.46MB
+ d24bfd8b43bd Downloading 6.291MB
+ f7f2d304681a Extracting 3B
+ f7f2d304681a Extracting 3B
+ 6c8909757692 Downloading 31.46MB
+ d24bfd8b43bd Downloading 6.291MB
+ f7f2d304681a Extracting 3B
+ f7f2d304681a Extracting 3B
+ 6c8909757692 Downloading 31.46MB
+ d24bfd8b43bd Downloading 7.34MB
+ f7f2d304681a Extracting 3B
+ f7f2d304681a Extracting 3B
+ 6c8909757692 Downloading 32.75MB
+ d24bfd8b43bd Downloading 8.389MB
+ f7f2d304681a Extracting 3B
+ f7f2d304681a Extracting 3B
+ 6c8909757692 Downloading 33.55MB
+ d24bfd8b43bd Downloading 9.437MB
+ f7f2d304681a Extracting 3B
+ f7f2d304681a Extracting 3B
+ 6c8909757692 Downloading 35.65MB
+ d24bfd8b43bd Downloading 10.49MB
+ f7f2d304681a Extracting 3B
+ f7f2d304681a Extracting 3B
+ 6c8909757692 Downloading 36.7MB
+ d24bfd8b43bd Downloading 10.49MB
+ f7f2d304681a Extracting 3B
+ f7f2d304681a Extracting 3B
+ 6c8909757692 Downloading 37.75MB
+ d24bfd8b43bd Downloading 11.53MB
+ f7f2d304681a Extracting 4B
+ f7f2d304681a Extracting 3B
+ 6c8909757692 Downloading 38.8MB
+ d24bfd8b43bd Downloading 12.58MB
+ f7f2d304681a Extracting 4B
+ f7f2d304681a Extracting 4B
+ 6c8909757692 Downloading 40.89MB
+ d24bfd8b43bd Downloading 13.63MB
+ f7f2d304681a Extracting 4B
+ f7f2d304681a Extracting 4B
+ d24bfd8b43bd Downloading 14.68MB
+ 6c8909757692 Downloading 41.94MB
+ f7f2d304681a Pull complete 0B
+ f7f2d304681a Extracting 4B
+ 6c8909757692 Downloading 42.99MB
+ d24bfd8b43bd Downloading 15.73MB
+ e554276b05e6 Extracting 1B
+ f7f2d304681a Extracting 4B
+ d24bfd8b43bd Downloading 16.78MB
+ 6c8909757692 Downloading 45.09MB
+ e554276b05e6 Extracting 1B
+ f7f2d304681a Extracting 4B
+ 6c8909757692 Downloading 46.14MB
+ d24bfd8b43bd Downloading 17.83MB
+ e554276b05e6 Pull complete 0B
+ f7f2d304681a Extracting 4B
+ 6c8909757692 Downloading 47.19MB
+ d24bfd8b43bd Downloading 18.87MB
+ f7f2d304681a Extracting 4B
+ d39db1cf9caa Pull complete 0B
+ 3233dc7a4892 Extracting 1B
+ d24bfd8b43bd Downloading 19.92MB
+ 6c8909757692 Downloading 48.23MB
+ f7f2d304681a Extracting 4B
+ 3233dc7a4892 Pull complete 0B
+ 649f8966f9af Extracting 1B
+ f5be0bddf3bb Pull complete 0B
+ 6c8909757692 Downloading 49.28MB
+ d24bfd8b43bd Downloading 22.02MB
+ f7f2d304681a Extracting 4B
+ 649f8966f9af Extracting 1B
+ 6c8909757692 Downloading 50.33MB
+ d24bfd8b43bd Downloading 23.47MB
+ f7f2d304681a Extracting 4B
+ 649f8966f9af Extracting 1B
+ 6c8909757692 Downloading 51.38MB
+ d24bfd8b43bd Downloading 26.21MB
+ f7f2d304681a Extracting 5B
+ 649f8966f9af Extracting 1B
+ 6c8909757692 Downloading 51.38MB
+ d24bfd8b43bd Downloading 28.31MB
+ f7f2d304681a Extracting 5B
+ 649f8966f9af Extracting 1B
+ 6c8909757692 Downloading 52.43MB
+ d24bfd8b43bd Downloading 30.41MB
+ f7f2d304681a Extracting 5B
+ 649f8966f9af Extracting 1B
+ d24bfd8b43bd Downloading 32.51MB
+ 6c8909757692 Downloading 53.48MB
+ f7f2d304681a Extracting 5B
+ 649f8966f9af Extracting 1B
+ 6c8909757692 Downloading 53.48MB
+ d24bfd8b43bd Downloading 34.6MB
+ f7f2d304681a Extracting 5B
+ 649f8966f9af Extracting 1B
+ 6c8909757692 Downloading 54.53MB
+ d24bfd8b43bd Downloading 37.75MB
+ f7f2d304681a Extracting 5B
+ 649f8966f9af Extracting 1B
+ 6c8909757692 Downloading 55.57MB
+ d24bfd8b43bd Downloading 39.85MB
+ 649f8966f9af Extracting 1B
+ 6c8909757692 Downloading 55.57MB
+ d24bfd8b43bd Downloading 41.94MB
+ 3233dc7a4892 Extracting 1B
+ 600332a7cea2 Pull complete 0B
+ 649f8966f9af Extracting 1B
+ d24bfd8b43bd Downloading 44.04MB
+ 6c8909757692 Downloading 56.62MB
+ 3233dc7a4892 Pull complete 0B
+ 649f8966f9af Pull complete 0B
+ 6c8909757692 Downloading 57.67MB
+ d24bfd8b43bd Downloading 47.19MB
+ 09f576f3e80c Extracting 1B
+ 09f576f3e80c Pull complete 0B
+ d24bfd8b43bd Downloading 50.33MB
+ 6c8909757692 Downloading 57.67MB
+ 158d7f9e808b Pull complete 0B
+ Image ghcr.io/dmitrybotyan/kjar-web:latest Pulled 
+ 6c8909757692 Downloading 58.72MB
+ d24bfd8b43bd Downloading 53.48MB
+ 6c8909757692 Downloading 59.77MB
+ d24bfd8b43bd Downloading 55.57MB
+ 6c8909757692 Downloading 59.85MB
+ d24bfd8b43bd Downloading 56.62MB
+ 6c8909757692 Downloading 60.82MB
+ d24bfd8b43bd Downloading 57.67MB
+ 6c8909757692 Downloading 61.87MB
+ d24bfd8b43bd Downloading 60.26MB
+ 6c8909757692 Downloading 62.91MB
+ d24bfd8b43bd Downloading 63.96MB
+ 6c8909757692 Downloading 62.91MB
+ d24bfd8b43bd Downloading 67.11MB
+ 6c8909757692 Downloading 63.96MB
+ d24bfd8b43bd Downloading 69.21MB
+ 6c8909757692 Downloading 65.01MB
+ d24bfd8b43bd Downloading 71.3MB
+ 6c8909757692 Downloading 66.06MB
+ d24bfd8b43bd Downloading 71.3MB
+ 6c8909757692 Downloading 67.11MB
+ d24bfd8b43bd Downloading 74.45MB
+ 6c8909757692 Downloading 67.11MB
+ d24bfd8b43bd Downloading 75.5MB
+ 6c8909757692 Downloading 67.11MB
+ d24bfd8b43bd Downloading 77.59MB
+ 6c8909757692 Downloading 67.11MB
+ d24bfd8b43bd Downloading 79.69MB
+ 6c8909757692 Downloading 67.11MB
+ d24bfd8b43bd Downloading 81.79MB
+ 6c8909757692 Downloading 67.11MB
+ d24bfd8b43bd Downloading 84.93MB
+ 6c8909757692 Downloading 68.16MB
+ d24bfd8b43bd Downloading 88.08MB
+ 6c8909757692 Downloading 69.21MB
+ d24bfd8b43bd Downloading 90.18MB
+ d24bfd8b43bd Downloading 92.27MB
+ 6c8909757692 Downloading 70.25MB
+ 6c8909757692 Downloading 71.3MB
+ d24bfd8b43bd Downloading 93.32MB
+ 6c8909757692 Downloading 72.35MB
+ d24bfd8b43bd Downloading 95.42MB
+ 6c8909757692 Downloading 72.35MB
+ d24bfd8b43bd Downloading 97.52MB
+ 6c8909757692 Downloading 73.4MB
+ d24bfd8b43bd Downloading 97.52MB
+ 6c8909757692 Downloading 74.45MB
+ d24bfd8b43bd Downloading 100.7MB
+ 6c8909757692 Downloading 75.5MB
+ d24bfd8b43bd Downloading 102.8MB
+ 6c8909757692 Downloading 76.55MB
+ d24bfd8b43bd Downloading 104.9MB
+ 6c8909757692 Downloading 76.55MB
+ d24bfd8b43bd Downloading 104.9MB
+ 6c8909757692 Downloading 77.59MB
+ d24bfd8b43bd Downloading 104.9MB
+ 6c8909757692 Downloading 78.64MB
+ d24bfd8b43bd Downloading 104.9MB
+ 6c8909757692 Downloading 79.69MB
+ d24bfd8b43bd Downloading 104.9MB
+ 6c8909757692 Downloading 80.74MB
+ d24bfd8b43bd Downloading 104.9MB
+ 6c8909757692 Downloading 81.79MB
+ d24bfd8b43bd Downloading 104.9MB
+ 6c8909757692 Downloading 82.84MB
+ d24bfd8b43bd Downloading 104.9MB
+ 6c8909757692 Downloading 83.89MB
+ d24bfd8b43bd Downloading 104.9MB
+ 6c8909757692 Downloading 84.93MB
+ d24bfd8b43bd Downloading 105.9MB
+ 6c8909757692 Downloading 84.93MB
+ d24bfd8b43bd Downloading 108MB
+ 6c8909757692 Downloading 85.98MB
+ d24bfd8b43bd Downloading 110.1MB
+ 6c8909757692 Downloading 87.03MB
+ d24bfd8b43bd Downloading 111.1MB
+ 6c8909757692 Downloading 88.08MB
+ d24bfd8b43bd Downloading 113.2MB
+ 6c8909757692 Downloading 89.13MB
+ d24bfd8b43bd Downloading 115.3MB
+ 6c8909757692 Downloading 90.18MB
+ d24bfd8b43bd Downloading 117.4MB
+ 6c8909757692 Downloading 90.18MB
+ d24bfd8b43bd Downloading 120.3MB
+ 6c8909757692 Downloading 91.23MB
+ d24bfd8b43bd Downloading 122.5MB
+ d24bfd8b43bd Downloading 124.8MB
+ 6c8909757692 Downloading 92.27MB
+ 6c8909757692 Downloading 93.32MB
+ d24bfd8b43bd Downloading 126.9MB
+ 6c8909757692 Downloading 94.37MB
+ d24bfd8b43bd Downloading 127.9MB
+ 6c8909757692 Downloading 95.42MB
+ d24bfd8b43bd Downloading 130.4MB
+ 6c8909757692 Downloading 96.47MB
+ d24bfd8b43bd Downloading 133.2MB
+ 6c8909757692 Downloading 97.52MB
+ d24bfd8b43bd Downloading 134.2MB
+ 6c8909757692 Downloading 98.57MB
+ d24bfd8b43bd Downloading 136.3MB
+ 6c8909757692 Downloading 98.57MB
+ d24bfd8b43bd Downloading 138.4MB
+ 6c8909757692 Downloading 99.61MB
+ d24bfd8b43bd Downloading 140.5MB
+ d24bfd8b43bd Downloading 142.6MB
+ 6c8909757692 Downloading 100.7MB
+ 6c8909757692 Downloading 101.7MB
+ d24bfd8b43bd Downloading 144.7MB
+ 6c8909757692 Downloading 102.8MB
+ d24bfd8b43bd Downloading 146.8MB
+ 6c8909757692 Downloading 103.8MB
+ d24bfd8b43bd Downloading 148.9MB
+ 6c8909757692 Downloading 104.9MB
+ d24bfd8b43bd Downloading 151MB
+ 6c8909757692 Downloading 105.9MB
+ d24bfd8b43bd Downloading 152MB
+ 6c8909757692 Downloading 107MB
+ d24bfd8b43bd Downloading 154.1MB
+ 6c8909757692 Downloading 108MB
+ d24bfd8b43bd Downloading 155.9MB
+ d24bfd8b43bd Download complete 0B
+ 6c8909757692 Downloading 109.1MB
+ 6c8909757692 Downloading 110.1MB
+ 6c8909757692 Downloading 111.1MB
+ 6c8909757692 Downloading 112.2MB
+ 6c8909757692 Downloading 113.2MB
+ 6c8909757692 Downloading 113.2MB
+ 6c8909757692 Downloading 114.3MB
+ 6c8909757692 Downloading 115.3MB
+ 6c8909757692 Downloading 116.4MB
+ 6c8909757692 Downloading 117.4MB
+ 6c8909757692 Downloading 118.5MB
+ 6c8909757692 Downloading 119.5MB
+ 6c8909757692 Downloading 120.6MB
+ 6c8909757692 Downloading 121.6MB
+ 6c8909757692 Downloading 122.7MB
+ 6c8909757692 Downloading 123.7MB
+ 6c8909757692 Downloading 124.8MB
+ 6c8909757692 Downloading 125.8MB
+ 6c8909757692 Downloading 126.9MB
+ 6c8909757692 Downloading 127.9MB
+ 6c8909757692 Downloading 129MB
+ 6c8909757692 Downloading 130MB
+ 6c8909757692 Downloading 131.1MB
+ 6c8909757692 Downloading 132.1MB
+ 6c8909757692 Downloading 132.2MB
+ 6c8909757692 Downloading 134.2MB
+ 6c8909757692 Downloading 135.3MB
+ 6c8909757692 Downloading 136.3MB
+ 6c8909757692 Downloading 137.4MB
+ 6c8909757692 Downloading 138.4MB
+ 6c8909757692 Downloading 139.5MB
+ 6c8909757692 Downloading 139.5MB
+ 6c8909757692 Downloading 140.5MB
+ 6c8909757692 Downloading 141.6MB
+ 6c8909757692 Downloading 143MB
+ 6c8909757692 Download complete 0B
+ 6c8909757692 Extracting 1B
+ 6c8909757692 Extracting 1B
+ 6c8909757692 Extracting 1B
+ 6c8909757692 Extracting 1B
+ 6c8909757692 Extracting 1B
+ 6c8909757692 Extracting 1B
+ 6c8909757692 Extracting 1B
+ 6c8909757692 Extracting 1B
+ 6c8909757692 Extracting 1B
+ 6c8909757692 Extracting 1B
+ 6c8909757692 Extracting 1B
+ 6c8909757692 Extracting 2B
+ 6c8909757692 Extracting 2B
+ 6c8909757692 Extracting 2B
+ 6c8909757692 Extracting 2B
+ 6c8909757692 Extracting 2B
+ 6c8909757692 Extracting 2B
+ 6c8909757692 Extracting 2B
+ 6c8909757692 Extracting 2B
+ 6c8909757692 Extracting 2B
+ 6c8909757692 Extracting 2B
+ 6c8909757692 Extracting 3B
+ 6c8909757692 Extracting 3B
+ 6c8909757692 Extracting 3B
+ 6c8909757692 Extracting 3B
+ 6c8909757692 Extracting 3B
+ 6c8909757692 Extracting 3B
+ 6c8909757692 Extracting 3B
+ 6c8909757692 Extracting 3B
+ 6c8909757692 Extracting 3B
+ 6c8909757692 Extracting 4B
+ 6c8909757692 Extracting 4B
+ 6c8909757692 Extracting 4B
+ 6c8909757692 Extracting 4B
+ 6c8909757692 Extracting 4B
+ 6c8909757692 Extracting 4B
+ 6c8909757692 Extracting 4B
+ 6c8909757692 Extracting 4B
+ 6c8909757692 Extracting 4B
+ 6c8909757692 Extracting 4B
+ 6c8909757692 Extracting 5B
+ 6c8909757692 Extracting 5B
+ 6c8909757692 Extracting 5B
+ 6c8909757692 Extracting 5B
+ 6c8909757692 Extracting 5B
+ 6c8909757692 Extracting 5B
+ 6c8909757692 Extracting 5B
+ 6c8909757692 Extracting 5B
+ 6c8909757692 Extracting 5B
+ 6c8909757692 Extracting 5B
+ 6c8909757692 Extracting 6B
+ 6c8909757692 Extracting 6B
+ 6c8909757692 Extracting 6B
+ 6c8909757692 Extracting 6B
+ 6c8909757692 Extracting 6B
+ 6c8909757692 Extracting 6B
+ 6c8909757692 Extracting 6B
+ 6c8909757692 Extracting 6B
+ 6c8909757692 Extracting 6B
+ 6c8909757692 Extracting 6B
+ 6c8909757692 Extracting 6B
+ 6c8909757692 Extracting 7B
+ 6c8909757692 Extracting 7B
+ 6c8909757692 Extracting 7B
+ 6c8909757692 Extracting 7B
+ 6c8909757692 Extracting 7B
+ 6c8909757692 Extracting 7B
+ 6c8909757692 Extracting 7B
+ 6c8909757692 Extracting 7B
+ 6c8909757692 Extracting 7B
+ 6c8909757692 Extracting 7B
+ 6c8909757692 Extracting 8B
+ 6c8909757692 Extracting 8B
+ 6c8909757692 Extracting 8B
+ 6c8909757692 Extracting 8B
+ 6c8909757692 Extracting 8B
+ 6c8909757692 Extracting 8B
+ 6c8909757692 Extracting 8B
+ 6c8909757692 Extracting 8B
+ 6c8909757692 Extracting 8B
+ 6c8909757692 Extracting 8B
+ 6c8909757692 Extracting 9B
+ 092bd07fb4da Extracting 1B
+ 6c8909757692 Pull complete 0B
+ 092bd07fb4da Pull complete 0B
+ abb6d5c92671 Pull complete 0B
+ 065c866c9237 Pull complete 0B
+ 0470446f998a Pull complete 0B
+ d24bfd8b43bd Extracting 1B
+ d24bfd8b43bd Extracting 1B
+ d24bfd8b43bd Extracting 1B
+ d24bfd8b43bd Extracting 1B
+ d24bfd8b43bd Extracting 1B
+ d24bfd8b43bd Extracting 1B
+ d24bfd8b43bd Extracting 1B
+ d24bfd8b43bd Extracting 1B
+ d24bfd8b43bd Extracting 1B
+ d24bfd8b43bd Extracting 1B
+ d24bfd8b43bd Extracting 1B
+ d24bfd8b43bd Extracting 2B
+ d24bfd8b43bd Extracting 2B
+ d24bfd8b43bd Extracting 2B
+ d24bfd8b43bd Extracting 2B
+ d24bfd8b43bd Extracting 2B
+ d24bfd8b43bd Extracting 2B
+ d24bfd8b43bd Extracting 2B
+ d24bfd8b43bd Extracting 2B
+ d24bfd8b43bd Extracting 2B
+ d24bfd8b43bd Extracting 2B
+ d24bfd8b43bd Extracting 3B
+ d24bfd8b43bd Extracting 3B
+ d24bfd8b43bd Extracting 3B
+ d24bfd8b43bd Extracting 3B
+ d24bfd8b43bd Extracting 3B
+ d24bfd8b43bd Extracting 3B
+ d24bfd8b43bd Extracting 3B
+ d24bfd8b43bd Extracting 3B
+ d24bfd8b43bd Extracting 3B
+ d24bfd8b43bd Extracting 3B
+ d24bfd8b43bd Extracting 4B
+ d24bfd8b43bd Extracting 4B
+ d24bfd8b43bd Extracting 4B
+ d24bfd8b43bd Extracting 4B
+ d24bfd8b43bd Extracting 4B
+ d24bfd8b43bd Extracting 4B
+ d24bfd8b43bd Extracting 4B
+ d24bfd8b43bd Extracting 4B
+ d24bfd8b43bd Extracting 4B
+ d24bfd8b43bd Extracting 4B
+ d24bfd8b43bd Extracting 5B
+ d24bfd8b43bd Extracting 5B
+ d24bfd8b43bd Extracting 5B
+ d24bfd8b43bd Extracting 5B
+ d24bfd8b43bd Extracting 5B
+ d24bfd8b43bd Extracting 5B
+ d24bfd8b43bd Extracting 5B
+ d24bfd8b43bd Extracting 5B
+ d24bfd8b43bd Extracting 5B
+ d24bfd8b43bd Extracting 5B
+ d24bfd8b43bd Extracting 6B
+ d24bfd8b43bd Extracting 6B
+ d24bfd8b43bd Extracting 6B
+ d24bfd8b43bd Extracting 6B
+ d24bfd8b43bd Extracting 6B
+ d24bfd8b43bd Extracting 6B
+ d24bfd8b43bd Extracting 6B
+ d24bfd8b43bd Extracting 6B
+ d24bfd8b43bd Extracting 6B
+ d24bfd8b43bd Extracting 6B
+ d24bfd8b43bd Extracting 7B
+ d24bfd8b43bd Extracting 7B
+ d24bfd8b43bd Extracting 7B
+ d24bfd8b43bd Extracting 7B
+ d24bfd8b43bd Extracting 7B
+ d24bfd8b43bd Extracting 7B
+ d24bfd8b43bd Extracting 7B
+ d24bfd8b43bd Extracting 7B
+ d24bfd8b43bd Extracting 7B
+ d24bfd8b43bd Extracting 7B
+ d24bfd8b43bd Extracting 8B
+ d24bfd8b43bd Extracting 8B
+ d24bfd8b43bd Extracting 8B
+ d24bfd8b43bd Extracting 8B
+ d24bfd8b43bd Extracting 8B
+ d24bfd8b43bd Extracting 8B
+ d24bfd8b43bd Extracting 8B
+ d24bfd8b43bd Extracting 8B
+ d24bfd8b43bd Extracting 8B
+ d24bfd8b43bd Extracting 8B
+ d24bfd8b43bd Extracting 9B
+ d24bfd8b43bd Extracting 9B
+ d24bfd8b43bd Extracting 9B
+ d24bfd8b43bd Extracting 9B
+ d24bfd8b43bd Extracting 9B
+ d24bfd8b43bd Pull complete 0B
+ Image ghcr.io/dmitrybotyan/kjar-api:latest Pulled 
++ echo '=== база и миграции ==='
+=== база и миграции ===
++ ssh target 'cd /opt/kjar && docker compose --env-file .env.production -f docker/docker-compose.prod.yml up -d db'
+ Container kjar-prod-db-1 Running 
++ ssh target 'cd /opt/kjar && timeout 180 bash -c '\''until docker compose --env-file .env.production -f docker/docker-compose.prod.yml exec -T db pg_isready > /dev/null 2>&1; do sleep 3; done'\'''
++ ssh target 'cd /opt/kjar && docker compose --env-file .env.production -f docker/docker-compose.prod.yml --profile tools run --rm migrate'
+ Container kjar-prod-db-1 Running 
+ Container kjar-prod-db-1 Waiting 
+ Container kjar-prod-db-1 Healthy 
+ Container kjar-prod-migrate-run-716f3767bed1 Creating 
+ Container kjar-prod-migrate-run-716f3767bed1 Created 
+🔄 Применение миграций...
+✅ Миграции успешно применены
++ echo '=== запуск ==='
+=== запуск ===
++ ssh target 'cd /opt/kjar && docker compose --env-file .env.production -f docker/docker-compose.prod.yml up -d && docker compose --env-file .env.production -f docker/docker-compose.prod.yml ps'
+ Container kjar-prod-minio-1 Running 
+ Container kjar-prod-nginx-1 Running 
+ Container kjar-prod-db-1 Running 
+ Container kjar-prod-api-1 Recreate 
+ Container kjar-prod-api-1 Recreated 
+ Container kjar-prod-web-1 Recreate 
+ Container kjar-prod-web-1 Recreated 
+ Container kjar-prod-minio-1 Waiting 
+ Container kjar-prod-minio-1 Waiting 
+ Container kjar-prod-db-1 Waiting 
+ Container kjar-prod-minio-1 Healthy 
+ Container kjar-prod-db-1 Healthy 
+ Container kjar-prod-api-1 Starting 
+ Container kjar-prod-minio-1 Healthy 
+ Container kjar-prod-minio-setup-1 Starting 
+ Container kjar-prod-api-1 Started 
+ Container kjar-prod-api-1 Waiting 
+ Container kjar-prod-minio-setup-1 Started 
+ Container kjar-prod-api-1 Healthy 
+ Container kjar-prod-web-1 Starting 
+ Container kjar-prod-web-1 Started 
+NAME                IMAGE                                  COMMAND                  SERVICE   CREATED          STATUS                   PORTS
+kjar-prod-api-1     ghcr.io/dmitrybotyan/kjar-api:latest   "docker-entrypoint.s…"   api       17 seconds ago   Up 6 seconds (healthy)   3001/tcp
+kjar-prod-db-1      postgres:16-alpine                     "docker-entrypoint.s…"   db        2 hours ago      Up 2 hours (healthy)     5432/tcp
+kjar-prod-minio-1   pgsty/minio:latest                     "/usr/bin/docker-ent…"   minio     2 hours ago      Up 2 hours (healthy)     9000/tcp
+kjar-prod-nginx-1   nginx:1.27-alpine                      "/docker-entrypoint.…"   nginx     2 hours ago      Up 2 hours               0.0.0.0:80->80/tcp, [::]:80->80/tcp, 0.0.0.0:443->443/tcp, [::]:443->443/tcp
+kjar-prod-web-1     ghcr.io/dmitrybotyan/kjar-web:latest   "docker-entrypoint.s…"   web       7 seconds ago    Up Less than a second    3000/tcp
++ ssh target 'cd /opt/kjar && docker compose --env-file .env.production -f docker/docker-compose.prod.yml exec -T nginx nginx -s reload'
+2026/10/02 12:32:17 [notice] 36#36: signal process started
++ echo '=== проверка ==='
+=== проверка ===
++ ssh target 'for i in $(seq 1 30); do
+    code=$(curl -s -o /dev/null -w '\''%{http_code}'\'' http://localhost/ || true)
+    echo "попытка $i: $code"
+    [ "$code" = '\''200'\'' ] && exit 0
+    sleep 5
+  done
+  cd /opt/kjar && docker compose --env-file .env.production -f docker/docker-compose.prod.yml logs --tail=60 web api nginx
+  exit 1'
+попытка 1: 200
++ echo '=== чистка ==='
+=== чистка ===
++ ssh target 'docker logout ghcr.io; docker image prune -f'
+Removing login credentials for ghcr.io
+Deleted Images:
+untagged: sha256:0868bb8894d4ef35cee32433f158ca3f9b36cea468168deb65d66cf216b061f3
+deleted: sha256:0868bb8894d4ef35cee32433f158ca3f9b36cea468168deb65d66cf216b061f3
+untagged: sha256:936efdba87233f2ed3894b01776e6484a9ba5cd960c139929876415d52fa2be0
+deleted: sha256:936efdba87233f2ed3894b01776e6484a9ba5cd960c139929876415d52fa2be0
+
+Total reclaimed space: 1.744GB
+
+прогон: 37006955319
+результат: success
