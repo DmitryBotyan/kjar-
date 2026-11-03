@@ -2,7 +2,7 @@ name: Деплой KJÁR
 
 # Схема: раннер собирает образы и кладёт в реестр GitHub, затем заходит
 # на сервер по ключу, и сервер забирает готовые образы. На сервере ничего
-# не собирается: там всего 2 ГБ памяти.
+# не собирается: там всего 1 ГБ памяти.
 on:
   push:
     branches: [main]
@@ -85,7 +85,7 @@ jobs:
           ssh-keygen -y -f ~/.ssh/id_ed25519 > /dev/null
           # До московского сервера прямого хода с раннера нет: пакеты не доходят.
           # Поэтому при заданном SSH_JUMP идём через перевалочный сервер тем же
-          # ключом. Пустой секрет — соединяемся напрямую.
+          # ключом. Если секрет пустой, соединяемся напрямую.
           JUMP="${{ secrets.SSH_JUMP }}"
           # Адрес из секрета тоже чистим: пробел или точка на конце ломают DNS
           HOST=$(printf '%s' "${{ secrets.SSH_HOST }}" | tr -d '[:space:]' | sed 's/\.$//')
@@ -146,12 +146,19 @@ jobs:
           ssh target "find ${REMOTE_DIR} -type f | wc -l"
 
           echo "=== боевые переменные ==="
+          # Без трассировки: set -x печатает значения целиком, а лог коммитится
+          # в открытый репозиторий. Маскировка GitHub действует только на его
+          # собственный вывод, не на этот файл
+          { set +x; } 2>/dev/null
           printf '%s\n' "$ENV_PRODUCTION" | ssh target "umask 077 && cat > ${REMOTE_DIR}/.env.production"
+          set -x
           ssh target "grep -c = ${REMOTE_DIR}/.env.production"
 
           echo "=== вход в реестр и получение образов ==="
           # Временный токен job: постоянный ключ на сервере не хранится
+          { set +x; } 2>/dev/null
           echo "$GHCR_TOKEN" | ssh target "docker login ghcr.io -u ${{ github.actor }} --password-stdin"
+          set -x
           ssh target "cd ${REMOTE_DIR} && ${COMPOSE} pull api web"
 
           echo "=== база и миграции ==="
