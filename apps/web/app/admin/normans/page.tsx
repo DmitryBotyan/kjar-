@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import DeleteConfirmModal from "@/components/admin/DeleteConfirmModal";
 import ImageUpload from "@/components/admin/ImageUpload";
 import { adminRequest, useAdminGuard } from "@/lib/useAdminGuard";
+import type { Norman } from "@/lib/types";
 
 interface NormanRow {
   id: number;
@@ -59,7 +60,7 @@ export default function AdminNormansPage() {
 
   const startEdit = async (row: NormanRow) => {
     try {
-      const response = await adminRequest<{ data: any }>(`/normans/${row.slug}`);
+      const response = await adminRequest<{ data: Norman }>(`/normans/${row.slug}`);
       const norman = response.data;
       setEditing(norman.slug);
       setDraft({

@@ -108,7 +108,7 @@ export default function AdminLayoutClient({ children }: { children: ReactNode })
       });
   }, []);
 
-  // Разделы сами сбрасывают токен на 401 — тогда снова показываем вход
+  // Разделы сами сбрасывают токен на 401, тогда снова показываем вход
   useEffect(() => {
     setMenuOpen(false);
     if (state === "ready" && !localStorage.getItem("authToken")) {

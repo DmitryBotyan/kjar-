@@ -8,24 +8,16 @@ const fileFilter = (
   file: Express.Multer.File,
   cb: multer.FileFilterCallback
 ) => {
-  const allowedMimes = [
-    "image/jpeg",
-    "image/jpg",
-    "image/png",
-    "image/gif",
-    "image/webp",
-    "image/svg+xml",
-    "application/pdf",
-    "text/plain",
-    "text/markdown",
-  ];
+  // Ранний отсев по заявленному типу. Настоящий тип проверяется по байтам
+  // при сохранении, в storage/imageType.ts
+  const allowedMimes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
 
   if (allowedMimes.includes(file.mimetype)) {
     cb(null, true);
   } else {
     cb(
       createError(
-        `Неподдерживаемый тип файла: ${file.mimetype}. Разрешены: изображения, PDF, текстовые файлы`,
+        `Неподдерживаемый тип файла: ${file.mimetype}. Загрузить можно JPG, PNG, GIF или WebP`,
         400,
         "INVALID_FILE_TYPE"
       )

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getPosts, getTags } from "@/lib/api";
+import type { Post, Tag } from "@/lib/types";
 
 interface PostsPageProps {
   searchParams: {
@@ -20,8 +21,8 @@ function formatDate(value?: string | null) {
 }
 
 export default async function PostsPage({ searchParams }: PostsPageProps) {
-  let posts: any[] = [];
-  let tags: any[] = [];
+  let posts: Post[] = [];
+  let tags: Tag[] = [];
   let total = 0;
 
   try {
@@ -73,8 +74,8 @@ export default async function PostsPage({ searchParams }: PostsPageProps) {
                 aria-label="Фильтр по тегу"
               >
                 <option value="">Все теги</option>
-                {tags.map((tag: any) => (
-                  <option key={tag.id || tag.slug} value={tag.slug}>
+                {tags.map((tag) => (
+                  <option key={tag.id} value={tag.slug}>
                     {tag.name}
                   </option>
                 ))}
@@ -134,7 +135,7 @@ export default async function PostsPage({ searchParams }: PostsPageProps) {
                   </div>
 
                   <div className="kjar-updates__grid">
-                    {rest.map((post: any, index: number) => (
+                    {rest.map((post, index: number) => (
                       <article key={post.id || post.slug} className="kjar-updates__card">
                         <div className="kjar-updates__card-media">
                           {post.image ? (

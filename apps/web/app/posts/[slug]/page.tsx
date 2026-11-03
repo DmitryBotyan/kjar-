@@ -4,13 +4,14 @@ import { getPostBySlug } from "@/lib/api";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import Poll from "@/components/Poll";
 import Comments from "@/components/Comments";
+import type { Post } from "@/lib/types";
 
 type PostPageProps = {
   params: { slug: string };
 };
 
 export default async function PostPage({ params }: PostPageProps) {
-  let post: any = null;
+  let post: Post | null = null;
 
   try {
     const response = await getPostBySlug(params.slug);
@@ -52,9 +53,9 @@ export default async function PostPage({ params }: PostPageProps) {
             )}
             {post.isEvent && <span className="kjar-chip kjar-chip--accent">Ивент</span>}
             {post.tags &&
-              post.tags.slice(0, 3).map((tag: any) => (
-                <span className="kjar-chip" key={tag.id || tag.slug || tag}>
-                  {tag.name || tag}
+              post.tags.slice(0, 3).map((tag) => (
+                <span className="kjar-chip" key={tag.id}>
+                  {tag.name}
                 </span>
               ))}
           </div>
@@ -90,13 +91,13 @@ export default async function PostPage({ params }: PostPageProps) {
               <div className="kjar-article__card" aria-label="Теги">
                 <h2 className="kjar-article__card-title">Теги</h2>
                 <div className="kjar-article__chips">
-                  {post.tags.map((tag: any) => (
+                  {post.tags.map((tag) => (
                     <Link
                       className="kjar-chip"
-                      key={tag.id || tag.slug || tag}
-                      href={`/posts?tag=${encodeURIComponent(tag.slug || tag)}`}
+                      key={tag.id}
+                      href={`/posts?tag=${encodeURIComponent(tag.slug)}`}
                     >
-                      {tag.name || tag}
+                      {tag.name}
                     </Link>
                   ))}
                 </div>

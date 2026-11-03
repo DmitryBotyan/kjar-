@@ -30,7 +30,7 @@ export default function DictionarySelect({
 }: DictionarySelectProps) {
   const { entries, loading, error } = useDictionary(group);
 
-  // Значение, снятое с публикации, всё ещё может стоять у старой записи —
+  // Значение, снятое с публикации, всё ещё может стоять у старой записи:
   // показываем его, чтобы правка формы его не затёрла.
   const missing =
     defaultValue && !entries.some((entry) => entry.code === defaultValue)

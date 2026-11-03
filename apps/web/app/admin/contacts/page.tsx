@@ -27,7 +27,7 @@ export default function AdminContactsPage() {
   const { requireToken, handleError } = useAdminGuard();
   const { entries: requestTypes } = useDictionary("contact_request_type");
   const [requests, setRequests] = useState<ContactRequest[]>([]);
-  // Со сводки на главной приходят по ссылке ?status=new — учитываем это
+  // Со сводки на главной приходят по ссылке ?status=new, учитываем это
   const [filter, setFilter] = useState(() => {
     if (typeof window === "undefined") return "";
     return new URLSearchParams(window.location.search).get("status") || "";

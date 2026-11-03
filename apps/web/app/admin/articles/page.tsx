@@ -5,13 +5,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { fetchFromAdminApi } from "@/lib/admin-api";
 import DeleteConfirmModal from "@/components/admin/DeleteConfirmModal";
+import type { Article } from "@/lib/types";
 
 export default function AdminArticlesPage() {
   const router = useRouter();
-  const [articles, setArticles] = useState<any[]>([]);
+  const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; article: any | null }>({
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; article: Article | null }>({
     isOpen: false,
     article: null,
   });
@@ -24,7 +25,7 @@ export default function AdminArticlesPage() {
       return;
     }
 
-    fetchFromAdminApi<Array<any>>("/articles?limit=100")
+    fetchFromAdminApi<Article[]>("/articles?limit=100")
       .then((response) => {
         setArticles(response.data || []);
       })
@@ -41,12 +42,13 @@ export default function AdminArticlesPage() {
       });
   }, [router]);
 
-  const handleDeleteClick = (article: any) => {
+  const handleDeleteClick = (article: Article) => {
     setDeleteModal({ isOpen: true, article });
   };
 
   const handleDeleteConfirm = async () => {
-    if (!deleteModal.article) return;
+    const target = deleteModal.article;
+    if (!target) return;
 
     setDeleting(true);
     const token = localStorage.getItem("authToken");
@@ -56,7 +58,7 @@ export default function AdminArticlesPage() {
     }
 
     try {
-      const response = await fetch(`/api/articles/${deleteModal.article.slug}`, {
+      const response = await fetch(`/api/articles/${target.slug}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -68,7 +70,7 @@ export default function AdminArticlesPage() {
         throw new Error(errorData.error?.message || "Ошибка удаления статьи");
       }
 
-      setArticles(articles.filter((a) => a.id !== deleteModal.article.id));
+      setArticles(articles.filter((a) => a.id !== target.id));
       setDeleteModal({ isOpen: false, article: null });
     } catch (err) {
       if (err instanceof Error && (err.message.includes("401") || err.message.includes("UNAUTHORIZED"))) {

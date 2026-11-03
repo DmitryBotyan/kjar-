@@ -53,12 +53,11 @@ export default function MarkdownRenderer({
           img: ({ node, ...props }) => (
             <img className="kjar-markdown__img" {...props} />
           ),
-          code: ({ node, inline, ...props }: any) => {
-            if (inline) {
-              return <code className="kjar-markdown__code-inline" {...props} />;
-            }
-            return <code className="kjar-markdown__code-block" {...props} />;
-          },
+          // react-markdown 9 не сообщает, строчный ли код: блок узнаётся по
+          // обёртке pre, и стили для него заданы через .kjar-markdown__pre code
+          code: ({ node, ...props }) => (
+            <code className="kjar-markdown__code-inline" {...props} />
+          ),
           pre: ({ node, ...props }) => (
             <pre className="kjar-markdown__pre" {...props} />
           ),

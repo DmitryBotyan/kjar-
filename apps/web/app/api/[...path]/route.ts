@@ -166,7 +166,7 @@ async function proxyRequest(
       {
         error: {
           code: "PROXY_ERROR",
-          message: error instanceof Error ? error.message : "Ошибка проксирования",
+          message: "Сервер не ответил, попробуйте ещё раз",
           details: {},
         },
       },

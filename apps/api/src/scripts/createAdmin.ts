@@ -31,7 +31,7 @@ async function main() {
   }
 
   if (password.length < 12) {
-    console.error("Пароль администратора — от 12 символов");
+    console.error("Пароль администратора должен быть не короче 12 символов");
     process.exit(1);
   }
 

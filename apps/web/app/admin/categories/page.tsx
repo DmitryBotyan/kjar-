@@ -5,13 +5,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { fetchFromAdminApi } from "@/lib/admin-api";
 import DeleteConfirmModal from "@/components/admin/DeleteConfirmModal";
+import type { Category } from "@/lib/types";
 
 export default function AdminCategoriesPage() {
   const router = useRouter();
-  const [categories, setCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; category: any | null }>({
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; category: Category | null }>({
     isOpen: false,
     category: null,
   });
@@ -24,7 +25,7 @@ export default function AdminCategoriesPage() {
       return;
     }
 
-    fetchFromAdminApi<Array<any>>("/categories")
+    fetchFromAdminApi<Category[]>("/categories")
       .then((response) => {
         setCategories(response.data || []);
       })
@@ -41,12 +42,13 @@ export default function AdminCategoriesPage() {
       });
   }, [router]);
 
-  const handleDeleteClick = (category: any) => {
+  const handleDeleteClick = (category: Category) => {
     setDeleteModal({ isOpen: true, category });
   };
 
   const handleDeleteConfirm = async () => {
-    if (!deleteModal.category) return;
+    const target = deleteModal.category;
+    if (!target) return;
 
     setDeleting(true);
     const token = localStorage.getItem("authToken");
@@ -56,7 +58,7 @@ export default function AdminCategoriesPage() {
     }
 
     try {
-      const response = await fetch(`/api/categories/${deleteModal.category.slug}`, {
+      const response = await fetch(`/api/categories/${target.slug}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -68,7 +70,7 @@ export default function AdminCategoriesPage() {
         throw new Error(errorData.error?.message || "Ошибка удаления категории");
       }
 
-      setCategories(categories.filter((c) => c.id !== deleteModal.category.id));
+      setCategories(categories.filter((c) => c.id !== target.id));
       setDeleteModal({ isOpen: false, category: null });
     } catch (err) {
       if (err instanceof Error && (err.message.includes("401") || err.message.includes("UNAUTHORIZED"))) {

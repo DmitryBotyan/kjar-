@@ -3,6 +3,7 @@ import CharacterCard from "@/components/CharacterCard";
 import { getCharacters, getTags } from "@/lib/api";
 import { getDictionarySet } from "@/lib/dictionaries";
 import type { DictionaryEntry } from "@/lib/dictionaries";
+import type { Character, Tag } from "@/lib/types";
 
 interface CharactersPageProps {
   searchParams: {
@@ -17,8 +18,8 @@ interface CharactersPageProps {
 }
 
 export default async function CharactersPage({ searchParams }: CharactersPageProps) {
-  let characters: any[] = [];
-  let tags: any[] = [];
+  let characters: Character[] = [];
+  let tags: Tag[] = [];
   let roles: DictionaryEntry[] = [];
   let species: DictionaryEntry[] = [];
   let statuses: DictionaryEntry[] = [];
@@ -50,10 +51,10 @@ export default async function CharactersPage({ searchParams }: CharactersPagePro
     console.error("Error loading characters:", error);
   }
 
-  // Сводка: по каждой роли из справочника — сколько карт в текущей выборке
+  // Сводка: сколько карт каждой роли из справочника в текущей выборке
   const byRole = roles.map((role) => ({
     role: role.label,
-    count: characters.filter((c: any) => c.role === role.code).length
+    count: characters.filter((c) => c.role === role.code).length
   }));
 
   const stats = { total: total || characters.length, byRole };
@@ -192,8 +193,8 @@ export default async function CharactersPage({ searchParams }: CharactersPagePro
                     defaultValue={searchParams.tag || ""}
                   >
                     <option value="">Все теги</option>
-                    {tags.map((tag: any) => (
-                      <option key={tag.id || tag.slug} value={tag.slug}>
+                    {tags.map((tag) => (
+                      <option key={tag.id} value={tag.slug}>
                         {tag.name}
                       </option>
                     ))}
@@ -228,7 +229,7 @@ export default async function CharactersPage({ searchParams }: CharactersPagePro
               </div>
             ) : (
               <ul className="kjar-characters__grid">
-                {characters.map((character: any) => (
+                {characters.map((character) => (
                   <li key={character.id || character.slug}>
                     <CharacterCard character={character} />
                   </li>

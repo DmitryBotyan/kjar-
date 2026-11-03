@@ -8,6 +8,8 @@ import ImageUpload from "@/components/admin/ImageUpload";
 import CharacterSheetEditor from "@/components/admin/CharacterSheetEditor";
 import CharacterCardEditor, { type CharacterCardValue } from "@/components/admin/CharacterCardEditor";
 import DictionarySelect from "@/components/admin/DictionarySelect";
+import { statsObject } from "@/lib/character";
+import type { Character } from "@/lib/types";
 
 export default function EditCharacterPage() {
   const router = useRouter();
@@ -17,7 +19,7 @@ export default function EditCharacterPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [character, setCharacter] = useState<any>(null);
+  const [character, setCharacter] = useState<Character | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [stats, setStats] = useState<Record<string, unknown> | null>(null);
   const [card, setCard] = useState<CharacterCardValue | null>(null);
@@ -29,14 +31,12 @@ export default function EditCharacterPage() {
       return;
     }
 
-    fetchFromAdminApi<any>(`/characters/${slug}`)
+    fetchFromAdminApi<Character>(`/characters/${slug}`)
       .then((response) => {
         setCharacter(response.data);
         setImageUrl(response.data.image || null);
         setStats(
-          response.data.statsJson && typeof response.data.statsJson === "object"
-            ? response.data.statsJson
-            : null
+          statsObject(response.data.statsJson)
         );
       })
       .catch((e) => {
@@ -259,7 +259,7 @@ export default function EditCharacterPage() {
 
           <CharacterCardEditor initial={character} onChange={setCard} />
 
-          <CharacterSheetEditor value={character.statsJson} onChange={setStats} />
+          <CharacterSheetEditor value={statsObject(character.statsJson)} onChange={setStats} />
 
           <div className="kjar-form-actions">
             <button

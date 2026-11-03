@@ -35,7 +35,7 @@ function asArray<T>(value: unknown): T[] {
 }
 
 function initialKin(raw: unknown): Kin[] {
-  return asArray<any>(raw).map((row) => ({
+  return asArray<{ kind?: unknown; type?: unknown; name?: unknown; slug?: unknown } | null>(raw).map((row) => ({
     kind: String(row?.kind ?? row?.type ?? ""),
     name: String(row?.name ?? ""),
     slug: row?.slug ? String(row.slug) : null

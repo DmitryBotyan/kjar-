@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { characterGender, characterNumber } from "@/lib/character";
+import { characterGender, characterNumber, type CardSource } from "@/lib/character";
 
 type CharacterCardProps = {
-  character: any;
+  character: CardSource & { slug: string; name: string; image: string | null };
 };
 
 export default function CharacterCard({ character }: CharacterCardProps) {
@@ -12,7 +12,7 @@ export default function CharacterCard({ character }: CharacterCardProps) {
   return (
     <Link
       className="kjar-deck-card"
-      href={`/characters/${character.slug || character.id}`}
+      href={`/characters/${character.slug}`}
     >
       <span className="kjar-deck-card__frame">
         {character.image ? (

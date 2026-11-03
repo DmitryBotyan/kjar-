@@ -188,7 +188,7 @@ export async function updatePoll(req: AuthRequest, res: Response) {
       throw createError("Опрос не найден", 404);
     }
 
-    const updateData: any = {};
+    const updateData: Partial<typeof polls.$inferInsert> = {};
     if (showPercentages !== undefined) updateData.showPercentages = showPercentages;
     if (isEnded !== undefined) updateData.isEnded = isEnded;
     if (allowMultiple !== undefined) updateData.allowMultiple = allowMultiple;
@@ -232,7 +232,7 @@ export async function votePoll(req: AuthRequest, res: Response) {
     const { postId } = req.params;
     const { optionId, voterKey } = req.body;
 
-    // Опрос открыт всем: вошедшего узнаём по учётной записи, гостя — по ключу,
+    // Опрос открыт всем: вошедшего узнаём по учётной записи, гостя по ключу,
     // который его браузер хранит у себя
     const userId = req.user?.id ?? null;
 

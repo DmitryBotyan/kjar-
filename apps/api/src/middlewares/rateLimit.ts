@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import type { AuthRequest } from "./auth.js";
 
 interface RateLimitStore {
   [key: string]: {
@@ -18,7 +19,7 @@ const MAX_REQUESTS = Number(process.env.RATE_LIMIT_MAX) || 100;
 function getClientId(req: Request): string {
   // req.ip разворачивается в реальный адрес посетителя благодаря trust proxy
   const ip = req.ip || req.socket.remoteAddress || "unknown";
-  const userId = (req as any).user?.id;
+  const userId = (req as AuthRequest).user?.id;
   return userId ? `user:${userId}` : `ip:${ip}`;
 }
 
@@ -26,7 +27,7 @@ function getClientId(req: Request): string {
  * Серверные компоненты Next дергают API изнутри docker-сети, чтобы собрать
  * страницу. Такие запросы нельзя считать за посетителя: одна страница делает
  * их несколько, и общий лимит выбирался бы за пару десятков просмотров.
- * Отличаем по отсутствию X-Forwarded-For — его проставляет nginx на входе,
+ * Отличаем по отсутствию X-Forwarded-For: его проставляет nginx на входе,
  * а порт API наружу не выставлен, подделать заголовок снаружи нельзя.
  * Следствие: в dev-стенде без nginx лимиты не применяются, проверять их
  * нужно запросами напрямую к API либо на боевом.

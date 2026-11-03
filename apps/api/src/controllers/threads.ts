@@ -172,7 +172,7 @@ export async function createThread(req: AuthRequest, res: Response) {
     tags?: string[];
   };
 
-  // Раздел обсуждения — из справочника thread_category: раньше его вписывали
+  // Раздел обсуждения берётся из справочника thread_category: раньше его вписывали
   // вручную, и разделы плодились опечатками.
   await assertDictionaryValue("thread_category", category?.trim(), "Раздел обсуждения");
 
@@ -221,7 +221,7 @@ export async function createThread(req: AuthRequest, res: Response) {
     }
   }
 
-  // Первое сообщение темы — её текст: так ветка сразу читается целиком
+  // Первое сообщение темы и есть её текст: так ветка сразу читается целиком
   await db.insert(messages).values({
     threadId: thread.id,
     authorId: req.user?.id ?? null,

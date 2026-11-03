@@ -164,7 +164,7 @@ export async function createPost(req: AuthRequest, res: Response) {
       participationType?: string | null;
     };
 
-    // Тип, формат и участие ивента — из справочников, чтобы подписи в админке
+    // Тип, формат и участие ивента берутся из справочников, чтобы подписи в админке
     // и на сайте не расходились.
     await assertDictionaryValue("event_type", data.eventType, "Тип ивента");
     await assertDictionaryValue("event_format", data.eventFormat, "Формат ивента");

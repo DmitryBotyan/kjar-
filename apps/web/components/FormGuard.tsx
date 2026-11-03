@@ -45,7 +45,7 @@ export function useFormToken() {
 
 /**
  * Ловушка для автозаполнения: человек это поле не видит и не заполняет,
- * а робот заполняет — и отправка отклоняется.
+ * а робот заполняет, и отправка отклоняется.
  */
 export function HoneypotField({ value, onChange }: { value: string; onChange: (next: string) => void }) {
   return (

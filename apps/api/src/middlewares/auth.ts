@@ -73,39 +73,32 @@ export async function authenticate(
   }
 }
 
-export function optionalAuth(
+// Гость тоже проходит дальше: неверный токен или сбой базы просто оставляют
+// запрос анонимным. Пользователя ждём до next(), иначе обработчик его не увидит
+export async function optionalAuth(
   req: AuthRequest,
   _res: Response,
   next: NextFunction
-): void {
+): Promise<void> {
   const authHeader = req.headers.authorization;
-  
-  if (authHeader && authHeader.startsWith("Bearer ")) {
-    const token = authHeader.substring(7);
-    
+  if (authHeader?.startsWith("Bearer ")) {
     try {
-      const decoded = jwt.verify(token, JWT_SECRET) as jwt.JwtPayload;
-      // Асинхронно загружаем пользователя, но не блокируем запрос
-      db.select({
-        id: users.id,
-        username: users.username,
-        role: users.role
-      })
-      .from(users)
-      .where(eq(users.id, decoded.userId))
-      .limit(1)
-      .then(([user]) => {
-        if (user) {
-          req.user = user;
-        }
-      })
-      .catch(() => {
-        // Игнорируем ошибки при опциональной аутентификации
-      });
+      const decoded = jwt.verify(authHeader.substring(7), JWT_SECRET) as jwt.JwtPayload;
+      const [user] = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          role: users.role
+        })
+        .from(users)
+        .where(eq(users.id, decoded.userId))
+        .limit(1);
+      if (user) {
+        req.user = user;
+      }
     } catch {
-      // Игнорируем ошибки при опциональной аутентификации
+      req.user = undefined;
     }
   }
-  
   next();
 }

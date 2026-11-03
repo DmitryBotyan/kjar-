@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getArticles, getCategories, getTags } from "@/lib/api";
 import { getDictionary, labelFor } from "@/lib/dictionaries";
 import type { DictionaryEntry } from "@/lib/dictionaries";
+import type { Article, Category, Tag } from "@/lib/types";
 
 interface LoreIndexPageProps {
   searchParams: {
@@ -17,9 +18,9 @@ interface LoreIndexPageProps {
 const RUNES = ["ᚨ", "ᚱ", "ᚲ", "ᛃ", "ᛉ", "ᛊ", "ᚦ", "ᛖ"];
 
 export default async function LoreIndexPage({ searchParams }: LoreIndexPageProps) {
-  let articles: any[] = [];
-  let categories: any[] = [];
-  let tags: any[] = [];
+  let articles: Article[] = [];
+  let categories: Category[] = [];
+  let tags: Tag[] = [];
   let eras: DictionaryEntry[] = [];
   let total = 0;
 
@@ -36,7 +37,7 @@ export default async function LoreIndexPage({ searchParams }: LoreIndexPageProps
       }),
       getCategories().catch(() => ({ data: [] })),
       getTags().catch(() => ({ data: [] })),
-      // Эпохи — из справочника админки, включая те, по которым статей пока нет
+      // Эпохи берутся из справочника админки, включая те, по которым статей пока нет
       getDictionary("article_era").catch(() => [])
     ]);
 
@@ -109,7 +110,7 @@ export default async function LoreIndexPage({ searchParams }: LoreIndexPageProps
                   defaultValue={searchParams.category || ""}
                 >
                   <option value="">Все категории</option>
-                  {categories.map((category: any) => (
+                  {categories.map((category) => (
                     <option key={category.id || category.slug} value={category.slug}>
                       {category.name}
                     </option>
@@ -147,8 +148,8 @@ export default async function LoreIndexPage({ searchParams }: LoreIndexPageProps
                   defaultValue={searchParams.tag || ""}
                 >
                   <option value="">Все теги</option>
-                  {tags.map((tag: any) => (
-                    <option key={tag.id || tag.slug} value={tag.slug}>
+                  {tags.map((tag) => (
+                    <option key={tag.id} value={tag.slug}>
                       {tag.name}
                     </option>
                   ))}
@@ -185,7 +186,7 @@ export default async function LoreIndexPage({ searchParams }: LoreIndexPageProps
               </div>
             ) : (
               <ul className="kjar-lore__grid">
-                {articles.map((article: any, index: number) => (
+                {articles.map((article, index: number) => (
                   <li key={article.slug || article.id}>
                     <article className="kjar-lore-card">
                       <div className="kjar-lore-card__header">
@@ -212,7 +213,7 @@ export default async function LoreIndexPage({ searchParams }: LoreIndexPageProps
                         {article.category && (
                           <div>
                             <dt>Категория</dt>
-                            <dd>{article.category.name || article.category}</dd>
+                            <dd>{article.category.name}</dd>
                           </div>
                         )}
                         {article.era && (
@@ -225,12 +226,12 @@ export default async function LoreIndexPage({ searchParams }: LoreIndexPageProps
 
                       {article.tags && article.tags.length > 0 && (
                         <div className="kjar-lore-card__chips">
-                          {article.tags.slice(0, 4).map((tag: any) => (
+                          {article.tags.slice(0, 4).map((tag) => (
                             <span
                               className="kjar-chip"
-                              key={tag.id || tag.slug || tag}
+                              key={tag.id}
                             >
-                              {tag.name || tag}
+                              {tag.name}
                             </span>
                           ))}
                         </div>

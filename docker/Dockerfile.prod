@@ -4,7 +4,7 @@
 # node:22-alpine, а не oven/bun: рантайм Next остаётся на Node, а Docker Hub
 # с российских адресов ограничивает анонимные загрузки. bun ставится из npm.
 FROM node:22-alpine AS base
-# Единственный внешний источник — реестр npm. Подменяется при сборке:
+# Единственный внешний источник: реестр npm. Подменяется при сборке:
 #   docker build --build-arg NPM_REGISTRY=https://зеркало ...
 ARG NPM_REGISTRY=https://registry.npmjs.org
 ENV BUN_CONFIG_REGISTRY=$NPM_REGISTRY

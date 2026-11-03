@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { fetchFromAdminApi } from "@/lib/admin-api";
+import type { Category } from "@/lib/types";
 
 export default function EditCategoryPage() {
   const router = useRouter();
@@ -13,7 +14,7 @@ export default function EditCategoryPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [category, setCategory] = useState<any>(null);
+  const [category, setCategory] = useState<Category | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
@@ -22,9 +23,9 @@ export default function EditCategoryPage() {
       return;
     }
 
-    fetchFromAdminApi<Array<any>>("/categories")
+    fetchFromAdminApi<Category[]>("/categories")
       .then((response) => {
-        const found = response.data.find((c: any) => c.slug === slug);
+        const found = response.data.find((c) => c.slug === slug);
         if (found) {
           setCategory(found);
         } else {

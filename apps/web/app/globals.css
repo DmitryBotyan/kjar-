@@ -2863,7 +2863,7 @@ button.kjar-character__reference[disabled] {
   overflow-x: auto;
 }
 
-.kjar-markdown__pre .kjar-markdown__code-block,
+.kjar-markdown__pre code,
 .kjar-article__content-md pre code {
   padding: 0;
   background: transparent;

@@ -4,13 +4,14 @@ import { getArticleBySlug } from "@/lib/api";
 import { getDictionary, labelFor } from "@/lib/dictionaries";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import Comments from "@/components/Comments";
+import type { Article } from "@/lib/types";
 
 type LoreArticlePageProps = {
   params: { slug: string };
 };
 
 export default async function LoreArticlePage({ params }: LoreArticlePageProps) {
-  let article: any = null;
+  let article: Article | null = null;
   const eras = await getDictionary("article_era").catch(() => []);
 
   try {
@@ -92,7 +93,7 @@ export default async function LoreArticlePage({ params }: LoreArticlePageProps) 
                 <div className="kjar-article__card" aria-label="Быстрые факты">
                   <h2 className="kjar-article__card-title">Быстрые факты</h2>
                   <dl className="kjar-article__facts">
-                    {article.factsJson.map((fact: any, index: number) => (
+                    {article.factsJson.map((fact, index: number) => (
                       <div key={fact.label || index}>
                         <dt>{fact.label}</dt>
                         <dd>{fact.value}</dd>
@@ -106,13 +107,13 @@ export default async function LoreArticlePage({ params }: LoreArticlePageProps) 
               <div className="kjar-article__card" aria-label="Теги">
                 <h2 className="kjar-article__card-title">Теги</h2>
                 <div className="kjar-article__chips">
-                  {article.tags.map((tag: any) => (
+                  {article.tags.map((tag) => (
                     <Link
                       className="kjar-chip"
-                      key={tag.id || tag.slug || tag}
-                      href={`/lore?tag=${encodeURIComponent(tag.slug || tag)}`}
+                      key={tag.id}
+                      href={`/lore?tag=${encodeURIComponent(tag.slug)}`}
                     >
-                      {tag.name || tag}
+                      {tag.name}
                     </Link>
                   ))}
                 </div>

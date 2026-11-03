@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { fetchFromAdminApi } from "@/lib/admin-api";
+import type { Tag } from "@/lib/types";
 
 export default function EditTagPage() {
   const router = useRouter();
@@ -13,7 +14,7 @@ export default function EditTagPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [tag, setTag] = useState<any>(null);
+  const [tag, setTag] = useState<Tag | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
@@ -22,9 +23,9 @@ export default function EditTagPage() {
       return;
     }
 
-    fetchFromAdminApi<Array<any>>("/tags")
+    fetchFromAdminApi<Tag[]>("/tags")
       .then((response) => {
-        const found = response.data.find((t: any) => t.slug === slug);
+        const found = response.data.find((t) => t.slug === slug);
         if (found) {
           setTag(found);
         } else {

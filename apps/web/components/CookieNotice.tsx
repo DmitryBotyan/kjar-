@@ -20,7 +20,10 @@ export default function CookieNotice() {
   const accept = () => {
     try {
       localStorage.setItem(STORAGE_KEY, "1");
-    } catch {}
+    } catch {
+      // В приватном режиме хранилище бывает закрыто: тогда плашка скроется
+      // только до перезагрузки, и это лучше, чем не дать её закрыть
+    }
     setVisible(false);
   };
 

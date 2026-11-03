@@ -5,13 +5,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { fetchFromAdminApi } from "@/lib/admin-api";
 import DeleteConfirmModal from "@/components/admin/DeleteConfirmModal";
+import type { Post } from "@/lib/types";
 
 export default function AdminPostsPage() {
   const router = useRouter();
-  const [posts, setPosts] = useState<any[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; post: any | null }>({
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; post: Post | null }>({
     isOpen: false,
     post: null,
   });
@@ -24,7 +25,7 @@ export default function AdminPostsPage() {
       return;
     }
 
-    fetchFromAdminApi<Array<any>>("/posts?limit=100")
+    fetchFromAdminApi<Post[]>("/posts?limit=100")
       .then((response) => {
         setPosts(response.data || []);
       })
@@ -41,12 +42,13 @@ export default function AdminPostsPage() {
       });
   }, [router]);
 
-  const handleDeleteClick = (post: any) => {
+  const handleDeleteClick = (post: Post) => {
     setDeleteModal({ isOpen: true, post });
   };
 
   const handleDeleteConfirm = async () => {
-    if (!deleteModal.post) return;
+    const target = deleteModal.post;
+    if (!target) return;
 
     setDeleting(true);
     const token = localStorage.getItem("authToken");
@@ -56,7 +58,7 @@ export default function AdminPostsPage() {
     }
 
     try {
-      const response = await fetch(`/api/posts/${deleteModal.post.slug}`, {
+      const response = await fetch(`/api/posts/${target.slug}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -68,7 +70,7 @@ export default function AdminPostsPage() {
         throw new Error(errorData.error?.message || "Ошибка удаления поста");
       }
 
-      setPosts(posts.filter((p) => p.id !== deleteModal.post.id));
+      setPosts(posts.filter((p) => p.id !== target.id));
       setDeleteModal({ isOpen: false, post: null });
     } catch (err) {
       if (err instanceof Error && (err.message.includes("401") || err.message.includes("UNAUTHORIZED"))) {

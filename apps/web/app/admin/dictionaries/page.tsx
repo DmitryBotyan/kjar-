@@ -6,7 +6,7 @@ import { adminRequest, useAdminGuard } from "@/lib/useAdminGuard";
 import { invalidateDictionary } from "@/lib/useDictionaries";
 import type { DictionaryEntry, DictionaryGroup } from "@/lib/dictionaries";
 
-// Подписи групп: сами значения редактируются, а состав групп задан кодом —
+// Подписи групп: сами значения редактируются, а состав групп задан кодом:
 // под каждую есть поле в контенте и форма, которая её показывает.
 const GROUPS: Array<{ key: DictionaryGroup; title: string; note: string }> = [
   {
@@ -93,7 +93,7 @@ export default function AdminDictionariesPage() {
     setBusy(true);
     try {
       await action();
-      // Формы кэшируют справочники в памяти вкладки — сбрасываем после правки
+      // Формы кэшируют справочники в памяти вкладки, поэтому после правки сбрасываем
       invalidateDictionary();
       await reload();
       setError(null);

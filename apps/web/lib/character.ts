@@ -4,20 +4,30 @@
 const GENDER_KEYS = ["пол", "gender", "sex"];
 const NUMBER_KEYS = ["номер", "number", "no", "№"];
 
+// Карточку рисуют и для полного кьяра, и для родни: у родни нет id и рода
+export type CardSource = {
+  id?: number;
+  species?: string | null;
+  statsJson: unknown;
+};
+
 export type Meter = {
   label: string;
   value: number;
   max: number;
 };
 
-function stats(character: any): Record<string, unknown> {
-  const raw = character?.statsJson;
+export function statsObject(raw: unknown): Record<string, unknown> | null {
   return raw && typeof raw === "object" && !Array.isArray(raw)
     ? (raw as Record<string, unknown>)
-    : {};
+    : null;
 }
 
-function pick(character: any, keys: string[]): unknown {
+function stats(character: CardSource): Record<string, unknown> {
+  return statsObject(character.statsJson) ?? {};
+}
+
+function pick(character: CardSource, keys: string[]): unknown {
   const source = stats(character);
   for (const [key, value] of Object.entries(source)) {
     if (keys.includes(key.trim().toLowerCase())) return value;
@@ -31,18 +41,18 @@ export function humanize(key: string): string {
   return clean.charAt(0).toUpperCase() + clean.slice(1);
 }
 
-export function characterGender(character: any): string | null {
+export function characterGender(character: CardSource): string | null {
   const value = pick(character, GENDER_KEYS);
   if (value === undefined || value === null || value === "") {
-    return character?.species || null;
+    return character.species || null;
   }
   return String(value);
 }
 
-export function characterNumber(character: any): string | null {
+export function characterNumber(character: CardSource): string | null {
   const value = pick(character, NUMBER_KEYS);
   const source =
-    value === undefined || value === null || value === "" ? character?.id : value;
+    value === undefined || value === null || value === "" ? character.id : value;
   return source === undefined || source === null ? null : `№ ${source}`;
 }
 
@@ -60,16 +70,16 @@ function asNumber(value: unknown): number | null {
 }
 
 // jsonb не хранит порядок ключей, поэтому базовый набор идёт первым и всегда
-// в одном и том же виде, а всё остальное — по алфавиту. Сам набор задаётся
+// в одном и том же виде, а всё остальное по алфавиту. Сам набор задаётся
 // справочником character_meter в админке.
 function meterRank(label: string, order: string[]): number {
   const index = order.indexOf(label.trim().toLowerCase());
   return index === -1 ? order.length : index;
 }
 
-// Числовые характеристики рисуются шкалами, всё остальное — парами ключ-значение
+// Числовые характеристики рисуются шкалами, всё остальное парами ключ-значение
 export function characterMeters(
-  character: any,
+  character: CardSource,
   baseMeters?: Array<{ code: string }>
 ): Meter[] {
   const order = (baseMeters || []).map((meter) => meter.code.trim().toLowerCase());
@@ -93,7 +103,7 @@ export function characterMeters(
     });
 }
 
-export function characterFacts(character: any): Array<[string, string]> {
+export function characterFacts(character: CardSource): Array<[string, string]> {
   return Object.entries(stats(character))
     .filter(([key, value]) => !isServiceKey(key) && asNumber(value) === null)
     .map(([key, value]) => [humanize(key), String(value)]);

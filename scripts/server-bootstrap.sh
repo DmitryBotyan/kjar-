@@ -10,7 +10,7 @@ echo "==> Обновление пакетов"
 apt-get update -y
 apt-get upgrade -y
 # fail2ban намеренно не ставим: он банил раннеры GitHub, и выкладка переставала
-# доходить до сервера. Защита строится иначе — вход только по ключу и ufw.
+# доходить до сервера. Защита строится иначе: вход только по ключу и ufw.
 apt-get install -y ca-certificates curl gnupg ufw rsync
 
 echo "==> Swap"

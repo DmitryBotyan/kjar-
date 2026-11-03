@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getEvents } from "@/lib/api";
 import { getDictionarySet, labelFor } from "@/lib/dictionaries";
 import type { DictionaryEntry } from "@/lib/dictionaries";
+import type { Post } from "@/lib/types";
 
 interface EventsPageProps {
   searchParams: {
@@ -26,8 +27,8 @@ function formatDate(value?: string | null) {
 }
 
 export default async function EventsPage({ searchParams }: EventsPageProps) {
-  let events: any[] = [];
-  // Варианты фильтров — весь справочник, а не только то, что уже встречалось
+  let events: Post[] = [];
+  // В фильтрах весь справочник, а не только то, что уже встречалось
   // в постах: иначе новый формат не выбрать, пока по нему нет ни одного ивента.
   let formats: DictionaryEntry[] = [];
   let types: DictionaryEntry[] = [];
@@ -232,7 +233,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
               </div>
             ) : (
               <ul className="kjar-events__grid">
-                {events.map((event: any, index: number) => (
+                {events.map((event, index: number) => (
                   <li key={event.id || event.slug}>
                     <article className="kjar-event-card">
                       <div className="kjar-event-card__media">
@@ -277,9 +278,9 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
 
                       {event.tags && event.tags.length > 0 && (
                         <div className="kjar-event-card__chips">
-                          {event.tags.slice(0, 3).map((tag: any) => (
-                            <span className="kjar-chip" key={tag.id || tag.slug || tag}>
-                              {tag.name || tag}
+                          {event.tags.slice(0, 3).map((tag) => (
+                            <span className="kjar-chip" key={tag.id}>
+                              {tag.name}
                             </span>
                           ))}
                         </div>

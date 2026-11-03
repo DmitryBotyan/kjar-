@@ -8,7 +8,7 @@
 
 ### Для Docker окружения (рекомендуется):
 
-`bun run db:migrate:docker` работает нормально — используйте тот же способ для seed:
+`bun run db:migrate:docker` работает нормально, используйте тот же способ для seed:
 
 ```bash
 # Убедитесь, что контейнеры запущены
@@ -30,7 +30,7 @@ bun run db:migrate  # или bun run db:migrate:docker
 bun run db:seed
 ```
 
-При локальном `bun run db:seed` используется `SEED_LOCALHOST=1`: скрипт подменяет хост `db` на `localhost` в `DATABASE_URL`, если в `.env` указан Docker-вариант (`@db:5432`). При `bun run db:seed:docker` подмена не выполняется — внутри контейнера хост `db` корректен. Менять `.env` не нужно.
+При локальном `bun run db:seed` используется `SEED_LOCALHOST=1`: скрипт подменяет хост `db` на `localhost` в `DATABASE_URL`, если в `.env` указан Docker-вариант (`@db:5432`). При `bun run db:seed:docker` подмена не выполняется: внутри контейнера хост `db` корректен. Менять `.env` не нужно.
 
 ## Что создаётся
 

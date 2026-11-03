@@ -15,7 +15,7 @@ export default async function NormanPage({ params }: NormanPageProps) {
 
   if (!norman) notFound();
 
-  const kjars: any[] = norman.kjars || [];
+  const kjars = norman.kjars || [];
 
   return (
     <div className="kjar-character">

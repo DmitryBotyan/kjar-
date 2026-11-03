@@ -5,13 +5,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { fetchFromAdminApi } from "@/lib/admin-api";
 import DeleteConfirmModal from "@/components/admin/DeleteConfirmModal";
+import type { Post } from "@/lib/types";
 
 export default function AdminEventsPage() {
   const router = useRouter();
-  const [events, setEvents] = useState<any[]>([]);
+  const [events, setEvents] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; event: any | null }>({
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; event: Post | null }>({
     isOpen: false,
     event: null,
   });
@@ -24,7 +25,7 @@ export default function AdminEventsPage() {
       return;
     }
 
-    fetchFromAdminApi<Array<any>>("/events?limit=100")
+    fetchFromAdminApi<Post[]>("/events?limit=100")
       .then((response) => {
         setEvents(response.data || []);
       })
@@ -41,12 +42,13 @@ export default function AdminEventsPage() {
       });
   }, [router]);
 
-  const handleDeleteClick = (event: any) => {
+  const handleDeleteClick = (event: Post) => {
     setDeleteModal({ isOpen: true, event });
   };
 
   const handleDeleteConfirm = async () => {
-    if (!deleteModal.event) return;
+    const target = deleteModal.event;
+    if (!target) return;
 
     setDeleting(true);
     const token = localStorage.getItem("authToken");
@@ -56,7 +58,7 @@ export default function AdminEventsPage() {
     }
 
     try {
-      const response = await fetch(`/api/posts/${deleteModal.event.slug}`, {
+      const response = await fetch(`/api/posts/${target.slug}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -68,7 +70,7 @@ export default function AdminEventsPage() {
         throw new Error(errorData.error?.message || "Ошибка удаления ивента");
       }
 
-      setEvents(events.filter((e) => e.id !== deleteModal.event.id));
+      setEvents(events.filter((e) => e.id !== target.id));
       setDeleteModal({ isOpen: false, event: null });
     } catch (err) {
       if (err instanceof Error && (err.message.includes("401") || err.message.includes("UNAUTHORIZED"))) {
@@ -119,7 +121,7 @@ export default function AdminEventsPage() {
                 <th>ID</th>
                 <th>Название</th>
                 <th>Slug</th>
-                <th>Статус</th>
+                <th>Формат</th>
                 <th>Дата</th>
                 <th>Создано</th>
                 <th>Действия</th>
@@ -131,8 +133,8 @@ export default function AdminEventsPage() {
                   <td>{event.id}</td>
                   <td>{event.title}</td>
                   <td>{event.slug}</td>
-                  <td>{event.status || "-"}</td>
-                  <td>{event.date ? new Date(event.date).toLocaleDateString("ru-RU") : "-"}</td>
+                  <td>{event.eventFormat || "-"}</td>
+                  <td>{event.publishedAt ? new Date(event.publishedAt).toLocaleDateString("ru-RU") : "-"}</td>
                   <td>{new Date(event.createdAt).toLocaleDateString("ru-RU")}</td>
                   <td>
                     <div className="kjar-admin__actions">

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getThreads } from "@/lib/api";
 import { getDictionary, labelFor } from "@/lib/dictionaries";
 import type { DictionaryEntry } from "@/lib/dictionaries";
+import type { Thread } from "@/lib/types";
 
 interface DiscussionsPageProps {
   searchParams: {
@@ -14,7 +15,7 @@ interface DiscussionsPageProps {
 }
 
 export default async function DiscussionsPage({ searchParams }: DiscussionsPageProps) {
-  let threads: any[] = [];
+  let threads: Thread[] = [];
   let categories: DictionaryEntry[] = [];
   let total = 0;
 
@@ -30,7 +31,7 @@ export default async function DiscussionsPage({ searchParams }: DiscussionsPageP
     threads = response.data || [];
     total = response.total || threads.length;
 
-    // Разделы — из справочника админки, а не из уже заведённых тем
+    // Разделы берутся из справочника админки, а не из уже заведённых тем
     categories = await getDictionary("thread_category").catch(() => []);
   } catch (error) {
     console.error("Error loading threads:", error);
@@ -123,7 +124,7 @@ export default async function DiscussionsPage({ searchParams }: DiscussionsPageP
               </div>
             ) : (
               <ul className="kjar-forum__list">
-                {threads.map((thread: any) => (
+                {threads.map((thread) => (
                   <li key={thread.slug || thread.id}>
                     <article className="kjar-forum-thread">
                       <div className="kjar-forum-thread__main">
@@ -148,12 +149,12 @@ export default async function DiscussionsPage({ searchParams }: DiscussionsPageP
                             </span>
                           )}
                           {thread.tags &&
-                            thread.tags.slice(0, 3).map((tag: any) => (
+                            thread.tags.slice(0, 3).map((tag) => (
                               <span
                                 className="kjar-chip"
-                                key={tag.id || tag.slug || tag}
+                                key={tag.id}
                               >
-                                {tag.name || tag}
+                                {tag.name}
                               </span>
                             ))}
                           {thread.authorName && (

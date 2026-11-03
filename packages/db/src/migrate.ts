@@ -13,7 +13,7 @@ dotenv.config({ path: resolve(rootDir, ".env") });
 const connectionString = process.env.DATABASE_URL;
 
 if (!connectionString) {
-  console.error("❌ DATABASE_URL не установлена в переменных окружения");
+  console.error("DATABASE_URL не установлена в переменных окружения");
   process.exit(1);
 }
 
@@ -25,16 +25,16 @@ const db = drizzle(pool);
 
 async function runMigrations() {
   try {
-    console.log("🔄 Применение миграций...");
+    console.log("Применение миграций...");
     
     await migrate(db, {
       migrationsFolder: join(__dirname, "../migrations")
     });
     
-    console.log("✅ Миграции успешно применены");
+    console.log("Миграции успешно применены");
     process.exit(0);
   } catch (error) {
-    console.error("❌ Ошибка при применении миграций:", error);
+    console.error("Ошибка при применении миграций:", error);
     process.exit(1);
   } finally {
     await pool.end();

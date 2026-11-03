@@ -8,7 +8,8 @@ import {
   jsonb,
   boolean,
   index,
-  unique
+  unique,
+  type AnyPgColumn
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -474,7 +475,7 @@ export const comments = pgTable(
     authorName: varchar("author_name", { length: 100 }).notNull(),
     content: text("content").notNull(),
     image: varchar("image", { length: 500 }),
-    parentId: integer("parent_id").references((): any => comments.id, { onDelete: "cascade" }),
+    parentId: integer("parent_id").references((): AnyPgColumn => comments.id, { onDelete: "cascade" }),
     isApproved: boolean("is_approved").notNull().default(true),
     createdAt: timestamp("created_at").notNull().defaultNow()
   },
@@ -511,7 +512,7 @@ export const contactRequests = pgTable(
 // Справочники значений, которые редактор выбирает в админке: роли и статусы
 // персонажей, типы и форматы ивентов, эпохи, разделы обсуждений. Раньше эти
 // наборы были расписаны в формах фронтенда, из-за чего подписи расходились
-// между админкой и сайтом. Теперь источник один — эта таблица.
+// между админкой и сайтом. Теперь источник один: эта таблица.
 export const dictionaries = pgTable(
   "dictionaries",
   {
@@ -520,7 +521,7 @@ export const dictionaries = pgTable(
     // character_meter, event_type, event_format, participation_type,
     // article_era, thread_category, contact_request_type
     group: varchar("group_key", { length: 64 }).notNull(),
-    // Код — то, что лежит в контентных таблицах (posts.event_type и подобных)
+    // Код это то, что лежит в контентных таблицах (posts.event_type и подобных)
     code: varchar("code", { length: 100 }).notNull(),
     label: varchar("label", { length: 200 }).notNull(),
     sortOrder: integer("sort_order").notNull().default(0),

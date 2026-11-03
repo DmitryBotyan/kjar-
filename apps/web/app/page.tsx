@@ -10,6 +10,7 @@ import CharacterCard from "@/components/CharacterCard";
 import { getArticles, getCharacters, getEvents, getPosts, getThreads } from "@/lib/api";
 import { getDictionarySet, labelFor } from "@/lib/dictionaries";
 import type { DictionarySet } from "@/lib/dictionaries";
+import type { Article, Character, Post, Thread } from "@/lib/types";
 
 function formatDate(value?: string | null) {
   if (!value) return null;
@@ -21,11 +22,11 @@ function formatDate(value?: string | null) {
 }
 
 export default async function HomePage() {
-  let posts: any[] = [];
-  let events: any[] = [];
-  let characters: any[] = [];
-  let threads: any[] = [];
-  let articles: any[] = [];
+  let posts: Post[] = [];
+  let events: Post[] = [];
+  let characters: Character[] = [];
+  let threads: Thread[] = [];
+  let articles: Article[] = [];
   let dictionaries: DictionarySet | null = null;
 
   try {
@@ -180,7 +181,7 @@ export default async function HomePage() {
 
           {posts.length > 0 ? (
             <div className="kjar-updates__grid">
-              {posts.map((post: any, index: number) => (
+              {posts.map((post, index: number) => (
                 <article key={post.id || post.slug} className="kjar-updates__card">
                   <div className="kjar-updates__card-media">
                     {post.image ? (
@@ -227,7 +228,7 @@ export default async function HomePage() {
             </div>
 
             <ul className="kjar-deck-row">
-              {characters.slice(0, 4).map((character: any) => (
+              {characters.slice(0, 4).map((character) => (
                 <li key={character.id || character.slug}>
                   <CharacterCard character={character} />
                 </li>
@@ -256,7 +257,7 @@ export default async function HomePage() {
               </h3>
               {articles.length > 0 ? (
                 <ul className="kjar-list-plain">
-                  {articles.map((article: any) => (
+                  {articles.map((article) => (
                     <li key={article.id || article.slug}>
                       <Link
                         className="kjar-row-link"
@@ -289,7 +290,7 @@ export default async function HomePage() {
               </h3>
               {threads.length > 0 ? (
                 <ul className="kjar-list-plain">
-                  {threads.map((thread: any) => (
+                  {threads.map((thread) => (
                     <li key={thread.id || thread.slug}>
                       <Link
                         className="kjar-row-link"

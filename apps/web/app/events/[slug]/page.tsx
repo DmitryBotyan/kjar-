@@ -5,6 +5,7 @@ import MarkdownRenderer from "@/components/MarkdownRenderer";
 import Poll from "@/components/Poll";
 import Comments from "@/components/Comments";
 import { getDictionarySet, labelFor } from "@/lib/dictionaries";
+import type { Post } from "@/lib/types";
 
 type EventPageProps = {
   params: { slug: string };
@@ -20,8 +21,19 @@ function formatDate(value?: string | null) {
   });
 }
 
+// Варианты в конфиге ивента админка пишет строкой или объектом { label } / { text }
+function optionText(option: unknown): string {
+  if (typeof option === "string") return option;
+  if (option && typeof option === "object") {
+    const { label, text } = option as { label?: unknown; text?: unknown };
+    if (typeof label === "string") return label;
+    if (typeof text === "string") return text;
+  }
+  return JSON.stringify(option);
+}
+
 export default async function EventPage({ params }: EventPageProps) {
-  let event: any = null;
+  let event: Post | null = null;
   const dictionaries = await getDictionarySet().catch(() => null);
 
   try {
@@ -43,13 +55,13 @@ export default async function EventPage({ params }: EventPageProps) {
   );
   const formatLabel = labelFor(dictionaries?.event_format, event.eventFormat);
 
-  const renderStages = (stages: any) => {
-    if (!stages || !Array.isArray(stages) || stages.length === 0) return null;
+  const renderStages = (stages: Post["eventStages"]) => {
+    if (!stages || stages.length === 0) return null;
 
     return (
       <div className="kjar-event__stages">
         <h2 className="kjar-event__stages-title">Этапы ивента</h2>
-        {stages.map((stage: any, index: number) => (
+        {stages.map((stage, index) => (
           <div key={index} className="kjar-event__stage">
             <h3 className="kjar-event__stage-title">
               Этап {stage.stage || index + 1}
@@ -76,31 +88,29 @@ export default async function EventPage({ params }: EventPageProps) {
     );
   };
 
-  const renderEventConfig = (config: any) => {
+  const renderEventConfig = (config: Post["eventConfig"]) => {
     if (!config) return null;
-    const hasOptions = config.options && Array.isArray(config.options);
-    const hasAnswers = config.correctAnswers && Array.isArray(config.correctAnswers);
-    if (!hasOptions && !hasAnswers) return null;
+    const options = Array.isArray(config.options) ? config.options : null;
+    const answers = Array.isArray(config.correctAnswers) ? config.correctAnswers : null;
+    if (!options && !answers) return null;
 
     return (
       <div className="kjar-event__config">
-        {hasOptions && (
+        {options && (
           <div className="kjar-event__poll">
             <h3>Варианты ответов</h3>
             <ul>
-              {config.options.map((option: any, idx: number) => (
-                <li key={idx}>
-                  {typeof option === "string" ? option : option.label || option.text}
-                </li>
+              {options.map((option, idx) => (
+                <li key={idx}>{optionText(option)}</li>
               ))}
             </ul>
           </div>
         )}
-        {hasAnswers && (
+        {answers && (
           <details className="kjar-event__answers">
             <summary>Показать правильные ответы</summary>
             <ul>
-              {config.correctAnswers.map((answer: any, idx: number) => (
+              {answers.map((answer, idx) => (
                 <li key={idx}>
                   {typeof answer === "string" ? answer : JSON.stringify(answer)}
                 </li>
@@ -199,13 +209,13 @@ export default async function EventPage({ params }: EventPageProps) {
               <div className="kjar-event__card" aria-label="Теги">
                 <h2 className="kjar-event__card-title">Теги</h2>
                 <div className="kjar-event__chips">
-                  {event.tags.map((tag: any) => (
+                  {event.tags.map((tag) => (
                     <Link
                       className="kjar-chip"
-                      key={tag.id || tag.slug || tag}
-                      href={`/events?tag=${encodeURIComponent(tag.slug || tag)}`}
+                      key={tag.id}
+                      href={`/events?tag=${encodeURIComponent(tag.slug)}`}
                     >
-                      {tag.name || tag}
+                      {tag.name}
                     </Link>
                   ))}
                 </div>

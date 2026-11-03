@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getThreadBySlug } from "@/lib/api";
 import { getDictionary, labelFor } from "@/lib/dictionaries";
 import { ReplyForm } from "./ReplyForm";
+import type { Thread, ThreadMessage } from "@/lib/types";
 
 type DiscussionPageProps = {
   params: { slug: string };
@@ -20,7 +21,7 @@ function formatDateTime(value?: string | null) {
 }
 
 export default async function DiscussionThreadPage({ params }: DiscussionPageProps) {
-  let thread: any = null;
+  let thread: Thread | null = null;
   const categories = await getDictionary("thread_category").catch(() => []);
 
   try {
@@ -36,7 +37,7 @@ export default async function DiscussionThreadPage({ params }: DiscussionPagePro
   }
 
   const categoryLabel = labelFor(categories, thread.category);
-  const messages: any[] = Array.isArray(thread.messages) ? thread.messages : [];
+  const messages: ThreadMessage[] = Array.isArray(thread.messages) ? thread.messages : [];
   const replies = Math.max(messages.length - 1, 0);
   const lastMessage = messages[messages.length - 1];
 
@@ -52,9 +53,9 @@ export default async function DiscussionThreadPage({ params }: DiscussionPagePro
           <div className="kjar-thread__meta">
             {categoryLabel && <span className="kjar-chip">{categoryLabel}</span>}
             {thread.tags &&
-              thread.tags.map((tag: any) => (
-                <span className="kjar-chip" key={tag.id || tag.slug || tag}>
-                  {tag.name || tag}
+              thread.tags.map((tag) => (
+                <span className="kjar-chip" key={tag.id}>
+                  {tag.name}
                 </span>
               ))}
             {thread.isLocked && (
@@ -81,7 +82,7 @@ export default async function DiscussionThreadPage({ params }: DiscussionPagePro
               </div>
             ) : (
               <ul className="kjar-thread__list">
-                {messages.map((message: any, index: number) => (
+                {messages.map((message, index: number) => (
                   <li key={message.id || index}>
                     <article className="kjar-thread-post">
                       <header className="kjar-thread-post__header">

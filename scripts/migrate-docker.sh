@@ -33,7 +33,7 @@ fi
 API_PS_OUTPUT=$(docker compose --env-file "$ROOT_DIR/.env" -f docker/docker-compose.dev.yml ps api 2>/dev/null)
 
 if ! echo "$API_PS_OUTPUT" | grep -qE "(Up|running)"; then
-  echo "❌ Контейнер API не запущен"
+  echo "Контейнер API не запущен"
   echo ""
   echo "Запустите контейнеры командой:"
   echo "  bun run dev"
@@ -47,21 +47,21 @@ fi
 DB_PS_OUTPUT=$(docker compose --env-file "$ROOT_DIR/.env" -f docker/docker-compose.dev.yml ps db 2>/dev/null)
 
 if ! echo "$DB_PS_OUTPUT" | grep -qE "(Up|running)"; then
-  echo "⚠️  Контейнер БД не запущен, запускаю..."
+  echo "Контейнер БД не запущен, запускаю..."
   docker compose --env-file "$ROOT_DIR/.env" -f docker/docker-compose.dev.yml up -d db
   echo "⏳ Ожидание готовности БД..."
   sleep 3
 fi
 
-echo "🔄 Применение миграций в Docker контейнере..."
+echo "Применение миграций в Docker контейнере..."
 
 # Устанавливаем зависимости, если их нет (как в run-dev.sh)
-echo "📦 Проверка зависимостей..."
+echo "Проверка зависимостей..."
 docker compose --env-file "$ROOT_DIR/.env" -f docker/docker-compose.dev.yml exec -T api sh -c "if [ ! -d /app/node_modules/@kjar ]; then bun install --frozen-lockfile; fi"
 
 # Миграции применяет собственный раннер на drizzle-orm, а не drizzle-kit:
 # drizzle-kit читает свой конфиг через esbuild и на смонтированном томе
 # спотыкается об EAGAIN, тогда как bun разбирает TypeScript сам.
 # .env подхватывается из корня проекта
-echo "🚀 Запуск миграций..."
+echo "Запуск миграций..."
 docker compose --env-file "$ROOT_DIR/.env" -f docker/docker-compose.dev.yml exec -T api sh -c "cd /app/packages/db && bun run migrate:direct"

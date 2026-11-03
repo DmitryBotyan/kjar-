@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { fetchFromAdminApi } from "@/lib/admin-api";
 import DictionarySelect from "@/components/admin/DictionarySelect";
+import type { Article, Category } from "@/lib/types";
 
 export default function EditArticlePage() {
   const router = useRouter();
@@ -14,8 +15,8 @@ export default function EditArticlePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [article, setArticle] = useState<any>(null);
-  const [categories, setCategories] = useState<any[]>([]);
+  const [article, setArticle] = useState<Article | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
@@ -25,8 +26,8 @@ export default function EditArticlePage() {
     }
 
     Promise.all([
-      fetchFromAdminApi<any>(`/articles/${slug}`),
-      fetchFromAdminApi<Array<any>>("/categories?limit=100"),
+      fetchFromAdminApi<Article>(`/articles/${slug}`),
+      fetchFromAdminApi<Category[]>("/categories?limit=100"),
     ])
       .then(([articleResponse, categoriesResponse]) => {
         setArticle(articleResponse.data);

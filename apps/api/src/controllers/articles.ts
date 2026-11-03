@@ -19,6 +19,8 @@ const articlesQuerySchema = paginationSchema.extend({
 
 export async function getArticles(req: AuthRequest, res: Response) {
   try {
+    // validateQuery на маршруте уже разобрал и заменил req.query, но тип
+    // Express об этом не знает. Повторный parse упал бы на числовом limit
     const { category, status, era, tag, search, limit, offset } =
       req.query as unknown as z.infer<typeof articlesQuerySchema>;
 
@@ -223,8 +225,8 @@ export async function createArticle(req: AuthRequest, res: Response) {
       status?: "draft" | "published" | "archived";
     };
     
-    // Эпоха — из справочника article_era. Раньше админка писала латиницей
-    // ("first"), а сид — кириллицей, и на /lore одна эпоха давала два фильтра.
+    // Эпоха берётся из справочника article_era. Раньше админка писала латиницей
+    // ("first"), а сид кириллицей, и на /lore одна эпоха давала два фильтра.
     await assertDictionaryValue("article_era", data.era, "Эпоха");
 
     let slug = data.slug || slugify(data.title);
@@ -304,8 +306,8 @@ export async function updateArticle(req: AuthRequest, res: Response) {
       status?: "draft" | "published" | "archived";
     };
 
-    // Эпоха — из справочника article_era. Раньше админка писала латиницей
-    // ("first"), а сид — кириллицей, и на /lore одна эпоха давала два фильтра.
+    // Эпоха берётся из справочника article_era. Раньше админка писала латиницей
+    // ("first"), а сид кириллицей, и на /lore одна эпоха давала два фильтра.
     await assertDictionaryValue("article_era", data.era, "Эпоха");
 
     const [existing] = await db

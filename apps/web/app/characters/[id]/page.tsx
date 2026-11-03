@@ -11,6 +11,7 @@ import MarkdownRenderer from "@/components/MarkdownRenderer";
 import CharacterHero from "@/components/CharacterHero";
 import CharacterWorks from "@/components/CharacterWorks";
 import { getDictionarySet, labelFor } from "@/lib/dictionaries";
+import type { Character } from "@/lib/types";
 
 type CharacterPageProps = {
   params: { id: string };
@@ -26,7 +27,7 @@ type Kin = {
 };
 
 export default async function CharacterPage({ params }: CharacterPageProps) {
-  let character: any = null;
+  let character: Character | null = null;
   const dictionaries = await getDictionarySet().catch(() => null);
 
   try {
@@ -41,7 +42,7 @@ export default async function CharacterPage({ params }: CharacterPageProps) {
     notFound();
   }
 
-  // Роль, статус и род показаны чипами выше — в характеристиках их не дублируем
+  // Роль, статус и род показаны чипами выше, в характеристиках их не дублируем
   const facts: Array<[string, string]> = [];
   if (character.field) facts.push(["Поле деятельности", character.field]);
   if (character.favorite) facts.push(["Любимая еда / предмет", character.favorite]);
@@ -183,13 +184,13 @@ export default async function CharacterPage({ params }: CharacterPageProps) {
 
             {character.tags && character.tags.length > 0 && (
               <div className="kjar-chips">
-                {character.tags.map((tag: any) => (
+                {character.tags.map((tag) => (
                   <Link
                     className="kjar-chip"
-                    key={tag.id || tag.slug || tag}
-                    href={`/characters?tag=${encodeURIComponent(tag.slug || tag)}`}
+                    key={tag.id}
+                    href={`/characters?tag=${encodeURIComponent(tag.slug)}`}
                   >
-                    {tag.name || tag}
+                    {tag.name}
                   </Link>
                 ))}
               </div>

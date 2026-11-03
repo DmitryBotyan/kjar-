@@ -2,15 +2,16 @@ import Link from "next/link";
 import { getTags } from "@/lib/api";
 import { getDictionary } from "@/lib/dictionaries";
 import { NewThreadForm } from "./NewThreadForm";
+import type { Tag } from "@/lib/types";
 
 export default async function NewDiscussionPage() {
-  // Разделы — из справочника админки, теги — из базы тегов
+  // Разделы берутся из справочника админки, теги из базы тегов
   const [categories, tagsResponse] = await Promise.all([
     getDictionary("thread_category").catch(() => []),
-    getTags().catch(() => ({ data: [] as any[] }))
+    getTags().catch(() => ({ data: [] as Tag[] }))
   ]);
 
-  const knownTags = (((tagsResponse.data as any[]) || []).map((tag) => tag.name) as string[]).sort();
+  const knownTags = tagsResponse.data.map((tag) => tag.name).sort();
 
   return (
     <div className="kjar-thread kjar-thread--new">

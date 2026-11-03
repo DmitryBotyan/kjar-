@@ -3,6 +3,8 @@ import { Upload } from "@aws-sdk/lib-storage";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { v4 as uuidv4 } from "uuid";
 import path from "path";
+import { createError } from "../middlewares/errorHandler.js";
+import { detectImageType } from "./imageType.js";
 
 const s3Client = new S3Client({
   endpoint: process.env.S3_ENDPOINT || "http://minio:9000",
@@ -39,9 +41,11 @@ export async function uploadFile(
   file: Express.Multer.File,
   folder: string = "uploads"
 ): Promise<UploadResult> {
-  const fileExtension = path.extname(file.originalname);
-  const fileName = `${uuidv4()}${fileExtension}`;
-  const key = `${folder}/${fileName}`;
+  const type = detectImageType(file.buffer);
+  if (!type) {
+    throw createError("Загрузить можно только картинку: JPG, PNG, GIF или WebP", 400, "INVALID_FILE_TYPE");
+  }
+  const key = `${folder}/${uuidv4()}${type.ext}`;
 
   const upload = new Upload({
     client: s3Client,
@@ -49,7 +53,7 @@ export async function uploadFile(
       Bucket: BUCKET,
       Key: key,
       Body: file.buffer,
-      ContentType: file.mimetype,
+      ContentType: type.mime,
       ACL: "public-read", // Для MinIO это может не работать, но не критично
     },
   });
@@ -61,7 +65,7 @@ export async function uploadFile(
     url: `${PUBLIC_URL}/${BUCKET}/${key}`,
     publicUrl: `${PUBLIC_URL}/${BUCKET}/${key}`,
     size: file.size,
-    contentType: file.mimetype,
+    contentType: type.mime,
   };
 }
 

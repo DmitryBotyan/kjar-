@@ -5,12 +5,13 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { fetchFromAdminApi } from "@/lib/admin-api";
 import DictionarySelect from "@/components/admin/DictionarySelect";
+import type { Category } from "@/lib/types";
 
 export default function NewArticlePage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [categories, setCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -20,7 +21,7 @@ export default function NewArticlePage() {
       return;
     }
 
-    fetchFromAdminApi<Array<any>>("/categories?limit=100")
+    fetchFromAdminApi<Category[]>("/categories?limit=100")
       .then((response) => {
         setCategories(response.data || []);
       })

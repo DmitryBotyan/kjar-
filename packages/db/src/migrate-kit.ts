@@ -11,7 +11,7 @@ const envPath = resolve(rootDir, ".env");
 dotenv.config({ path: envPath });
 
 if (!process.env.DATABASE_URL) {
-  console.error("❌ DATABASE_URL не установлена в переменных окружения");
+  console.error("DATABASE_URL не установлена в переменных окружения");
   console.error("Проверьте файл .env в корне проекта");
   process.exit(1);
 }
@@ -23,6 +23,6 @@ try {
     cwd: resolve(__dirname, "..")
   });
 } catch (error) {
-  console.error("❌ Ошибка при применении миграций");
+  console.error("Ошибка при применении миграций");
   process.exit(1);
 }

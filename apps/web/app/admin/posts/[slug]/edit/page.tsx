@@ -7,6 +7,7 @@ import { fetchFromAdminApi } from "@/lib/admin-api";
 import ImageUpload from "@/components/admin/ImageUpload";
 import PollManager from "@/components/admin/PollManager";
 import DictionarySelect from "@/components/admin/DictionarySelect";
+import type { Post } from "@/lib/types";
 
 export default function EditPostPage() {
   const router = useRouter();
@@ -16,7 +17,7 @@ export default function EditPostPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [post, setPost] = useState<any>(null);
+  const [post, setPost] = useState<Post | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -26,7 +27,7 @@ export default function EditPostPage() {
       return;
     }
 
-    fetchFromAdminApi<any>(`/posts/${slug}`)
+    fetchFromAdminApi<Post>(`/posts/${slug}`)
       .then((response) => {
         setPost(response.data);
         setImageUrl(response.data.image || null);

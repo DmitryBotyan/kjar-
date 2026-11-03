@@ -5,13 +5,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { fetchFromAdminApi } from "@/lib/admin-api";
 import DeleteConfirmModal from "@/components/admin/DeleteConfirmModal";
+import type { Character } from "@/lib/types";
 
 export default function AdminCharactersPage() {
   const router = useRouter();
-  const [characters, setCharacters] = useState<any[]>([]);
+  const [characters, setCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; character: any | null }>({
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; character: Character | null }>({
     isOpen: false,
     character: null,
   });
@@ -24,7 +25,7 @@ export default function AdminCharactersPage() {
       return;
     }
 
-    fetchFromAdminApi<Array<any>>("/characters?limit=100")
+    fetchFromAdminApi<Character[]>("/characters?limit=100")
       .then((response) => {
         setCharacters(response.data || []);
       })
@@ -41,12 +42,13 @@ export default function AdminCharactersPage() {
       });
   }, [router]);
 
-  const handleDeleteClick = (character: any) => {
+  const handleDeleteClick = (character: Character) => {
     setDeleteModal({ isOpen: true, character });
   };
 
   const handleDeleteConfirm = async () => {
-    if (!deleteModal.character) return;
+    const target = deleteModal.character;
+    if (!target) return;
 
     setDeleting(true);
     const token = localStorage.getItem("authToken");
@@ -56,7 +58,7 @@ export default function AdminCharactersPage() {
     }
 
     try {
-      const response = await fetch(`/api/characters/${deleteModal.character.slug}`, {
+      const response = await fetch(`/api/characters/${target.slug}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -68,7 +70,7 @@ export default function AdminCharactersPage() {
         throw new Error(errorData.error?.message || "Ошибка удаления кьяра");
       }
 
-      setCharacters(characters.filter((c) => c.id !== deleteModal.character.id));
+      setCharacters(characters.filter((c) => c.id !== target.id));
       setDeleteModal({ isOpen: false, character: null });
     } catch (err) {
       if (err instanceof Error && (err.message.includes("401") || err.message.includes("UNAUTHORIZED"))) {

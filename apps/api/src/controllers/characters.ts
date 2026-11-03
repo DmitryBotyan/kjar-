@@ -15,15 +15,18 @@ function text(value: unknown, max: number): string {
 }
 
 // Старые карточки хранили связи как { type, name } или как объект «тип: имя»
+// Строка из jsonb: форма не гарантирована, поэтому поля читаются как unknown
+type LooseRow = Partial<Record<string, unknown>> | null | undefined;
+
 export function normalizeKinship(raw: unknown): Kin[] {
-  const rows: unknown[] = Array.isArray(raw)
+  const rows: LooseRow[] = Array.isArray(raw)
     ? raw
     : raw && typeof raw === "object"
       ? Object.entries(raw as Record<string, unknown>).map(([kind, name]) => ({ kind, name }))
       : [];
 
   return rows
-    .map((row: any) => ({
+    .map((row) => ({
       kind: text(row?.kind ?? row?.type, 100),
       name: text(row?.name ?? row?.title, 200),
       slug: text(row?.slug, 255) || null
@@ -34,8 +37,8 @@ export function normalizeKinship(raw: unknown): Kin[] {
 
 function normalizeAchievements(raw: unknown): Achievement[] {
   if (!Array.isArray(raw)) return [];
-  return raw
-    .map((row: any) => ({ title: text(row?.title, 200), note: text(row?.note, 1000) || null }))
+  return (raw as LooseRow[])
+    .map((row) => ({ title: text(row?.title, 200), note: text(row?.note, 1000) || null }))
     .filter((row) => row.title)
     .slice(0, 100);
 }
@@ -58,12 +61,12 @@ type CharacterInput = {
   summary?: string | null;
   description?: string | null;
   image?: string | null;
-  statsJson?: any;
-  relationsJson?: any;
+  statsJson?: unknown;
+  relationsJson?: unknown;
   tjornId?: number | null;
   favorite?: string | null;
   features?: string | null;
-  achievementsJson?: any;
+  achievementsJson?: unknown;
 };
 
 // Поля карточки, которые пишутся одинаково при создании и правке

@@ -1,3 +1,4 @@
+import type { Article, Category, Character, Norman, Post, Tag, Thread } from "./types";
 
 const API_BASE_PATH = "/api";
 
@@ -85,11 +86,11 @@ export async function getArticles(params?: {
 
   const queryString = searchParams.toString();
   // Передаём путь без /api/v1 - прокси сам добавит его
-  return fetchFromApi<Array<any>>(`/articles${queryString ? `?${queryString}` : ""}`);
+  return fetchFromApi<Article[]>(`/articles${queryString ? `?${queryString}` : ""}`);
 }
 
 export async function getArticleBySlug(slug: string) {
-  return fetchFromApi<any>(`/articles/${slug}`);
+  return fetchFromApi<Article>(`/articles/${slug}`);
 }
 
 export async function getCharacters(params?: {
@@ -112,11 +113,11 @@ export async function getCharacters(params?: {
   }
 
   const queryString = searchParams.toString();
-  return fetchFromApi<Array<any>>(`/characters${queryString ? `?${queryString}` : ""}`);
+  return fetchFromApi<Character[]>(`/characters${queryString ? `?${queryString}` : ""}`);
 }
 
 export async function getCharacterBySlug(slug: string) {
-  return fetchFromApi<any>(`/characters/${slug}`);
+  return fetchFromApi<Character>(`/characters/${slug}`);
 }
 
 export async function getPosts(params?: {
@@ -136,11 +137,11 @@ export async function getPosts(params?: {
   }
 
   const queryString = searchParams.toString();
-  return fetchFromApi<Array<any>>(`/posts${queryString ? `?${queryString}` : ""}`);
+  return fetchFromApi<Post[]>(`/posts${queryString ? `?${queryString}` : ""}`);
 }
 
 export async function getPostBySlug(slug: string) {
-  return fetchFromApi<any>(`/posts/${slug}`);
+  return fetchFromApi<Post>(`/posts/${slug}`);
 }
 
 export async function getEvents(params?: {
@@ -163,11 +164,11 @@ export async function getEvents(params?: {
   }
 
   const queryString = searchParams.toString();
-  return fetchFromApi<Array<any>>(`/events${queryString ? `?${queryString}` : ""}`);
+  return fetchFromApi<Post[]>(`/events${queryString ? `?${queryString}` : ""}`);
 }
 
 export async function getEventBySlug(slug: string) {
-  return fetchFromApi<any>(`/events/${slug}`);
+  return fetchFromApi<Post>(`/events/${slug}`);
 }
 
 export async function getThreads(params?: {
@@ -188,25 +189,25 @@ export async function getThreads(params?: {
   }
 
   const queryString = searchParams.toString();
-  return fetchFromApi<Array<any>>(`/threads${queryString ? `?${queryString}` : ""}`);
+  return fetchFromApi<Thread[]>(`/threads${queryString ? `?${queryString}` : ""}`);
 }
 
 export async function getThreadBySlug(slug: string) {
-  return fetchFromApi<any>(`/threads/${slug}`);
+  return fetchFromApi<Thread>(`/threads/${slug}`);
 }
 
 export async function getCategories() {
-  return fetchFromApi<Array<any>>("/categories");
+  return fetchFromApi<Category[]>("/categories");
 }
 
 export async function getTags() {
-  return fetchFromApi<Array<any>>("/tags");
+  return fetchFromApi<Tag[]>("/tags");
 }
 
 export async function getNormans() {
-  return fetchFromApi<Array<any>>("/normans");
+  return fetchFromApi<Norman[]>("/normans");
 }
 
 export async function getNormanBySlug(slug: string) {
-  return fetchFromApi<any>(`/normans/${slug}`);
+  return fetchFromApi<Norman>(`/normans/${slug}`);
 }

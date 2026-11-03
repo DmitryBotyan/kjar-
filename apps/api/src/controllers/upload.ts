@@ -2,13 +2,18 @@ import type { Request, Response } from "express";
 import { uploadFile, deleteFile, getPublicUrl, fileExists } from "../storage/s3.js";
 import { createError } from "../middlewares/errorHandler.js";
 
+// Папку задаёт клиент: без проверки через неё пишут в любой путь бакета
+function uploadFolder(value: unknown): string {
+  return typeof value === "string" && /^[a-z0-9-]{1,32}$/.test(value) ? value : "uploads";
+}
+
 export async function uploadSingleFile(req: Request, res: Response) {
   try {
     if (!req.file) {
       throw createError("Файл не был загружен", 400, "NO_FILE_UPLOADED");
     }
 
-    const folder = (req.query.folder as string) || "uploads";
+    const folder = uploadFolder(req.query.folder);
     const result = await uploadFile(req.file, folder);
 
     res.json({
@@ -37,7 +42,7 @@ export async function uploadMultipleFiles(req: Request, res: Response) {
     }
 
     const files = Array.isArray(req.files) ? req.files : Object.values(req.files).flat();
-    const folder = (req.query.folder as string) || "uploads";
+    const folder = uploadFolder(req.query.folder);
 
     const results = await Promise.all(
       files.map((file) => uploadFile(file, folder))

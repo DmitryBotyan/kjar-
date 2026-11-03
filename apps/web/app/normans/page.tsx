@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getNormans } from "@/lib/api";
+import type { Norman } from "@/lib/types";
 
 export const metadata = {
   title: "Норманны — KJÁR"
@@ -14,7 +15,7 @@ function kjarWord(count: number) {
 }
 
 export default async function NormansPage() {
-  const normans: any[] = await getNormans()
+  const normans: Norman[] = await getNormans()
     .then((response) => response.data || [])
     .catch(() => []);
 
@@ -51,7 +52,7 @@ export default async function NormansPage() {
                         <span className="kjar-norman-card__summary">{norman.summary}</span>
                       )}
                       <span className="kjar-norman-card__count">
-                        {norman.kjarCount} {kjarWord(norman.kjarCount)}
+                        {norman.kjarCount ?? 0} {kjarWord(norman.kjarCount ?? 0)}
                       </span>
                     </span>
                   </Link>

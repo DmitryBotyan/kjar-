@@ -5,13 +5,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { fetchFromAdminApi } from "@/lib/admin-api";
 import DeleteConfirmModal from "@/components/admin/DeleteConfirmModal";
+import type { Tag } from "@/lib/types";
 
 export default function AdminTagsPage() {
   const router = useRouter();
-  const [tags, setTags] = useState<any[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; tag: any | null }>({
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; tag: Tag | null }>({
     isOpen: false,
     tag: null,
   });
@@ -24,7 +25,7 @@ export default function AdminTagsPage() {
       return;
     }
 
-    fetchFromAdminApi<Array<any>>("/tags")
+    fetchFromAdminApi<Tag[]>("/tags")
       .then((response) => {
         setTags(response.data || []);
       })
@@ -41,12 +42,13 @@ export default function AdminTagsPage() {
       });
   }, [router]);
 
-  const handleDeleteClick = (tag: any) => {
+  const handleDeleteClick = (tag: Tag) => {
     setDeleteModal({ isOpen: true, tag });
   };
 
   const handleDeleteConfirm = async () => {
-    if (!deleteModal.tag) return;
+    const target = deleteModal.tag;
+    if (!target) return;
 
     setDeleting(true);
     const token = localStorage.getItem("authToken");
@@ -56,7 +58,7 @@ export default function AdminTagsPage() {
     }
 
     try {
-      const response = await fetch(`/api/tags/${deleteModal.tag.slug}`, {
+      const response = await fetch(`/api/tags/${target.slug}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -68,7 +70,7 @@ export default function AdminTagsPage() {
         throw new Error(errorData.error?.message || "Ошибка удаления тега");
       }
 
-      setTags(tags.filter((t) => t.id !== deleteModal.tag.id));
+      setTags(tags.filter((t) => t.id !== target.id));
       setDeleteModal({ isOpen: false, tag: null });
     } catch (err) {
       if (err instanceof Error && (err.message.includes("401") || err.message.includes("UNAUTHORIZED"))) {

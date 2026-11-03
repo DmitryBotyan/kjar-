@@ -36,14 +36,14 @@ let connectionString = process.env.DATABASE_URL;
 const SALT_ROUNDS = Number(process.env.BCRYPT_SALT_ROUNDS) || 12;
 
 if (!connectionString) {
-  console.error("❌ DATABASE_URL не установлена в переменных окружения");
+  console.error("DATABASE_URL не установлена в переменных окружения");
   process.exit(1);
 }
 
-// При локальном запуске (bun run db:seed) хост "db" недоступен — используем localhost.
+// При локальном запуске (bun run db:seed) хост "db" недоступен, поэтому используем localhost.
 // При seed:docker подмена не нужна: внутри контейнера localhost = сам контейнер, БД в "db".
 if (process.env.SEED_LOCALHOST === "1" && (connectionString.includes("@db:") || connectionString.includes("@db/"))) {
-  // Снаружи БД видна на DB_PORT (внутри сети docker — всегда 5432)
+  // Снаружи БД видна на DB_PORT (внутри сети docker всегда 5432)
   const hostPort = process.env.DB_PORT || "5433";
   connectionString = connectionString
     .replace(/@db:\d+/g, `@localhost:${hostPort}`)
@@ -61,10 +61,10 @@ const db = drizzle(pool);
 
 async function seed() {
   try {
-    console.log("🌱 Начало заполнения базы данных тестовыми данными...");
+    console.log("Начало заполнения базы данных тестовыми данными...");
 
     // Очистка данных (в обратном порядке зависимостей)
-    console.log("🧹 Очистка существующих данных...");
+    console.log("Очистка существующих данных...");
     await db.delete(messages);
     await db.delete(threadTags);
     await db.delete(threads);
@@ -81,7 +81,7 @@ async function seed() {
     await db.delete(categories);
     await db.delete(users);
 
-    console.log("👥 Создание пользователей...");
+    console.log("Создание пользователей...");
     const passwordHash = await bcrypt.hash("password123", SALT_ROUNDS);
     
     const [adminUser] = await db
@@ -129,9 +129,9 @@ async function seed() {
       })
       .returning();
 
-    console.log(`✅ Создано ${5} пользователей`);
+    console.log(`Создано 5 пользователей`);
 
-    console.log("📁 Создание категорий...");
+    console.log("Создание категорий...");
     const [categoryGeo] = await db
       .insert(categories)
       .values({
@@ -168,9 +168,9 @@ async function seed() {
       })
       .returning();
 
-    console.log(`✅ Создано ${4} категорий`);
+    console.log("Создано 4 категории");
 
-    console.log("🏷️  Создание тегов...");
+    console.log("Создание тегов...");
     const tagData = [
       { slug: "north", name: "Север" },
       { slug: "runes", name: "Руны" },
@@ -185,9 +185,9 @@ async function seed() {
     ];
 
     const insertedTags = await db.insert(tags).values(tagData).returning();
-    console.log(`✅ Создано ${insertedTags.length} тегов`);
+    console.log(`Создано ${insertedTags.length} тегов`);
 
-    console.log("📚 Создание статей...");
+    console.log("Создание статей...");
     const [article1] = await db
       .insert(articles)
       .values({
@@ -298,9 +298,9 @@ async function seed() {
       { articleId: article3.id, tagId: insertedTags[1].id }, // Руны
     ]);
 
-    console.log(`✅ Создано ${4} статей`);
+    console.log("Создано 4 статьи");
 
-    console.log("👤 Создание персонажей...");
+    console.log("Создание персонажей...");
     const [char1] = await db
       .insert(characters)
       .values({
@@ -440,9 +440,9 @@ async function seed() {
       { characterId: char4.id, tagId: insertedTags[1].id }, // Руны
     ]);
 
-    console.log(`✅ Создано ${6} персонажей`);
+    console.log(`Создано 6 персонажей`);
 
-    console.log("📰 Создание постов...");
+    console.log("Создание постов...");
     const [post1] = await db
       .insert(posts)
       .values({
@@ -490,9 +490,9 @@ async function seed() {
       { postId: post2.id, tagId: insertedTags[6].id }, // Навигация
     ]);
 
-    console.log(`✅ Создано ${2} поста`);
+    console.log(`Создано 2 поста`);
 
-    console.log("🎉 Создание ивентов...");
+    console.log("Создание ивентов...");
     const [eventPost1] = await db
       .insert(posts)
       .values({
@@ -717,9 +717,9 @@ async function seed() {
       { postId: eventPost5.id, tagId: insertedTags[1].id }, // Руны
     ]);
 
-    console.log(`✅ Создано ${5} ивентов`);
+    console.log(`Создано 5 ивентов`);
 
-    console.log("📊 Создание опроса...");
+    console.log("Создание опроса...");
     const [poll1] = await db
       .insert(polls)
       .values({
@@ -751,9 +751,9 @@ async function seed() {
       { pollId: poll1.id, optionId: insertedPollOptions[3].id, characterId: char1.id }, // Рунная мастерская (от персонажа)
     ]);
 
-    console.log(`✅ Создан опрос с ${insertedPollOptions.length} вариантами ответов и 5 голосами`);
+    console.log(`Создан опрос с ${insertedPollOptions.length} вариантами ответов и 5 голосами`);
 
-    console.log("📅 Создание событий...");
+    console.log("Создание событий...");
     const [event1] = await db
       .insert(events)
       .values({
@@ -834,9 +834,9 @@ async function seed() {
       },
     ]);
 
-    console.log(`✅ Создано ${3} события`);
+    console.log(`Создано 3 события`);
 
-    console.log("💬 Создание обсуждений...");
+    console.log("Создание обсуждений...");
     const [thread1] = await db
       .insert(threads)
       .values({
@@ -930,10 +930,10 @@ async function seed() {
       },
     ]);
 
-    console.log(`✅ Создано ${3} обсуждения с ${6} сообщениями`);
+    console.log(`Создано 3 обсуждения с 6 сообщениями`);
 
-    console.log("\n✅ База данных успешно заполнена тестовыми данными!");
-    console.log("\n📋 Сводка:");
+    console.log("\nБаза данных успешно заполнена тестовыми данными!");
+    console.log("\nСводка:");
     console.log(`   - Пользователей: 5 (1 admin, 1 mod, 3 user)`);
     console.log(`   - Категорий: 4`);
     console.log(`   - Тегов: ${insertedTags.length}`);
@@ -944,7 +944,7 @@ async function seed() {
     console.log(`   - Событий: 3`);
     console.log(`   - Обсуждений: 3`);
     console.log(`   - Сообщений: 6`);
-    console.log("\n🔑 Тестовые учетные данные:");
+    console.log("\nТестовые учетные данные:");
     console.log(`   - admin / password123 (роль: admin)`);
     console.log(`   - moderator / password123 (роль: mod)`);
     console.log(`   - astra_norn / password123 (роль: user)`);
@@ -953,7 +953,7 @@ async function seed() {
 
     process.exit(0);
   } catch (error) {
-    console.error("❌ Ошибка при заполнении базы данных:", error);
+    console.error("Ошибка при заполнении базы данных:", error);
     process.exit(1);
   } finally {
     await pool.end();
