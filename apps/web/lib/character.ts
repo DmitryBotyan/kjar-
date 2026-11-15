@@ -43,17 +43,16 @@ export function humanize(key: string): string {
 
 export function characterGender(character: CardSource): string | null {
   const value = pick(character, GENDER_KEYS);
-  if (value === undefined || value === null || value === "") {
-    return character.species || null;
-  }
-  return String(value);
+  return value === undefined || value === null || value === "" ? null : String(value);
 }
 
 export function characterNumber(character: CardSource): string | null {
   const value = pick(character, NUMBER_KEYS);
   const source =
     value === undefined || value === null || value === "" ? character.id : value;
-  return source === undefined || source === null ? null : `№ ${source}`;
+  if (source === undefined || source === null || source === "") return null;
+  // Номер в листе могли записать уже с решёткой или знаком номера
+  return `#${String(source).replace(/^[#№\s]+/, "")}`;
 }
 
 function isServiceKey(key: string): boolean {

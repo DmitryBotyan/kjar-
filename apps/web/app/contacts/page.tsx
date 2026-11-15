@@ -2,7 +2,7 @@ import { ContactForm } from "./ContactForm";
 import { getDictionary } from "@/lib/dictionaries";
 
 // Адрес редакции задаётся в окружении: в разных установках он разный
-const CONTACT_EMAIL = process.env.CONTACT_EMAIL || "hello@kjar.ru";
+const CONTACT_EMAIL = process.env.CONTACT_EMAIL || "kjarss1@mail.ru";
 
 export default async function ContactsPage() {
   const requestTypes = await getDictionary("contact_request_type").catch(() => []);
@@ -12,10 +12,10 @@ export default async function ContactsPage() {
       <section className="kjar-contacts__hero">
         <div className="kjar-contacts__inner">
           <header className="kjar-contacts__header">
-            <h1 className="kjar-contacts__title">Связь с редакцией</h1>
+            <h1 className="kjar-contacts__title">Связь с Большим Домом</h1>
             <p className="kjar-contacts__lead">
-              Заявки на роли, правки в хроники, вопросы по ивентам и доступам. Пишите
-              коротко и по делу, так ответ придёт быстрее.
+              Заявки на роли, правки в правила, вопросы по ивентам и доступам. Пишите
+              коротко и по делу, так ответ придет быстрее.
             </p>
           </header>
         </div>
@@ -25,19 +25,21 @@ export default async function ContactsPage() {
         <div className="kjar-contacts__inner kjar-contacts__layout">
           <aside className="kjar-contacts__info" aria-label="Контактная информация">
             <div className="kjar-contacts__card">
-              <h2 className="kjar-contacts__card-title">Редакция</h2>
+              <h2 className="kjar-contacts__card-title">Большой Дом</h2>
               <dl className="kjar-contacts__list">
                 <div>
                   <dt>Почта</dt>
-                  <dd>{CONTACT_EMAIL}</dd>
+                  <dd>
+                    <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+                  </dd>
                 </div>
                 <div>
                   <dt>Время ответа</dt>
-                  <dd>1–3 рабочих дня</dd>
+                  <dd>1–5 рабочих дней</dd>
                 </div>
                 <div>
                   <dt>Формат письма</dt>
-                  <dd>Тема, суть, ссылки</dd>
+                  <dd>Тема, изложение, приложения</dd>
                 </div>
               </dl>
             </div>
@@ -45,10 +47,10 @@ export default async function ContactsPage() {
             <div className="kjar-contacts__card">
               <h2 className="kjar-contacts__card-title">С чем приходят чаще всего</h2>
               <ul className="kjar-contacts__stack">
-                <li>Заявка на роль и новая карта в колоде</li>
-                <li>Предложения по лору и дополнения к статьям</li>
-                <li>Ошибки в хрониках и уточнения по датам</li>
-                <li>Организация ивента с мастером</li>
+                <li>Заявка на вступление в Большой Дом</li>
+                <li>Начисление Рунной Силы и других особенностей</li>
+                <li>Пояснение за определенный пункт правил</li>
+                <li>Какие особенности есть у кьяров?</li>
               </ul>
             </div>
 

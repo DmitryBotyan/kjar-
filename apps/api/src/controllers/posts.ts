@@ -9,7 +9,7 @@ import { assertDictionaryValue } from "./dictionaries.js";
 
 export async function getPosts(req: Request, res: Response) {
   try {
-    const { tag, search, limit = "50", offset = "0", isEvent } = req.query;
+    const { tag, section, search, limit = "50", offset = "0", isEvent } = req.query;
 
     const conditions = [isNotNull(posts.publishedAt)];
 
@@ -20,6 +20,10 @@ export async function getPosts(req: Request, res: Response) {
       conditions.push(eq(posts.isEvent, isEventBool));
     } else {
       conditions.push(eq(posts.isEvent, false));
+    }
+
+    if (section) {
+      conditions.push(eq(posts.section, section as string));
     }
 
     if (search) {
@@ -64,6 +68,7 @@ export async function getPosts(req: Request, res: Response) {
         summary: posts.summary,
         image: posts.image,
         publishedAt: posts.publishedAt,
+        section: posts.section,
         isEvent: posts.isEvent,
         eventType: posts.eventType,
         eventFormat: posts.eventFormat,
@@ -162,6 +167,8 @@ export async function createPost(req: AuthRequest, res: Response) {
       eventType?: string | null;
       eventFormat?: string | null;
       participationType?: string | null;
+      eventAudience?: string | null;
+      section?: string | null;
     };
 
     // Тип, формат и участие ивента берутся из справочников, чтобы подписи в админке
@@ -173,6 +180,8 @@ export async function createPost(req: AuthRequest, res: Response) {
       data.participationType,
       "Тип участия"
     );
+    await assertDictionaryValue("event_audience", data.eventAudience, "Для кого ивент");
+    await assertDictionaryValue("post_section", data.section, "Раздел поста");
 
     let slug = data.slug || slugify(data.title);
 
@@ -213,6 +222,8 @@ export async function createPost(req: AuthRequest, res: Response) {
         eventType: data.eventType || null,
         eventFormat: data.eventFormat || null,
         participationType: data.participationType || null,
+        eventAudience: data.eventAudience || null,
+        section: data.section || null,
         createdBy: req.user.id,
       })
       .returning();
@@ -253,6 +264,8 @@ export async function updatePost(req: AuthRequest, res: Response) {
       eventType?: string | null;
       eventFormat?: string | null;
       participationType?: string | null;
+      eventAudience?: string | null;
+      section?: string | null;
     };
 
     await assertDictionaryValue("event_type", data.eventType, "Тип ивента");
@@ -262,6 +275,8 @@ export async function updatePost(req: AuthRequest, res: Response) {
       data.participationType,
       "Тип участия"
     );
+    await assertDictionaryValue("event_audience", data.eventAudience, "Для кого ивент");
+    await assertDictionaryValue("post_section", data.section, "Раздел поста");
 
     const [existing] = await db
       .select()
@@ -328,6 +343,8 @@ export async function updatePost(req: AuthRequest, res: Response) {
         ...(data.eventType !== undefined && { eventType: data.eventType }),
         ...(data.eventFormat !== undefined && { eventFormat: data.eventFormat }),
         ...(data.participationType !== undefined && { participationType: data.participationType }),
+        ...(data.eventAudience !== undefined && { eventAudience: data.eventAudience || null }),
+        ...(data.section !== undefined && { section: data.section || null }),
         updatedAt: new Date(),
       })
       .where(eq(posts.id, existing.id))

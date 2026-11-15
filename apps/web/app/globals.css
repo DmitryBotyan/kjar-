@@ -19,14 +19,15 @@
   /* Сами шрифты подключает app/fonts.ts, здесь только их переменные */
   --rune: "Norse", var(--font-alegreya), Georgia, serif;
   --display: var(--font-alegreya), Georgia, serif;
-  --body: var(--font-golos), system-ui, sans-serif;
+  --body: var(--font-crimson), var(--font-alegreya), Georgia, serif;
+  --ui: var(--font-typewriter), var(--font-alegreya), "Courier New", monospace;
 
-  /* Кегль: 13 / 16 / 20 / 28 / 44 / 72 */
-  --t-xs: 0.8125rem;
-  --t-s: 1rem;
-  --t-m: 1.25rem;
-  --t-l: 1.75rem;
-  --t-xl: 2.75rem;
+  /* Кегль: 14 / 18 / 22 / 30 / 46 / 72 */
+  --t-xs: 0.875rem;
+  --t-s: 1.125rem;
+  --t-m: 1.375rem;
+  --t-l: 1.875rem;
+  --t-xl: 2.875rem;
   --t-2xl: 4.5rem;
 
   /* Отступы: 4 / 8 / 16 / 32 / 64 / 128 */
@@ -56,6 +57,7 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  background: var(--bark);
 }
 
 html,
@@ -68,7 +70,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--bark);
+  background: transparent;
   color: var(--ink);
   font-family: var(--body);
   font-size: var(--t-s);
@@ -78,6 +80,17 @@ body {
 
 main {
   flex: 1 0 auto;
+}
+
+/* Фон заказчицы: рунная рамка на тёмно-зелёном. Отдельным слоем, а не
+   background-attachment: fixed, потому что Safari на iOS fixed не держит. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--bark) url("/images/bg-frame.jpg") center / cover no-repeat;
+  pointer-events: none;
 }
 
 img {
@@ -494,9 +507,9 @@ a.kjar-chip:hover {
   border-radius: var(--r-field);
   background: transparent;
   color: var(--ink);
-  font-family: var(--body);
+  font-family: var(--ui);
   font-size: var(--t-s);
-  font-weight: 500;
+  font-weight: 400;
   text-decoration: none;
   cursor: pointer;
   transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
@@ -609,6 +622,35 @@ a.kjar-chip:hover {
 .kjar-label {
   color: var(--ash);
   font-size: var(--t-xs);
+}
+
+/* Машинописный шрифт держит служебный слой: подписи, чипы, даты и пары
+   ключ-значение. Поля остаются книжными: машинопись широкая и обрезает
+   длинные варианты в выпадающих списках */
+.kjar-label,
+.kjar-chip,
+.kjar-meta,
+.kjar-lore-card__meta,
+.kjar-event-card__meta,
+.kjar-character-card__meta,
+.kjar-article__meta,
+.kjar-event__meta,
+.kjar-events__hero-meta,
+.kjar-forum-thread__meta,
+.kjar-norman-card__meta,
+.kjar-row-link__meta,
+.kjar-thread__meta,
+.kjar-updates__date,
+.kjar-article__breadcrumbs,
+.kjar-character__breadcrumbs,
+.kjar-event__breadcrumbs,
+.kjar-album__count,
+.kjar-comments__count,
+.kjar-norman-card__count,
+.kjar-poll__percent,
+.kjar-markdown__th,
+.kjar-admin__table th {
+  font-family: var(--ui);
 }
 
 .kjar-input,
@@ -787,8 +829,8 @@ input[type="radio"] {
 }
 
 .kjar-brand__mark {
-  width: 44px;
-  height: 44px;
+  width: 52px;
+  height: 52px;
   flex: 0 0 auto;
   object-fit: contain;
 }
@@ -815,6 +857,8 @@ input[type="radio"] {
   text-overflow: ellipsis;
 }
 
+/* Меню капсом и жирным по просьбе заказчицы. На десктопе стоит отдельной
+   строкой под логотипом: десять пунктов в одну строку с ним не помещаются */
 .kjar-nav {
   display: none;
 }
@@ -833,15 +877,23 @@ input[type="radio"] {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  color: var(--ash);
+  line-height: 1;
+  color: var(--ink);
   font-family: var(--rune);
-  font-size: var(--t-m);
+  font-size: var(--t-s);
+  font-weight: 700;
   letter-spacing: 0.04em;
+  text-transform: uppercase;
   text-decoration: none;
+  white-space: nowrap;
   transition: color 0.15s ease;
 }
 
 .kjar-nav__item a:hover {
+  color: var(--gold);
+}
+
+.kjar-nav__item--accent a {
   color: var(--gold);
 }
 
@@ -851,27 +903,54 @@ input[type="radio"] {
   gap: var(--s2);
 }
 
+/* Кнопка поиска в той же рамке, что «Меню»: на телефоне только лупа,
+   на десктопе к ней добавляется подпись набором меню */
 .kjar-search {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
+  gap: var(--s2);
+  min-width: 44px;
   height: 44px;
-  padding: 0;
-  border: 0;
+  padding: 0 var(--s2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-field);
   background: transparent;
-  color: var(--ash);
+  color: var(--ink);
   cursor: pointer;
-  transition: color 0.15s ease;
+  transition: color 0.15s ease, border-color 0.15s ease;
 }
 
-.kjar-search:hover {
+.kjar-search:hover,
+.kjar-search:focus-visible {
+  border-color: var(--gold);
   color: var(--gold);
+  outline: none;
 }
 
 .kjar-search__icon {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
+}
+
+.kjar-search__label {
+  display: none;
+  font-family: var(--rune);
+  font-size: var(--t-s);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+@media (min-width: 1040px) {
+  .kjar-search {
+    padding: 0 var(--s3);
+  }
+
+  .kjar-search__label {
+    display: inline;
+  }
 }
 
 .kjar-drawer {
@@ -924,17 +1003,46 @@ input[type="radio"] {
 }
 
 @media (min-width: 1040px) {
-  .kjar-nav {
-    display: block;
+  /* Строка с логотипом высотой ровно 68px уезжает при прокрутке, у края
+     остаётся только меню: две строки целиком съедали треть экрана */
+  .kjar-header {
+    top: -69px;
   }
 
-  /* На десктопе меню дышит: пункты стоят вразрядку, а не слипшимся блоком */
+  .kjar-header__inner {
+    height: 68px;
+    min-height: 0;
+    padding-block: 0;
+  }
+
+  .kjar-nav {
+    display: block;
+    border-top: 1px solid var(--line);
+  }
+
   .kjar-nav__list {
-    gap: var(--s4);
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    gap: var(--s3);
+    max-width: var(--wrap);
+    margin-inline: auto;
+    padding-inline: var(--s4);
   }
 
   .kjar-drawer {
     display: none;
+  }
+}
+
+/* На широком экране меню крупнее */
+@media (min-width: 1400px) {
+  .kjar-nav__item a {
+    font-size: var(--t-m);
+  }
+
+  .kjar-nav__list {
+    max-width: none;
+    padding-inline: var(--s5);
   }
 }
 
@@ -982,10 +1090,9 @@ input[type="radio"] {
   max-width: none;
   text-wrap: balance;
   color: var(--ash);
-  font-family: var(--rune);
+  font-family: var(--display);
   font-size: var(--t-m);
   font-weight: 400;
-  letter-spacing: 0.14em;
   line-height: 1.35;
 }
 
@@ -1470,6 +1577,15 @@ input[type="radio"] {
   overflow: hidden;
 }
 
+/* Лента постов внутри страницы раздела: поля уже даёт обёртка страницы */
+.kjar-updates__inner--flush {
+  padding: 0;
+}
+
+.kjar-updates__more {
+  margin-top: var(--s4);
+}
+
 /* ============================ Персонажи ============================ */
 
 @media (min-width: 900px) {
@@ -1588,7 +1704,7 @@ input[type="radio"] {
 .kjar-deck-card:hover,
 .kjar-deck-card:focus-visible {
   border-color: var(--gold);
-  box-shadow: 0 0 0 1px var(--gold), 0 0 24px rgba(163, 181, 146, 0.24);
+  box-shadow: 0 0 0 1px var(--gold);
   outline: none;
 }
 
@@ -1607,38 +1723,112 @@ input[type="radio"] {
   object-fit: cover;
 }
 
-/* Одна строка, фиксированная высота: все карты в сетке одинаковы */
+/* Имя крупно, номер под ним мельче. Высота постоянная: карты в сетке равны */
 .kjar-deck-card__plate {
   display: flex;
-  flex-wrap: nowrap;
-  align-items: baseline;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  gap: 0 var(--s2);
-  height: 44px;
-  padding-inline: var(--s2);
+  gap: 2px;
+  min-height: 72px;
+  padding: var(--s2);
   background: var(--plate);
   color: var(--ink);
+  text-align: center;
+}
+
+.kjar-deck-card__name {
+  max-width: 100%;
+  overflow: hidden;
   font-family: var(--rune);
-  font-size: var(--t-m);
-  letter-spacing: 0.04em;
-  line-height: 44px;
+  font-size: var(--t-l);
+  font-weight: 700;
+  line-height: 1.1;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.kjar-deck-card__cell {
+.kjar-deck-card__num {
+  color: var(--ash);
+  font-size: var(--t-xs);
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+}
+
+/* Альбомы колоды: плитка рода с обложкой и счётом, как альбомы в ВК */
+.kjar-albums {
+  padding-top: var(--s4);
+}
+
+.kjar-albums__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s3);
+  margin-bottom: var(--s3);
+}
+
+.kjar-albums__reset {
+  color: var(--gold);
+}
+
+.kjar-albums__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(136px, 100%), 1fr));
+  gap: var(--s3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kjar-album {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--s1) var(--s2);
+  color: inherit;
+  text-decoration: none;
+}
+
+.kjar-album__cover {
+  grid-column: 1 / -1;
+  display: block;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--r-field);
+  background: #000;
+  transition: border-color 0.15s ease;
+}
+
+.kjar-album__cover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.kjar-album__name {
   min-width: 0;
   overflow: hidden;
+  font-family: var(--display);
+  font-weight: 700;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.kjar-deck-card__num {
-  flex: 0 0 auto;
+.kjar-album__count {
+  color: var(--ash);
+  font-variant-numeric: tabular-nums;
 }
 
-.kjar-deck-card__sep {
-  flex: 0 0 auto;
-  color: var(--ink);
-  opacity: 0.45;
+.kjar-album:hover .kjar-album__cover,
+.kjar-album:focus-visible .kjar-album__cover,
+.kjar-album--active .kjar-album__cover {
+  border-color: var(--gold);
+}
+
+.kjar-album--active .kjar-album__name {
+  color: var(--gold);
 }
 
 /* ============================ Ивенты ============================ */
@@ -2211,7 +2401,6 @@ input[type="radio"] {
   border: 1px solid var(--line);
   border-radius: var(--r-field);
   background: var(--bark);
-  box-shadow: 0 0 24px rgba(163, 181, 146, 0.1);
 }
 
 .kjar-character__reference {
@@ -2275,7 +2464,7 @@ input[type="radio"] {
 
 .kjar-meter__max {
   color: var(--ash);
-  font-family: var(--body);
+  font-family: var(--ui);
   font-size: var(--t-xs);
 }
 
@@ -2627,14 +2816,20 @@ button.kjar-character__reference[disabled] {
   list-style: none;
   display: grid;
   gap: var(--s3);
-  grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
 }
 
+.kjar-normans > li {
+  display: flex;
+  min-width: 0;
+}
+
+/* В списке картинка квадратная, на странице норманна в своих пропорциях */
 .kjar-norman-card {
   display: flex;
-  gap: var(--s3);
-  height: 100%;
-  padding: var(--s3);
+  flex-direction: column;
+  width: 100%;
+  overflow: hidden;
   border: 1px solid var(--line);
   border-radius: var(--r-card);
   background: var(--peat);
@@ -2643,20 +2838,21 @@ button.kjar-character__reference[disabled] {
   transition: border-color 0.15s ease;
 }
 
-.kjar-norman-card:hover {
-  border-color: var(--moss);
+.kjar-norman-card:hover,
+.kjar-norman-card:focus-visible {
+  border-color: var(--gold);
+  outline: none;
 }
 
 .kjar-norman-card__image {
-  flex: none;
-  width: 72px;
-  height: 72px;
+  display: block;
+  aspect-ratio: 1 / 1;
   overflow: hidden;
-  border-radius: 50%;
-  background: var(--line);
+  background: #000;
 }
 
 .kjar-norman-card__image img {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -2667,13 +2863,19 @@ button.kjar-character__reference[disabled] {
   align-content: start;
   gap: var(--s1);
   min-width: 0;
+  padding: var(--s3);
 }
 
 .kjar-norman-card__name {
-  font-family: var(--rune);
+  font-family: var(--display);
   font-size: var(--t-l);
-  letter-spacing: 0.04em;
+  font-weight: 700;
   line-height: 1.1;
+}
+
+.kjar-norman-card__meta {
+  color: var(--ink);
+  font-size: var(--t-xs);
 }
 
 .kjar-norman-card__summary {
@@ -2691,18 +2893,23 @@ button.kjar-character__reference[disabled] {
 }
 
 .kjar-norman {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  display: grid;
   gap: var(--s4);
+  align-items: start;
+}
+
+@media (min-width: 820px) {
+  .kjar-norman {
+    grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
+  }
 }
 
 .kjar-norman__image {
-  width: 160px;
-  height: 160px;
+  display: block;
+  width: 100%;
+  height: auto;
   border: 1px solid var(--line);
-  border-radius: 50%;
-  object-fit: cover;
+  border-radius: var(--r-card);
 }
 
 /* ============================ Контакты ============================ */
@@ -2813,7 +3020,8 @@ button.kjar-character__reference[disabled] {
 
 .kjar-markdown__strong {
   color: var(--ink);
-  font-weight: 600;
+  font-family: var(--display);
+  font-weight: 700;
 }
 
 .kjar-markdown__em {
@@ -2994,7 +3202,7 @@ button.kjar-character__reference[disabled] {
   border: 0;
   background: none;
   color: var(--ash);
-  font-family: var(--body);
+  font-family: var(--ui);
   font-size: var(--t-xs);
   cursor: pointer;
   transition: color 0.15s ease;
@@ -3081,6 +3289,20 @@ button.kjar-character__reference[disabled] {
   cursor: pointer;
 }
 
+/* Картинки, приложенные к обращению */
+.kjar-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  margin: var(--s2) 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kjar-attachments .kjar-comments__image-preview {
+  width: 120px;
+}
+
 .kjar-comments__form-actions {
   display: flex;
   flex-wrap: wrap;
@@ -3102,14 +3324,110 @@ button.kjar-character__reference[disabled] {
 
 .kjar-poll {
   display: grid;
-  gap: var(--s2);
+  gap: var(--s3);
+  margin-block: var(--s4);
 }
 
-.kjar-poll h3 {
+.kjar-poll__title {
   margin: 0;
   font-family: var(--display);
   font-size: var(--t-m);
   font-weight: 500;
+}
+
+.kjar-poll__ended,
+.kjar-poll__loading,
+.kjar-poll__total {
+  margin: 0;
+  color: var(--ash);
+  font-size: var(--t-xs);
+}
+
+.kjar-poll__total {
+  padding-top: var(--s2);
+  border-top: 1px solid var(--line);
+}
+
+.kjar-poll__options {
+  display: grid;
+  gap: var(--s2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Полоса снизу показывает долю голосов, выбранный вариант подсвечен фоном */
+.kjar-poll__option {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--r-field);
+}
+
+.kjar-poll__option--chosen {
+  border-color: var(--moss);
+  background: var(--plate);
+}
+
+.kjar-poll__vote {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: var(--s2) var(--s3);
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.kjar-poll__vote:hover:not(:disabled),
+.kjar-poll__vote:focus-visible {
+  background: var(--plate);
+  outline: none;
+}
+
+.kjar-poll__vote:disabled {
+  cursor: progress;
+}
+
+.kjar-poll__result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding: var(--s2) var(--s3);
+}
+
+.kjar-poll__numbers {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.kjar-poll__votes {
+  color: var(--ash);
+  font-size: var(--t-xs);
+}
+
+.kjar-poll__percent {
+  min-width: 3.5em;
+  color: var(--gold);
+  font-weight: 600;
+  text-align: right;
+}
+
+.kjar-poll__bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 4px;
+  background: var(--gold);
+  transition: width 0.3s ease;
 }
 
 /* ============================ Поиск ============================ */
@@ -3324,40 +3642,17 @@ button.kjar-character__reference[disabled] {
   color: var(--ash);
 }
 
-.kjar-footer__columns {
-  display: grid;
-  gap: var(--s4);
-  grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
-}
-
-.kjar-footer__column {
-  display: grid;
-  gap: var(--s2);
-  align-content: start;
-}
-
-.kjar-footer__column-title {
-  margin: 0;
-  font-family: var(--display);
-  font-size: var(--t-s);
-  font-weight: 500;
-}
-
 .kjar-footer__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2) var(--s4);
   margin: 0;
   padding: 0;
   list-style: none;
-  display: grid;
-  gap: var(--s2);
 }
 
 .kjar-footer__link {
   font-size: var(--t-xs);
-}
-
-.kjar-footer__stack {
-  display: grid;
-  gap: var(--s1);
 }
 
 .kjar-footer__bottom {
@@ -3374,7 +3669,8 @@ button.kjar-character__reference[disabled] {
 
 @media (min-width: 860px) {
   .kjar-footer__inner {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: end;
     gap: var(--s5);
     padding-block: var(--s5) var(--s4);
   }
@@ -3463,7 +3759,7 @@ button.kjar-character__reference[disabled] {
   border: 0;
   background: none;
   color: var(--gold);
-  font-family: var(--body);
+  font-family: var(--ui);
   font-size: var(--t-xs);
   text-decoration: none;
   cursor: pointer;
@@ -3521,6 +3817,81 @@ button.kjar-character__reference[disabled] {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: var(--s2);
+}
+
+/* Кадрирование картинки в админке: шире обычной модалки, кроппер тянется */
+.kjar-crop {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  max-width: 800px;
+  height: min(80vh, 640px);
+  overflow: hidden;
+}
+
+.kjar-crop__area {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  border-radius: var(--r-field);
+  overflow: hidden;
+  background: #000;
+}
+
+.kjar-crop__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding-top: var(--s3);
+  border-top: 1px solid var(--line);
+}
+
+.kjar-crop__zoom {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--s2);
+  color: var(--ash);
+  font-size: var(--t-xs);
+}
+
+.kjar-crop__zoom input {
+  flex: 1;
+  max-width: 200px;
+  accent-color: var(--gold);
+}
+
+.kjar-crop__value {
+  min-width: 3em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Загрузчик картинки в админке */
+.kjar-upload__preview {
+  display: block;
+  max-width: 100%;
+  max-height: 300px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-field);
+}
+
+.kjar-upload__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.kjar-upload__pick {
+  cursor: pointer;
+}
+
+.kjar-upload__pick[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 /* ============================ Страница 404 ============================ */

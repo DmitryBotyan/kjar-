@@ -300,7 +300,7 @@ export default function Comments({ targetType, targetId }: CommentsProps) {
               type="file"
               accept="image/*"
               onChange={handleImageSelect}
-              style={{ display: "none" }}
+              className="kjar-sr-only"
               id="comment-image"
             />
             <label

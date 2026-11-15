@@ -54,6 +54,7 @@ export default async function EventPage({ params }: EventPageProps) {
     event.participationType
   );
   const formatLabel = labelFor(dictionaries?.event_format, event.eventFormat);
+  const audienceLabel = labelFor(dictionaries?.event_audience, event.eventAudience);
 
   const renderStages = (stages: Post["eventStages"]) => {
     if (!stages || stages.length === 0) return null;
@@ -88,9 +89,9 @@ export default async function EventPage({ params }: EventPageProps) {
     );
   };
 
-  const renderEventConfig = (config: Post["eventConfig"]) => {
+  const renderEventConfig = (config: Post["eventConfig"], showOptions: boolean) => {
     if (!config) return null;
-    const options = Array.isArray(config.options) ? config.options : null;
+    const options = showOptions && Array.isArray(config.options) ? config.options : null;
     const answers = Array.isArray(config.correctAnswers) ? config.correctAnswers : null;
     if (!options && !answers) return null;
 
@@ -169,7 +170,8 @@ export default async function EventPage({ params }: EventPageProps) {
             {event.eventFormat === "poll" && event.id && <Poll postId={event.id} />}
 
             {renderStages(event.eventStages)}
-            {renderEventConfig(event.eventConfig)}
+            {/* У опроса варианты уже показаны в голосовании */}
+            {renderEventConfig(event.eventConfig, event.eventFormat !== "poll")}
 
             {event.id && <Comments targetType="event" targetId={event.id} />}
           </article>
@@ -180,20 +182,26 @@ export default async function EventPage({ params }: EventPageProps) {
               <dl className="kjar-event__info-list">
                 {typeLabel && (
                   <>
-                    <dt>Тип</dt>
+                    <dt>Раздел</dt>
                     <dd>{typeLabel}</dd>
-                  </>
-                )}
-                {formatLabel && (
-                  <>
-                    <dt>Формат</dt>
-                    <dd>{formatLabel}</dd>
                   </>
                 )}
                 {participationLabel && (
                   <>
-                    <dt>Участие</dt>
+                    <dt>Тип</dt>
                     <dd>{participationLabel}</dd>
+                  </>
+                )}
+                {audienceLabel && (
+                  <>
+                    <dt>Формат</dt>
+                    <dd>{audienceLabel}</dd>
+                  </>
+                )}
+                {formatLabel && (
+                  <>
+                    <dt>Механика</dt>
+                    <dd>{formatLabel}</dd>
                   </>
                 )}
                 {event.publishedAt && (

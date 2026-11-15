@@ -1,4 +1,4 @@
-import type { Article, Category, Character, Norman, Post, Tag, Thread } from "./types";
+import type { Article, Category, Character, DeckSummary, Norman, Post, Tag, Thread } from "./types";
 
 const API_BASE_PATH = "/api";
 
@@ -97,6 +97,7 @@ export async function getCharacters(params?: {
   role?: string;
   status?: string;
   species?: string;
+  gender?: string;
   tag?: string;
   search?: string;
   limit?: number;
@@ -116,12 +117,17 @@ export async function getCharacters(params?: {
   return fetchFromApi<Character[]>(`/characters${queryString ? `?${queryString}` : ""}`);
 }
 
+export async function getDeckSummary() {
+  return fetchFromApi<DeckSummary>("/characters/summary");
+}
+
 export async function getCharacterBySlug(slug: string) {
   return fetchFromApi<Character>(`/characters/${slug}`);
 }
 
 export async function getPosts(params?: {
   tag?: string;
+  section?: string;
   search?: string;
   limit?: number;
   offset?: number;
@@ -148,6 +154,7 @@ export async function getEvents(params?: {
   eventType?: string;
   eventFormat?: string;
   participationType?: string;
+  eventAudience?: string;
   tag?: string;
   search?: string;
   limit?: number;
@@ -204,8 +211,18 @@ export async function getTags() {
   return fetchFromApi<Tag[]>("/tags");
 }
 
-export async function getNormans() {
-  return fetchFromApi<Norman[]>("/normans");
+export async function getNormans(params?: {
+  search?: string;
+  gender?: string;
+  occupation?: string;
+  type?: string;
+}) {
+  const searchParams = new URLSearchParams();
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value) searchParams.append(key, value);
+  });
+  const queryString = searchParams.toString();
+  return fetchFromApi<Norman[]>(`/normans${queryString ? `?${queryString}` : ""}`);
 }
 
 export async function getNormanBySlug(slug: string) {

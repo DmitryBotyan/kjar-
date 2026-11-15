@@ -21,6 +21,7 @@ export default function EditCharacterPage() {
   const [error, setError] = useState<string | null>(null);
   const [character, setCharacter] = useState<Character | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [portraitUrl, setPortraitUrl] = useState<string | null>(null);
   const [stats, setStats] = useState<Record<string, unknown> | null>(null);
   const [card, setCard] = useState<CharacterCardValue | null>(null);
 
@@ -35,6 +36,7 @@ export default function EditCharacterPage() {
       .then((response) => {
         setCharacter(response.data);
         setImageUrl(response.data.image || null);
+        setPortraitUrl(response.data.portrait || null);
         setStats(
           statsObject(response.data.statsJson)
         );
@@ -68,6 +70,7 @@ export default function EditCharacterPage() {
       summary: formData.get("summary") || null,
       description: formData.get("description") || null,
       image: imageUrl,
+      portrait: portraitUrl,
       statsJson: stats && Object.keys(stats).length > 0 ? stats : null,
       ...card,
     };
@@ -254,7 +257,16 @@ export default function EditCharacterPage() {
             value={imageUrl || undefined}
             onChange={setImageUrl}
             folder="characters"
-            label="Референс кьяра"
+            label="Картинка страницы кьяра"
+            crop={false}
+          />
+
+          <ImageUpload
+            value={portraitUrl || undefined}
+            onChange={setPortraitUrl}
+            folder="characters"
+            label="Вертикальный портрет для колоды"
+            aspectRatio={3 / 4}
           />
 
           <CharacterCardEditor initial={character} onChange={setCard} />

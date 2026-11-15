@@ -110,6 +110,12 @@ export const normans = pgTable(
     summary: text("summary"),
     description: text("description"),
     image: varchar("image", { length: 500 }),
+    // Коды справочников norman_gender, norman_occupation, norman_type
+    gender: varchar("gender", { length: 100 }),
+    occupation: varchar("occupation", { length: 100 }),
+    normanType: varchar("norman_type", { length: 100 }),
+    // Мини-анкета { "Добродушие": 7, ... }, шкалы из справочника norman_trait
+    traitsJson: jsonb("traits_json"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow()
   }
@@ -136,6 +142,8 @@ export const characters = pgTable(
     // [{ title, note? }]
     achievementsJson: jsonb("achievements_json"),
     image: varchar("image", { length: 500 }),
+    // Вертикальная картинка для колоды, image остаётся картинкой страницы
+    portrait: varchar("portrait", { length: 500 }),
     createdBy: integer("created_by").references(() => users.id),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow()
@@ -205,6 +213,8 @@ export const posts = pgTable(
     participationType: varchar("participation_type", { length: 50 }), // individual, mass
     eventStages: jsonb("event_stages"), // [{stage: number, title: string, content: string, tasks: []}] для многоэтапных
     eventConfig: jsonb("event_config"), // Конфигурация ивента (варианты ответов, правильные ответы, настройки и т.д.)
+    eventAudience: varchar("event_audience", { length: 100 }), // справочник event_audience
+    section: varchar("section", { length: 100 }), // справочник post_section
     createdBy: integer("created_by").references(() => users.id),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow()
@@ -214,6 +224,7 @@ export const posts = pgTable(
     publishedAtIdx: index("posts_published_at_idx").on(table.publishedAt),
     createdAtIdx: index("posts_created_at_idx").on(table.createdAt),
     isEventIdx: index("posts_is_event_idx").on(table.isEvent),
+    sectionIdx: index("posts_section_idx").on(table.section),
     eventTypeIdx: index("posts_event_type_idx").on(table.eventType),
     eventFormatIdx: index("posts_event_format_idx").on(table.eventFormat)
   })
@@ -498,6 +509,10 @@ export const contactRequests = pgTable(
     requestType: varchar("request_type", { length: 100 }),
     subject: varchar("subject", { length: 300 }).notNull(),
     message: text("message").notNull(),
+    // Ссылки, которые отправитель приложил к обращению, по одной на строку
+    attachments: text("attachments"),
+    // Адреса загруженных картинок
+    imagesJson: jsonb("images_json"),
     status: varchar("status", { length: 24 }).notNull().default("new"), // new, in_progress, done
     createdAt: timestamp("created_at").notNull().defaultNow()
   },
@@ -517,9 +532,7 @@ export const dictionaries = pgTable(
   "dictionaries",
   {
     id: serial("id").primaryKey(),
-    // Группа справочника: character_role, character_status, character_species,
-    // character_meter, event_type, event_format, participation_type,
-    // article_era, thread_category, contact_request_type
+    // Группа справочника, полный список в DICTIONARY_GROUPS у API
     group: varchar("group_key", { length: 64 }).notNull(),
     // Код это то, что лежит в контентных таблицах (posts.event_type и подобных)
     code: varchar("code", { length: 100 }).notNull(),

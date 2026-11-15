@@ -133,7 +133,7 @@ export default function CharacterWorks({ slug, name, works }: CharacterWorksProp
         </ul>
       ) : (
         <p className="kjar-section__note">
-          Здесь появятся арты игроков по {name}. Нарисовали — присылайте.
+          Здесь появятся работы, посвященные кьяру {name}. Нарисовали или написали — выкладывайте!
         </p>
       )}
 

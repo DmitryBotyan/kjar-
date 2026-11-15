@@ -1,14 +1,14 @@
 import Link from "next/link";
 import CharacterCard from "@/components/CharacterCard";
-import { getCharacters, getTags } from "@/lib/api";
+import { getCharacters, getDeckSummary, getTags } from "@/lib/api";
 import { getDictionarySet } from "@/lib/dictionaries";
 import type { DictionaryEntry } from "@/lib/dictionaries";
-import type { Character, Tag } from "@/lib/types";
+import type { Character, DeckSummary, Tag } from "@/lib/types";
 
 interface CharactersPageProps {
   searchParams: {
     role?: string;
-    status?: string;
+    gender?: string;
     species?: string;
     tag?: string;
     search?: string;
@@ -17,19 +17,37 @@ interface CharactersPageProps {
   };
 }
 
+// Сводка называет типы во множественном числе, справочник хранит единственное
+const PLURAL: Record<string, string> = {
+  Обычный: "Обычные",
+  Особый: "Особые",
+  Лорный: "Лорные",
+  Ас: "Асы"
+};
+
+function deckHref(params: Record<string, string | undefined>) {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value) query.set(key, value);
+  });
+  const text = query.toString();
+  return text ? `/characters?${text}` : "/characters";
+}
+
 export default async function CharactersPage({ searchParams }: CharactersPageProps) {
   let characters: Character[] = [];
   let tags: Tag[] = [];
   let roles: DictionaryEntry[] = [];
+  let genders: DictionaryEntry[] = [];
   let species: DictionaryEntry[] = [];
-  let statuses: DictionaryEntry[] = [];
+  let summary: DeckSummary = { total: 0, byRole: [], bySpecies: [] };
   let total = 0;
 
   try {
-    const [charactersRes, tagsRes, dictionaries] = await Promise.all([
+    const [charactersRes, tagsRes, dictionaries, summaryRes] = await Promise.all([
       getCharacters({
         role: searchParams.role,
-        status: searchParams.status,
+        gender: searchParams.gender,
         species: searchParams.species,
         tag: searchParams.tag,
         search: searchParams.search,
@@ -37,27 +55,31 @@ export default async function CharactersPage({ searchParams }: CharactersPagePro
         offset: searchParams.offset ? parseInt(searchParams.offset) : 0
       }),
       getTags().catch(() => ({ data: [] })),
-      getDictionarySet()
+      getDictionarySet(),
+      getDeckSummary().catch(() => null)
     ]);
 
     characters = charactersRes.data || [];
     total = charactersRes.total || characters.length;
     tags = tagsRes.data || [];
+    if (summaryRes?.data) summary = summaryRes.data;
 
     roles = dictionaries.character_role;
+    genders = dictionaries.character_gender;
     species = dictionaries.character_species;
-    statuses = dictionaries.character_status;
   } catch (error) {
     console.error("Error loading characters:", error);
   }
 
-  // Сводка: сколько карт каждой роли из справочника в текущей выборке
-  const byRole = roles.map((role) => ({
-    role: role.label,
-    count: characters.filter((c) => c.role === role.code).length
-  }));
+  const countFor = (code: string) =>
+    summary.byRole.find((row) => row.code === code)?.count || 0;
 
-  const stats = { total: total || characters.length, byRole };
+  // Альбомы по родам: пустой род тоже показан, чтобы было видно, что он есть
+  const albums = species.map((item) => {
+    const row = summary.bySpecies.find((entry) => entry.code === item.code);
+    return { ...item, count: row?.count || 0, cover: row?.cover || null };
+  });
+  const activeAlbum = species.find((item) => item.code === searchParams.species);
 
   return (
     <div className="kjar-characters">
@@ -66,9 +88,8 @@ export default async function CharactersPage({ searchParams }: CharactersPagePro
           <header className="kjar-characters__header">
             <h1 className="kjar-characters__title">Колода кьяров</h1>
             <p className="kjar-characters__lead">
-              Каждая карта — человек, страж или тот, кого лес пустил обратно. Роль,
-              род, поле деятельности и короткая заметка: достаточно, чтобы собрать
-              состав на сюжет.
+              Перечень кьяров — место, где вы можете узнать и познакомиться
+              с каждым зверем, обретшим свое место в Хеймсвальде.
             </p>
             {roles.length > 0 && (
               <div className="kjar-characters__chips">
@@ -78,7 +99,7 @@ export default async function CharactersPage({ searchParams }: CharactersPagePro
                       searchParams.role === role.code ? " kjar-chip--accent" : ""
                     }`}
                     key={role.code}
-                    href={`/characters?role=${encodeURIComponent(role.code)}`}
+                    href={deckHref({ role: role.code })}
                   >
                     {role.label}
                   </Link>
@@ -91,19 +112,53 @@ export default async function CharactersPage({ searchParams }: CharactersPagePro
             <h2 className="kjar-characters__summary-title">Сводка</h2>
             <ul className="kjar-characters__summary-list">
               <li className="kjar-characters__summary-item">
-                <span>Всего карт</span>
-                <span className="kjar-characters__summary-value">{stats.total}</span>
+                <span>Всего кьяров</span>
+                <span className="kjar-characters__summary-value">{summary.total}</span>
               </li>
-              {stats.byRole.map((row) => (
-                <li className="kjar-characters__summary-item" key={row.role}>
-                  <span>{row.role}</span>
-                  <span className="kjar-characters__summary-value">{row.count}</span>
+              {roles.map((role) => (
+                <li className="kjar-characters__summary-item" key={role.code}>
+                  <span>{PLURAL[role.code] || role.label}</span>
+                  <span className="kjar-characters__summary-value">{countFor(role.code)}</span>
                 </li>
               ))}
             </ul>
           </div>
         </div>
       </section>
+
+      {albums.length > 0 && (
+        <section className="kjar-albums" aria-label="Альбомы">
+          <div className="kjar-characters__inner">
+            <div className="kjar-albums__head">
+              <h2 className="kjar-characters__section-title">Альбомы</h2>
+              {activeAlbum && (
+                <Link className="kjar-albums__reset" href={deckHref({ ...searchParams, species: undefined })}>
+                  Вся колода
+                </Link>
+              )}
+            </div>
+            <ul className="kjar-albums__grid">
+              {albums.map((album) => (
+                <li key={album.code}>
+                  <Link
+                    className={`kjar-album${
+                      album.code === searchParams.species ? " kjar-album--active" : ""
+                    }`}
+                    href={deckHref({ species: album.code })}
+                    aria-current={album.code === searchParams.species ? "page" : undefined}
+                  >
+                    <span className="kjar-album__cover">
+                      {album.cover ? <img src={album.cover} alt="" loading="lazy" /> : <span />}
+                    </span>
+                    <span className="kjar-album__name">{album.label}</span>
+                    <span className="kjar-album__count">{album.count}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
 
       <section className="kjar-characters__body">
         <div className="kjar-characters__inner kjar-characters__layout">
@@ -120,13 +175,18 @@ export default async function CharactersPage({ searchParams }: CharactersPagePro
                   name="search"
                   type="search"
                   defaultValue={searchParams.search || ""}
-                  placeholder="Имя, род, занятие"
+                  placeholder="Имя, пол, тип"
                 />
               </div>
 
+              {/* Альбом выбран плиткой выше и при фильтрации не сбрасывается */}
+              {searchParams.species && (
+                <input type="hidden" name="species" value={searchParams.species} />
+              )}
+
               <div className="kjar-field">
                 <label className="kjar-label" htmlFor="character-role">
-                  Роль
+                  Тип
                 </label>
                 <select
                   className="kjar-select"
@@ -134,7 +194,7 @@ export default async function CharactersPage({ searchParams }: CharactersPagePro
                   name="role"
                   defaultValue={searchParams.role || ""}
                 >
-                  <option value="">Все роли</option>
+                  <option value="">Все типы</option>
                   {roles.map((role) => (
                     <option key={role.code} value={role.code}>
                       {role.label}
@@ -144,38 +204,19 @@ export default async function CharactersPage({ searchParams }: CharactersPagePro
               </div>
 
               <div className="kjar-field">
-                <label className="kjar-label" htmlFor="character-species">
-                  Род
+                <label className="kjar-label" htmlFor="character-gender">
+                  Пол
                 </label>
                 <select
                   className="kjar-select"
-                  id="character-species"
-                  name="species"
-                  defaultValue={searchParams.species || ""}
+                  id="character-gender"
+                  name="gender"
+                  defaultValue={searchParams.gender || ""}
                 >
-                  <option value="">Любой род</option>
-                  {species.map((item) => (
+                  <option value="">Любой</option>
+                  {genders.map((item) => (
                     <option key={item.code} value={item.code}>
                       {item.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="kjar-field">
-                <label className="kjar-label" htmlFor="character-status">
-                  Статус
-                </label>
-                <select
-                  className="kjar-select"
-                  id="character-status"
-                  name="status"
-                  defaultValue={searchParams.status || ""}
-                >
-                  <option value="">Любой статус</option>
-                  {statuses.map((status) => (
-                    <option key={status.code} value={status.code}>
-                      {status.label}
                     </option>
                   ))}
                 </select>
@@ -216,9 +257,11 @@ export default async function CharactersPage({ searchParams }: CharactersPagePro
           <section className="kjar-characters__list" aria-label="Список кьяров">
             <div className="kjar-characters__list-head">
               <div>
-                <h2 className="kjar-characters__section-title">Карты</h2>
+                <h2 className="kjar-characters__section-title">
+                  {activeAlbum ? activeAlbum.label : "Карты"}
+                </h2>
                 <p className="kjar-characters__section-subtitle">
-                  Показано {characters.length} из {stats.total}
+                  Показано {characters.length} из {total}
                 </p>
               </div>
             </div>

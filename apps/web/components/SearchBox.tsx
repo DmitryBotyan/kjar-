@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, X } from "lucide-react";
+import { X } from "lucide-react";
+import RuneSearchIcon from "./RuneSearchIcon";
 
 type Hit = { type: string; title: string; text: string | null; href: string };
 
@@ -91,7 +92,7 @@ export default function SearchBox() {
     <div className={`kjar-searchbox${open ? " kjar-searchbox--open" : ""}`} ref={rootRef}>
       {open ? (
         <div className="kjar-searchbox__field">
-          <Search className="kjar-searchbox__icon" aria-hidden="true" />
+          <RuneSearchIcon className="kjar-searchbox__icon" />
           <input
             ref={inputRef}
             className="kjar-searchbox__input"
@@ -121,10 +122,12 @@ export default function SearchBox() {
           type="button"
           className="kjar-search"
           onClick={() => setOpen(true)}
-          title="Поиск по сайту"
+          aria-label="Поиск по сайту"
         >
-          <Search className="kjar-search__icon" aria-hidden="true" />
-          <span className="kjar-sr-only">Поиск по сайту</span>
+          <RuneSearchIcon className="kjar-search__icon" />
+          <span className="kjar-search__label" aria-hidden="true">
+            Поиск
+          </span>
         </button>
       )}
 

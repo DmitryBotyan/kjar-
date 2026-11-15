@@ -19,7 +19,12 @@ const normanSchema = z.object({
   slug: z.string().trim().max(255).optional(),
   summary: z.string().optional().nullable(),
   description: z.string().optional().nullable(),
-  image: z.string().max(500).optional().nullable()
+  image: z.string().max(500).optional().nullable(),
+  gender: z.string().max(100).optional().nullable(),
+  occupation: z.string().max(100).optional().nullable(),
+  normanType: z.string().max(100).optional().nullable(),
+  // Шкалы мини-анкеты, от 0 до 10
+  traitsJson: z.record(z.string().max(100), z.number().int().min(0).max(10)).optional().nullable()
 });
 
 router.get("/", asyncHandler(getNormans));

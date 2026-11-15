@@ -78,6 +78,13 @@
       "when": 1786366466567,
       "tag": "0010_kjar_card",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1786366466568,
+      "tag": "0011_client_edits",
+      "breakpoints": true
     }
   ]
 }

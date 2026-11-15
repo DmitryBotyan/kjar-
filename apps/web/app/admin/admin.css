@@ -427,3 +427,58 @@ body.kjar-admin-body .kjar-cookie {
 .kjar-admin__empty p {
   margin: 0;
 }
+
+/* Приложения к обращению */
+.kjar-admin__pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.kjar-admin__thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  margin-top: var(--s2);
+}
+
+.kjar-admin__thumbs img {
+  display: block;
+  width: 72px;
+  height: 72px;
+  border-radius: var(--r-field);
+  object-fit: cover;
+}
+
+/* Опрос в редакторе поста */
+.kjar-sheet__row--option {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.kjar-check {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.kjar-check input {
+  accent-color: var(--gold);
+}
+
+.kjar-poll-admin__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-field);
+}
+
+.kjar-poll-admin__votes {
+  color: var(--ash);
+  font-size: var(--t-xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

@@ -7,15 +7,13 @@ import type { Post } from "@/lib/types";
 interface EventsPageProps {
   searchParams: {
     eventType?: string;
-    eventFormat?: string;
     participationType?: string;
-    tag?: string;
+    eventAudience?: string;
     search?: string;
     limit?: string;
     offset?: string;
   };
 }
-
 
 function formatDate(value?: string | null) {
   if (!value) return null;
@@ -33,14 +31,14 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
   let formats: DictionaryEntry[] = [];
   let types: DictionaryEntry[] = [];
   let participations: DictionaryEntry[] = [];
+  let audiences: DictionaryEntry[] = [];
   let total = 0;
 
   try {
     const response = await getEvents({
       eventType: searchParams.eventType,
-      eventFormat: searchParams.eventFormat,
       participationType: searchParams.participationType,
-      tag: searchParams.tag,
+      eventAudience: searchParams.eventAudience,
       search: searchParams.search,
       limit: searchParams.limit ? parseInt(searchParams.limit) : 50,
       offset: searchParams.offset ? parseInt(searchParams.offset) : 0
@@ -53,6 +51,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
     formats = dictionaries.event_format;
     types = dictionaries.event_type;
     participations = dictionaries.participation_type;
+    audiences = dictionaries.event_audience;
   } catch (error) {
     console.error("Error loading events:", error);
   }
@@ -136,46 +135,8 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
               </div>
 
               <div className="kjar-field">
-                <label className="kjar-label" htmlFor="event-type">
-                  Тип
-                </label>
-                <select
-                  className="kjar-select"
-                  id="event-type"
-                  name="eventType"
-                  defaultValue={searchParams.eventType || ""}
-                >
-                  <option value="">Все типы</option>
-                  {types.map((type) => (
-                    <option key={type.code} value={type.code}>
-                      {type.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="kjar-field">
-                <label className="kjar-label" htmlFor="event-format">
-                  Формат
-                </label>
-                <select
-                  className="kjar-select"
-                  id="event-format"
-                  name="eventFormat"
-                  defaultValue={searchParams.eventFormat || ""}
-                >
-                  <option value="">Все форматы</option>
-                  {formats.map((format) => (
-                    <option key={format.code} value={format.code}>
-                      {format.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="kjar-field">
                 <label className="kjar-label" htmlFor="participation-type">
-                  Участие
+                  Тип
                 </label>
                 <select
                   className="kjar-select"
@@ -183,27 +144,51 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
                   name="participationType"
                   defaultValue={searchParams.participationType || ""}
                 >
-                  <option value="">Любое</option>
-                  {participations.map((participation) => (
-                    <option key={participation.code} value={participation.code}>
-                      {participation.label}
+                  <option value="">Любой</option>
+                  {participations.map((entry) => (
+                    <option key={entry.code} value={entry.code}>
+                      {entry.label}
                     </option>
                   ))}
                 </select>
               </div>
 
               <div className="kjar-field">
-                <label className="kjar-label" htmlFor="event-tag">
-                  Тег
+                <label className="kjar-label" htmlFor="event-audience">
+                  Формат
                 </label>
-                <input
-                  className="kjar-input"
-                  id="event-tag"
-                  name="tag"
-                  type="text"
-                  defaultValue={searchParams.tag || ""}
-                  placeholder="Например: солнцеворот"
-                />
+                <select
+                  className="kjar-select"
+                  id="event-audience"
+                  name="eventAudience"
+                  defaultValue={searchParams.eventAudience || ""}
+                >
+                  <option value="">Любой</option>
+                  {audiences.map((entry) => (
+                    <option key={entry.code} value={entry.code}>
+                      {entry.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="kjar-field">
+                <label className="kjar-label" htmlFor="event-type">
+                  Раздел
+                </label>
+                <select
+                  className="kjar-select"
+                  id="event-type"
+                  name="eventType"
+                  defaultValue={searchParams.eventType || ""}
+                >
+                  <option value="">Все разделы</option>
+                  {types.map((entry) => (
+                    <option key={entry.code} value={entry.code}>
+                      {entry.label}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="kjar-form-actions">
@@ -233,7 +218,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
               </div>
             ) : (
               <ul className="kjar-events__grid">
-                {events.map((event, index: number) => (
+                {events.map((event) => (
                   <li key={event.id || event.slug}>
                     <article className="kjar-event-card">
                       <div className="kjar-event-card__media">
@@ -270,8 +255,20 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
                         )}
                         {event.eventType && (
                           <div>
-                            <dt>Тип</dt>
+                            <dt>Раздел</dt>
                             <dd>{labelFor(types, event.eventType)}</dd>
+                          </div>
+                        )}
+                        {event.participationType && (
+                          <div>
+                            <dt>Тип</dt>
+                            <dd>{labelFor(participations, event.participationType)}</dd>
+                          </div>
+                        )}
+                        {event.eventAudience && (
+                          <div>
+                            <dt>Формат</dt>
+                            <dd>{labelFor(audiences, event.eventAudience)}</dd>
                           </div>
                         )}
                       </dl>

@@ -13,6 +13,7 @@ export default function NewCharacterPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [portraitUrl, setPortraitUrl] = useState<string | null>(null);
   const [stats, setStats] = useState<Record<string, unknown>>({});
   const [card, setCard] = useState<CharacterCardValue | null>(null);
 
@@ -32,6 +33,7 @@ export default function NewCharacterPage() {
       summary: formData.get("summary") || null,
       description: formData.get("description") || null,
       image: imageUrl,
+      portrait: portraitUrl,
       statsJson: Object.keys(stats).length > 0 ? stats : null,
       ...card,
     };
@@ -178,7 +180,16 @@ export default function NewCharacterPage() {
             value={imageUrl || undefined}
             onChange={setImageUrl}
             folder="characters"
-            label="Референс кьяра"
+            label="Картинка страницы кьяра"
+            crop={false}
+          />
+
+          <ImageUpload
+            value={portraitUrl || undefined}
+            onChange={setPortraitUrl}
+            folder="characters"
+            label="Вертикальный портрет для колоды"
+            aspectRatio={3 / 4}
           />
 
           <CharacterCardEditor onChange={setCard} />

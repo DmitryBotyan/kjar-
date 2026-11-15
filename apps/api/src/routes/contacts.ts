@@ -20,7 +20,10 @@ const createSchema = z.object({
   contact: z.string().trim().min(3, "Оставьте способ связи").max(200),
   requestType: z.string().trim().max(100).optional().nullable(),
   subject: z.string().trim().min(3, "Коротко обозначьте тему").max(300),
-  message: z.string().trim().min(10, "Опишите вопрос подробнее").max(10000)
+  message: z.string().trim().min(10, "Опишите вопрос подробнее").max(10000),
+  // Ссылки на работы, анкеты и прочее, по одной в строке
+  attachments: z.string().trim().max(2000).optional().nullable(),
+  images: z.array(z.string().max(500)).max(5).optional().nullable()
 });
 
 const updateSchema = z.object({

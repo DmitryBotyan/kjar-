@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useId, useRef, useState } from "react";
 import ImageCropModal from "./ImageCropModal";
 
 interface ImageUploadProps {
@@ -10,6 +10,8 @@ interface ImageUploadProps {
   label?: string;
   disabled?: boolean;
   aspectRatio?: number;
+  // false: картинка грузится как есть, без кадрирования
+  crop?: boolean;
 }
 
 export default function ImageUpload({
@@ -19,6 +21,7 @@ export default function ImageUpload({
   label = "Изображение",
   disabled = false,
   aspectRatio = 16 / 9,
+  crop = true,
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,6 +29,8 @@ export default function ImageUpload({
   const [showCropModal, setShowCropModal] = useState(false);
   const [selectedFileUrl, setSelectedFileUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // На одной форме бывает два загрузчика: id должен быть свой у каждого
+  const inputId = useId();
 
   const uploadFile = async (file: File) => {
     setError(null);
@@ -84,6 +89,11 @@ export default function ImageUpload({
 
     setError(null);
 
+    if (!crop) {
+      await uploadFile(file);
+      return;
+    }
+
     const fileUrl = URL.createObjectURL(file);
     setSelectedFileUrl(fileUrl);
     setShowCropModal(true);
@@ -122,71 +132,47 @@ export default function ImageUpload({
     }
   };
 
+  const busy = disabled || uploading;
+
   return (
     <div className="kjar-field">
-      <label className="kjar-label">{label}</label>
-      
-      {preview && (
-        <div style={{ marginBottom: "12px" }}>
-          <img
-            src={preview}
-            alt="Preview"
-            style={{
-              maxWidth: "100%",
-              maxHeight: "300px",
-              borderRadius: "6px",
-              border: "1px solid var(--line)",
-            }}
-          />
-        </div>
-      )}
+      <label className="kjar-label" htmlFor={inputId}>
+        {label}
+      </label>
 
-      <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+      {preview && <img className="kjar-upload__preview" src={preview} alt="" />}
+
+      <div className="kjar-upload__actions">
         <input
           ref={fileInputRef}
+          className="kjar-sr-only"
           type="file"
-          accept="image/*"
+          accept="image/jpeg,image/png,image/gif,image/webp"
           onChange={handleFileSelect}
-          disabled={disabled || uploading}
-          style={{ display: "none" }}
-          id="image-upload-input"
+          disabled={busy}
+          id={inputId}
         />
         <label
-          htmlFor="image-upload-input"
-          className="kjar-button kjar-button--ghost"
-          style={{
-            cursor: disabled || uploading ? "not-allowed" : "pointer",
-            opacity: disabled || uploading ? 0.6 : 1,
-          }}
+          htmlFor={inputId}
+          className="kjar-button kjar-button--ghost kjar-upload__pick"
+          aria-disabled={busy}
         >
-          {uploading ? "Загрузка..." : preview ? "Заменить изображение" : "Загрузить изображение"}
+          {uploading ? "Загружаем…" : preview ? "Заменить картинку" : "Загрузить картинку"}
         </label>
-        
+
         {preview && (
           <button
             type="button"
             onClick={handleRemove}
-            disabled={disabled || uploading}
+            disabled={busy}
             className="kjar-button kjar-button--danger"
           >
-            Удалить
+            Убрать картинку
           </button>
         )}
       </div>
 
-      {error && (
-        <div className="kjar-admin__error">
-          {error}
-        </div>
-      )}
-
-      {preview && (
-        <input
-          type="hidden"
-          name="image"
-          value={preview}
-        />
-      )}
+      {error && <div className="kjar-admin__error">{error}</div>}
 
       {showCropModal && selectedFileUrl && (
         <ImageCropModal

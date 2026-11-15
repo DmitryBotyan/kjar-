@@ -44,15 +44,15 @@ export default async function DiscussionsPage({ searchParams }: DiscussionsPageP
           <header className="kjar-forum__header">
             <h1 className="kjar-forum__title">Общий стол</h1>
             <p className="kjar-forum__lead">
-              Здесь спорят о лоре, договариваются об ивентах и правят хроники.
-              Заглядывайте перед игрой: половина решений принимается именно тут.
+              Здесь спорят о лоре, договариваются об ивентах и правят устои.
+              Заглядывайте, если у Вас есть вопросы или предложения.
             </p>
             <div className="kjar-forum__actions">
               <Link
                 className="kjar-button kjar-button--primary kjar-forum__cta"
                 href="/discussions/new"
               >
-                Новая тема
+                Новый запрос
               </Link>
               <Link className="kjar-button kjar-button--ghost" href="/lore">
                 Этикет и правила

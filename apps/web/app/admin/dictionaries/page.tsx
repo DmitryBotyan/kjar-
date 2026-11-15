@@ -11,8 +11,13 @@ import type { DictionaryEntry, DictionaryGroup } from "@/lib/dictionaries";
 const GROUPS: Array<{ key: DictionaryGroup; title: string; note: string }> = [
   {
     key: "character_role",
-    title: "Роли кьяров",
-    note: "Фильтр и сводка на странице колоды"
+    title: "Типы кьяров",
+    note: "Фильтр «Тип» и сводка на странице колоды"
+  },
+  {
+    key: "character_gender",
+    title: "Пол кьяров",
+    note: "Фильтр «Пол» в колоде и выбор в листе персонажа"
   },
   {
     key: "character_status",
@@ -22,7 +27,7 @@ const GROUPS: Array<{ key: DictionaryGroup; title: string; note: string }> = [
   {
     key: "character_species",
     title: "Роды кьяров",
-    note: "Фильтр «Род» и чип в карточке"
+    note: "Альбомы колоды и чип в карточке"
   },
   {
     key: "character_meter",
@@ -34,13 +39,27 @@ const GROUPS: Array<{ key: DictionaryGroup; title: string; note: string }> = [
     title: "Родство",
     note: "Графа «Родственные связи». Значение «Потомок» уходит в «Потомство»"
   },
-  { key: "event_type", title: "Типы ивентов", note: "Фильтр и чип на странице ивентов" },
-  { key: "event_format", title: "Форматы ивентов", note: "Фильтр и чип формата" },
+  { key: "event_type", title: "Разделы ивентов", note: "Фильтр «Раздел» и чипы на странице ивентов" },
+  {
+    key: "event_format",
+    title: "Механики ивентов",
+    note: "Опрос, загадка и прочее. Код poll включает голосование"
+  },
   {
     key: "participation_type",
     title: "Типы участия",
-    note: "Фильтр «Участие» на странице ивентов"
+    note: "Фильтр «Тип» на странице ивентов"
   },
+  { key: "event_audience", title: "Для кого ивент", note: "Фильтр «Формат» на странице ивентов" },
+  {
+    key: "post_section",
+    title: "Разделы постов",
+    note: "Фильтр «Раздел». Коды schedule и market открываются из меню"
+  },
+  { key: "norman_gender", title: "Пол норманнов", note: "Фильтр и карточка норманна" },
+  { key: "norman_occupation", title: "Род деятельности", note: "Фильтр и карточка норманна" },
+  { key: "norman_type", title: "Типы норманнов", note: "Фильтр и карточка норманна" },
+  { key: "norman_trait", title: "Шкалы анкеты норманна", note: "Мини-анкета, от 0 до 10" },
   { key: "article_era", title: "Эпохи", note: "Чипы и фильтр энциклопедии" },
   {
     key: "thread_category",

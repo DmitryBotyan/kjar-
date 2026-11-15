@@ -4,16 +4,24 @@ import { db } from "../db/index.js";
 import { contactRequests } from "@kjar/db";
 import { createError } from "../middlewares/errorHandler.js";
 import { assertDictionaryValue } from "./dictionaries.js";
+import { getPublicUrl } from "../storage/s3.js";
 import type { AuthRequest } from "../middlewares/auth.js";
 
 export async function createContactRequest(req: AuthRequest, res: Response) {
-  const { name, contact, requestType, subject, message } = req.body as {
+  const { name, contact, requestType, subject, message, attachments, images } = req.body as {
     name: string;
     contact: string;
     requestType?: string | null;
     subject: string;
     message: string;
+    attachments?: string | null;
+    images?: string[] | null;
   };
+
+  // Картинки грузятся через загрузку комментариев, поэтому принимаем только
+  // адреса из нашего хранилища: чужая ссылка в админке открылась бы как своя
+  const storagePrefix = getPublicUrl("comments/");
+  const ownImages = (images || []).filter((url) => url.startsWith(storagePrefix));
 
   // Тип обращения раньше приклеивался к теме префиксом и в админке не
   // фильтровался. Теперь это отдельное поле из справочника.
@@ -26,7 +34,9 @@ export async function createContactRequest(req: AuthRequest, res: Response) {
       contact: contact.trim(),
       requestType: requestType?.trim() || null,
       subject: subject.trim(),
-      message: message.trim()
+      message: message.trim(),
+      attachments: attachments?.trim() || null,
+      imagesJson: ownImages.length ? ownImages : null
     })
     .returning({ id: contactRequests.id, createdAt: contactRequests.createdAt });
 

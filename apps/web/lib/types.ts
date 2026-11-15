@@ -46,12 +46,19 @@ export interface Norman {
   summary: string | null;
   description: string | null;
   image: string | null;
+  // Коды справочников norman_gender, norman_occupation, norman_type
+  gender: string | null;
+  occupation: string | null;
+  normanType: string | null;
   createdAt: string;
   updatedAt: string;
   // В списке: сколько кьяров у норманна
   kjarCount?: number;
-  // Только в ответе на одного норманна
-  kjars?: Array<Pick<Character, "id" | "slug" | "name" | "species" | "summary" | "image" | "statsJson">>;
+  // Только в ответе на одного норманна: шкалы анкеты от 0 до 10
+  traitsJson?: Record<string, number> | null;
+  kjars?: Array<
+    Pick<Character, "id" | "slug" | "name" | "species" | "summary" | "image" | "portrait" | "statsJson">
+  >;
 }
 
 export interface Kin {
@@ -85,7 +92,9 @@ export interface Character {
   species: string | null;
   summary: string | null;
   statsJson: unknown;
+  // image для страницы кьяра, portrait вертикальный для колоды
   image: string | null;
+  portrait: string | null;
   createdAt: string;
   updatedAt: string;
   // Только в ответе на одного кьяра
@@ -117,15 +126,24 @@ export interface Post {
   content?: string | null;
   image: string | null;
   publishedAt: string | null;
+  // Код справочника post_section
+  section: string | null;
   isEvent: boolean;
   eventType: string | null;
   eventFormat: string | null;
   participationType: string | null;
+  eventAudience?: string | null;
   eventStages: EventStage[] | null;
   eventConfig: Record<string, unknown> | null;
   createdAt: string;
   updatedAt: string;
   tags?: Tag[];
+}
+
+export interface DeckSummary {
+  total: number;
+  byRole: Array<{ code: string; count: number }>;
+  bySpecies: Array<{ code: string; count: number; cover: string | null }>;
 }
 
 export interface ThreadMessage {

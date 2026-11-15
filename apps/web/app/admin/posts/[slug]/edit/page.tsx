@@ -70,6 +70,8 @@ export default function EditPostPage() {
       eventType: formData.get("eventType") || null,
       eventFormat: formData.get("eventFormat") || null,
       participationType: formData.get("participationType") || null,
+      eventAudience: formData.get("eventAudience") || null,
+      section: formData.get("section") || null,
     };
 
     const token = localStorage.getItem("authToken");
@@ -219,6 +221,20 @@ export default function EditPostPage() {
           </div>
 
           <div className="kjar-field">
+            <label className="kjar-label" htmlFor="section">
+              Раздел
+            </label>
+            <DictionarySelect
+              group="post_section"
+              id="section"
+              name="section"
+              emptyLabel="Без раздела"
+              defaultValue={post.section || ""}
+            />
+            <p className="kjar-admin__note">Разделы «Расписание» и «Торговая площадь» открываются из меню сайта.</p>
+          </div>
+
+          <div className="kjar-field">
             <label className="kjar-label" htmlFor="isEvent">
               Это ивент?
             </label>
@@ -232,7 +248,7 @@ export default function EditPostPage() {
             <>
               <div className="kjar-field">
                 <label className="kjar-label" htmlFor="eventType">
-                  Тип ивента
+                  Раздел ивента
                 </label>
                 <DictionarySelect
                   group="event_type"
@@ -245,7 +261,7 @@ export default function EditPostPage() {
 
               <div className="kjar-field">
                 <label className="kjar-label" htmlFor="eventFormat">
-                  Формат ивента
+                  Механика ивента
                 </label>
                 <DictionarySelect
                   group="event_format"
@@ -258,7 +274,7 @@ export default function EditPostPage() {
 
               <div className="kjar-field">
                 <label className="kjar-label" htmlFor="participationType">
-                  Тип участия
+                  Тип: участие
                 </label>
                 <DictionarySelect
                   group="participation_type"
@@ -266,6 +282,19 @@ export default function EditPostPage() {
                   name="participationType"
                   emptyLabel="Не указано"
                   defaultValue={post.participationType || ""}
+                />
+              </div>
+
+              <div className="kjar-field">
+                <label className="kjar-label" htmlFor="eventAudience">
+                  Формат: для кого
+                </label>
+                <DictionarySelect
+                  group="event_audience"
+                  id="eventAudience"
+                  name="eventAudience"
+                  emptyLabel="Не указано"
+                  defaultValue={post.eventAudience || ""}
                 />
               </div>
             </>

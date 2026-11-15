@@ -61,6 +61,7 @@ type CharacterInput = {
   summary?: string | null;
   description?: string | null;
   image?: string | null;
+  portrait?: string | null;
   statsJson?: unknown;
   relationsJson?: unknown;
   tjornId?: number | null;
@@ -86,9 +87,41 @@ function cardFields(data: CharacterInput) {
   };
 }
 
+/**
+ * Сводка колоды и альбомы: счёт по типам и по родам на всю колоду, без
+ * фильтров страницы. Обложка альбома берётся у последней карты рода.
+ */
+export async function getCharactersSummary(_req: Request, res: Response) {
+  const [totalRow] = await db.select({ count: sql<number>`count(*)` }).from(characters);
+
+  const byRole = await db
+    .select({ code: characters.role, count: sql<number>`count(*)` })
+    .from(characters)
+    .groupBy(characters.role);
+
+  const bySpecies = await db
+    .select({
+      code: characters.species,
+      count: sql<number>`count(*)`,
+      cover: sql<string | null>`(array_agg(coalesce(${characters.portrait}, ${characters.image}) order by ${characters.createdAt} desc) filter (where coalesce(${characters.portrait}, ${characters.image}) is not null))[1]`
+    })
+    .from(characters)
+    .groupBy(characters.species);
+
+  res.json({
+    data: {
+      total: Number(totalRow?.count || 0),
+      byRole: byRole.map((row) => ({ code: row.code, count: Number(row.count) })),
+      bySpecies: bySpecies
+        .filter((row) => row.code)
+        .map((row) => ({ code: row.code, count: Number(row.count), cover: row.cover }))
+    }
+  });
+}
+
 export async function getCharacters(req: Request, res: Response) {
   try {
-    const { role, status, species, tag, search, tjorn, limit = "50", offset = "0" } = req.query;
+    const { role, status, species, gender, tag, search, tjorn, limit = "50", offset = "0" } = req.query;
 
     const conditions = [];
 
@@ -104,6 +137,15 @@ export async function getCharacters(req: Request, res: Response) {
       conditions.push(eq(characters.species, species as string));
     }
 
+    // Пол лежит в листе персонажа под ключом «пол» в любом регистре, как и
+    // читает его карта. Лист бывает не объектом, поэтому сначала проверка типа
+    if (gender) {
+      conditions.push(sql`case when jsonb_typeof(${characters.statsJson}) = 'object' then exists (
+        select 1 from jsonb_each_text(${characters.statsJson}) as entry
+        where lower(trim(entry.key)) in ('пол', 'gender', 'sex') and entry.value = ${gender as string}
+      ) else false end`);
+    }
+
     if (tjorn) {
       conditions.push(eq(characters.tjornId, Number(tjorn)));
     }
@@ -112,7 +154,10 @@ export async function getCharacters(req: Request, res: Response) {
       conditions.push(
         or(
           ilike(characters.name, `%${search}%`),
-          ilike(characters.summary, `%${search}%`)
+          ilike(characters.summary, `%${search}%`),
+          ilike(characters.role, `%${search}%`),
+          // Пол ищется по листу персонажа целиком
+          sql`${characters.statsJson}::text ilike ${`%${search}%`}`
         )!
       );
     }
@@ -155,6 +200,7 @@ export async function getCharacters(req: Request, res: Response) {
         // Пол и номер лежат в statsJson и нужны плашке карты в списке колоды
         statsJson: characters.statsJson,
         image: characters.image,
+        portrait: characters.portrait,
         createdAt: characters.createdAt,
         updatedAt: characters.updatedAt
       })
@@ -324,6 +370,7 @@ export async function createCharacter(req: AuthRequest, res: Response) {
         summary: data.summary || null,
         description: data.description || null,
         image: data.image || null,
+        portrait: data.portrait || null,
         statsJson: data.statsJson || null,
         ...cardFields(data),
         createdBy: req.user.id,
@@ -426,6 +473,7 @@ export async function updateCharacter(req: AuthRequest, res: Response) {
         ...(data.summary !== undefined && { summary: data.summary }),
         ...(data.description !== undefined && { description: data.description }),
         ...(data.image !== undefined && { image: data.image }),
+        ...(data.portrait !== undefined && { portrait: data.portrait }),
         ...(data.statsJson !== undefined && { statsJson: data.statsJson }),
         ...cardFields(data),
         updatedAt: new Date(),

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { ImagePlus, X } from "lucide-react";
 import { HoneypotField, useFormToken } from "../../components/FormGuard";
 import type { DictionaryEntry } from "@/lib/dictionaries";
 
@@ -15,6 +16,36 @@ export function ContactForm({ requestTypes }: ContactFormProps) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+  const [images, setImages] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Картинки идут через ту же гостевую загрузку, что и в комментариях
+  const handleImageSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      setError("Картинка больше 10 МБ");
+      return;
+    }
+
+    setUploading(true);
+    setError(null);
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+      const response = await fetch("/api/comments/upload", { method: "POST", body: formData });
+      const body = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(body?.error?.message || "Не удалось загрузить картинку");
+      const url = body?.data?.url || body?.data?.publicUrl;
+      if (url) setImages((current) => [...current, url]);
+    } catch (uploadError) {
+      setError(uploadError instanceof Error ? uploadError.message : "Не удалось загрузить картинку");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -34,6 +65,8 @@ export function ContactForm({ requestTypes }: ContactFormProps) {
           requestType: type || null,
           subject: String(values.get("subject") || ""),
           message: String(values.get("message") || ""),
+          attachments: String(values.get("attachments") || "") || null,
+          images,
           website,
           formToken
         })
@@ -46,6 +79,7 @@ export function ContactForm({ requestTypes }: ContactFormProps) {
       }
 
       form.reset();
+      setImages([]);
       setSent(true);
       refresh();
     } catch (submitError) {
@@ -61,8 +95,8 @@ export function ContactForm({ requestTypes }: ContactFormProps) {
       <div className="kjar-form-card">
         <h2 className="kjar-contacts__form-title">Обращение отправлено</h2>
         <p className="kjar-contacts__text">
-          Редакция читает обращения в порядке поступления и отвечает по указанному
-          контакту в течение 1–3 рабочих дней.
+          Обращения читаем в порядке поступления и отвечаем по указанному
+          контакту в течение 1–5 рабочих дней.
         </p>
         <div className="kjar-form-actions">
           <button
@@ -106,7 +140,7 @@ export function ContactForm({ requestTypes }: ContactFormProps) {
             id="contact-channel"
             name="contact"
             type="text"
-            placeholder="Почта или ник в мессенджере"
+            placeholder="Почта или ссылка на ВК/ТГ"
             maxLength={200}
             required
           />
@@ -164,6 +198,55 @@ export function ContactForm({ requestTypes }: ContactFormProps) {
         />
       </div>
 
+      <div className="kjar-field">
+        <label className="kjar-label" htmlFor="contact-attachments">
+          Приложения
+        </label>
+        <textarea
+          className="kjar-textarea"
+          id="contact-attachments"
+          name="attachments"
+          rows={3}
+          placeholder="Ссылки на работы, анкеты и посты, по одной в строке"
+          maxLength={2000}
+        />
+        {images.length > 0 && (
+          <ul className="kjar-attachments">
+            {images.map((url) => (
+              <li className="kjar-comments__image-preview" key={url}>
+                <img src={url} alt="Приложенная картинка" />
+                <button
+                  type="button"
+                  aria-label="Убрать картинку"
+                  onClick={() => setImages((current) => current.filter((item) => item !== url))}
+                >
+                  <X size={16} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        {images.length < 5 && (
+          <div>
+            <input
+              ref={fileInputRef}
+              className="kjar-sr-only"
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              id="contact-image"
+              onChange={handleImageSelect}
+            />
+            <label
+              htmlFor="contact-image"
+              className="kjar-button kjar-button--ghost kjar-comments__attach-btn"
+            >
+              <ImagePlus size={18} aria-hidden="true" />
+              {uploading ? "Загружаем…" : "Приложить фото"}
+            </label>
+          </div>
+        )}
+      </div>
+
       <HoneypotField value={website} onChange={setWebsite} />
 
       {error ? (
@@ -173,7 +256,7 @@ export function ContactForm({ requestTypes }: ContactFormProps) {
       ) : null}
 
       <div className="kjar-form-actions">
-        <button className="kjar-button kjar-button--primary" type="submit" disabled={submitting}>
+        <button className="kjar-button kjar-button--primary" type="submit" disabled={submitting || uploading}>
           {submitting ? "Отправляем" : "Отправить письмо"}
         </button>
         <button className="kjar-button kjar-button--ghost" type="reset" disabled={submitting}>
@@ -181,7 +264,7 @@ export function ContactForm({ requestTypes }: ContactFormProps) {
         </button>
       </div>
 
-      <p className="kjar-form-note">Ответим по указанному контакту в течение 1–3 рабочих дней.</p>
+      <p className="kjar-form-note">Ответим по указанному контакту в течение 1–5 рабочих дней.</p>
     </form>
   );
 }

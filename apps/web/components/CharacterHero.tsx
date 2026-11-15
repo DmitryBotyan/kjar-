@@ -5,6 +5,8 @@ import { X } from "lucide-react";
 
 type CharacterHeroProps = {
   name: string;
+  // card: картинка в карте (вертикальная), image: полный референс
+  card: string | null;
   image: string | null;
   plate: ReactNode;
   children: ReactNode;
@@ -12,7 +14,7 @@ type CharacterHeroProps = {
 
 // Карта в шапке открывает полный референс прямо над характеристиками:
 // в карте он обрезан под пропорцию 3:4
-export default function CharacterHero({ name, image, plate, children }: CharacterHeroProps) {
+export default function CharacterHero({ name, card, image, plate, children }: CharacterHeroProps) {
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -32,7 +34,7 @@ export default function CharacterHero({ name, image, plate, children }: Characte
             aria-controls="kjar-reference-full"
             disabled={!image}
           >
-            {image ? <img src={image} alt={`Референс ${name}`} loading="eager" /> : <span />}
+            {card ? <img src={card} alt={`Референс ${name}`} loading="eager" /> : <span />}
             {image && (
               <span className="kjar-character__reference-hint">
                 {open ? "Свернуть референс" : "Полный референс"}

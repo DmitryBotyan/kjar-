@@ -6,7 +6,7 @@ import { createError } from "../middlewares/errorHandler.js";
 
 export async function getEvents(req: Request, res: Response) {
   try {
-    const { eventType, eventFormat, participationType, tag, search, limit = "50", offset = "0" } = req.query;
+    const { eventType, eventFormat, participationType, eventAudience, tag, search, limit = "50", offset = "0" } = req.query;
 
     const conditions = [
       isNotNull(posts.publishedAt),
@@ -23,6 +23,10 @@ export async function getEvents(req: Request, res: Response) {
 
     if (participationType) {
       conditions.push(eq(posts.participationType, participationType as string));
+    }
+
+    if (eventAudience) {
+      conditions.push(eq(posts.eventAudience, eventAudience as string));
     }
 
     if (search) {
@@ -72,6 +76,7 @@ export async function getEvents(req: Request, res: Response) {
         eventType: posts.eventType,
         eventFormat: posts.eventFormat,
         participationType: posts.participationType,
+        eventAudience: posts.eventAudience,
         eventStages: posts.eventStages,
         eventConfig: posts.eventConfig,
         createdAt: posts.createdAt,

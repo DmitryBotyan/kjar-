@@ -151,7 +151,7 @@ export function NewThreadForm({ categories, knownTags }: NewThreadFormProps) {
 
       <div className="kjar-form-actions">
         <button className="kjar-button kjar-button--primary" type="submit" disabled={submitting}>
-          {submitting ? "Создаём" : "Создать тему"}
+          {submitting ? "Отправляем" : "Отправить запрос"}
         </button>
         <button className="kjar-button kjar-button--ghost" type="reset" disabled={submitting}>
           Очистить

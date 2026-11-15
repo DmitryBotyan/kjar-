@@ -192,8 +192,8 @@ export default function CharacterCardEditor({ initial, onChange }: CharacterCard
         <div className="kjar-sheet__block">
         <h2 className="kjar-sheet__title">Родственные связи и потомство</h2>
         <p className="kjar-sheet__note">
-          Если родич есть на сайте, выберите его карточку: имя станет ссылкой. Если нет —
-          просто впишите имя. Вид «Потомок» попадает в графу «Потомство».
+          Если родич есть на сайте, выберите его карточку: имя станет ссылкой. Если
+          его нет, впишите имя. Вид «Потомок» попадает в графу «Потомство».
         </p>
         <ul className="kjar-sheet__rows">
         {kin.map((row, index) => (

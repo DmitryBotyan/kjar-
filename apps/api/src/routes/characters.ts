@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getCharacters, getCharacterBySlug, createCharacter, updateCharacter, deleteCharacter } from "../controllers/characters.js";
+import { getCharacters, getCharactersSummary, getCharacterBySlug, createCharacter, updateCharacter, deleteCharacter } from "../controllers/characters.js";
 import { createWork, uploadWorkImage } from "../controllers/works.js";
 import { rateLimit } from "../middlewares/rateLimit.js";
 import { antiSpam } from "../middlewares/antiSpam.js";
@@ -22,6 +22,7 @@ const createCharacterSchema = z.object({
   summary: z.string().optional().nullable(),
   description: z.string().optional().nullable(),
   image: z.string().optional().nullable(),
+  portrait: z.string().optional().nullable(),
   statsJson: z.any().optional(),
   relationsJson: z.any().optional(),
   tjornId: z.number().int().positive().nullable().optional(),
@@ -40,6 +41,7 @@ const updateCharacterSchema = z.object({
   summary: z.string().optional().nullable(),
   description: z.string().optional().nullable(),
   image: z.string().optional().nullable(),
+  portrait: z.string().optional().nullable(),
   statsJson: z.any().optional(),
   relationsJson: z.any().optional(),
   tjornId: z.number().int().positive().nullable().optional(),
@@ -49,6 +51,7 @@ const updateCharacterSchema = z.object({
 });
 
 router.get("/", asyncHandler(getCharacters));
+router.get("/summary", asyncHandler(getCharactersSummary));
 router.get("/:slug", asyncHandler(getCharacterBySlug));
 
 // Работы присылают игроки без входа: защита формы и отдельные лимиты

@@ -13,6 +13,8 @@ interface ContactRequest {
   requestType?: string | null;
   subject: string;
   message: string;
+  attachments?: string | null;
+  imagesJson?: string[] | null;
   status: string;
   createdAt: string;
 }
@@ -145,6 +147,19 @@ export default function AdminContactsPage() {
                       <strong>{request.subject}</strong>
                       <br />
                       {request.message}
+                      {/* Ссылки показаны текстом: их прислал посетитель, открывать вслепую не стоит */}
+                      {request.attachments && (
+                        <p className="kjar-admin__note kjar-admin__pre">{request.attachments}</p>
+                      )}
+                      {request.imagesJson && request.imagesJson.length > 0 && (
+                        <div className="kjar-admin__thumbs">
+                          {request.imagesJson.map((url) => (
+                            <a key={url} href={url} target="_blank" rel="noreferrer">
+                              <img src={url} alt="Приложение к обращению" loading="lazy" />
+                            </a>
+                          ))}
+                        </div>
+                      )}
                     </td>
                     <td>
                       <select

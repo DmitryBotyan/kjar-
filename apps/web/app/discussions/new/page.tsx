@@ -20,7 +20,7 @@ export default async function NewDiscussionPage() {
           <Link className="kjar-thread__back" href="/discussions">
             К списку тем
           </Link>
-          <h1 className="kjar-thread__title">Новая тема</h1>
+          <h1 className="kjar-thread__title">Новый запрос</h1>
           <p className="kjar-thread__lead">
             Опишите суть обсуждения, выберите раздел и добавьте теги. Чем точнее
             формулировка, тем быстрее к столу подойдут нужные участники.

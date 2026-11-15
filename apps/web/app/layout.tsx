@@ -3,13 +3,13 @@ import Link from "next/link";
 import { Menu } from "lucide-react";
 import SearchBox from "@/components/SearchBox";
 import CookieNotice from "@/components/CookieNotice";
-import { alegreya, golos } from "./fonts";
+import { alegreya, crimson, typewriter } from "./fonts";
 import "./norse.css";
 import "./globals.css";
 
 // Адрес сайта и почта редакции задаются окружением: в коде их быть не должно
 const SITE_URL = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL;
-const CONTACT_EMAIL = process.env.CONTACT_EMAIL || "hello@kjar.ru";
+const CONTACT_EMAIL = process.env.CONTACT_EMAIL || "kjarss1@mail.ru";
 
 const title = "KJÁR — сказы, которые обрели плоть";
 const description =
@@ -27,11 +27,14 @@ export const metadata = {
   }
 };
 
+// «Расписание» по просьбе заказчицы стоит первым и выделено цветом
 const navigation = [
+  { href: "/schedule", label: "Расписание", accent: true },
   { href: "/", label: "Главная" },
   { href: "/lore", label: "Свод" },
   { href: "/characters", label: "Звери" },
   { href: "/normans", label: "Норманны" },
+  { href: "/market", label: "Торговая площадь" },
   { href: "/posts", label: "Посты" },
   { href: "/events", label: "События" },
   { href: "/discussions", label: "Важное" },
@@ -44,7 +47,7 @@ type RootLayoutProps = {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="ru" className={`${alegreya.variable} ${golos.variable}`}>
+    <html lang="ru" className={`${alegreya.variable} ${crimson.variable} ${typewriter.variable}`}>
       <body>
         <header className="kjar-header">
           <div className="kjar-header__inner">
@@ -54,8 +57,8 @@ export default function RootLayout({ children }: RootLayoutProps) {
                   className="kjar-brand__mark"
                   src="/images/logo.png"
                   alt=""
-                  width={44}
-                  height={44}
+                  width={64}
+                  height={64}
                 />
                 <span className="kjar-brand__text">
                   <span className="kjar-brand__title">KJÁR</span>
@@ -63,16 +66,6 @@ export default function RootLayout({ children }: RootLayoutProps) {
                 </span>
               </Link>
             </div>
-
-            <nav className="kjar-nav" aria-label="Основная навигация">
-              <ul className="kjar-nav__list">
-                {navigation.map((item) => (
-                  <li className="kjar-nav__item" key={item.label}>
-                    <Link href={item.href}>{item.label}</Link>
-                  </li>
-                ))}
-              </ul>
-            </nav>
 
             <div className="kjar-header__tools">
               <SearchBox />
@@ -85,7 +78,10 @@ export default function RootLayout({ children }: RootLayoutProps) {
                 <nav className="kjar-drawer__panel" aria-label="Мобильная навигация">
                   <ul className="kjar-nav__list">
                     {navigation.map((item) => (
-                      <li className="kjar-nav__item" key={`drawer-${item.label}`}>
+                      <li
+                        className={`kjar-nav__item${item.accent ? " kjar-nav__item--accent" : ""}`}
+                        key={`drawer-${item.label}`}
+                      >
                         <Link href={item.href}>{item.label}</Link>
                       </li>
                     ))}
@@ -94,6 +90,19 @@ export default function RootLayout({ children }: RootLayoutProps) {
               </details>
             </div>
           </div>
+
+          <nav className="kjar-nav" aria-label="Основная навигация">
+            <ul className="kjar-nav__list">
+              {navigation.map((item) => (
+                <li
+                  className={`kjar-nav__item${item.accent ? " kjar-nav__item--accent" : ""}`}
+                  key={item.label}
+                >
+                  <Link href={item.href}>{item.label}</Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
         </header>
 
         <main>{children}</main>
@@ -115,85 +124,29 @@ export default function RootLayout({ children }: RootLayoutProps) {
                 Ролевой адопт-проект, посвященный существам, способным проводить Вас в
                 скандинавские суровые времена и показать, на что они способны.
               </p>
-              <div className="kjar-footer__stack">
-                <a className="kjar-footer__link" href={`mailto:${CONTACT_EMAIL}`}>
-                  {CONTACT_EMAIL}
-                </a>
-                <Link className="kjar-footer__link" href="/contacts">
-                  Написать редакции
-                </Link>
-              </div>
+              <a className="kjar-footer__link" href={`mailto:${CONTACT_EMAIL}`}>
+                {CONTACT_EMAIL}
+              </a>
             </div>
 
-            <div className="kjar-footer__columns">
-              <div className="kjar-footer__column">
-                <h2 className="kjar-footer__column-title">Мир</h2>
-                <ul className="kjar-footer__list">
-                  <li>
-                    <Link className="kjar-footer__link" href="/lore">
-                      Свод
-                    </Link>
-                  </li>
-                  <li>
-                    <Link className="kjar-footer__link" href="/characters">
-                      Колода зверей
-                    </Link>
-                  </li>
-                  <li>
-                    <Link className="kjar-footer__link" href="/normans">
-                      Норманны
-                    </Link>
-                  </li>
-                  <li>
-                    <Link className="kjar-footer__link" href="/lore">
-                      Эпохи и хроники
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-
-              <div className="kjar-footer__column">
-                <h2 className="kjar-footer__column-title">Игра</h2>
-                <ul className="kjar-footer__list">
-                  <li>
-                    <Link className="kjar-footer__link" href="/events">
-                      События
-                    </Link>
-                  </li>
-                  <li>
-                    <Link className="kjar-footer__link" href="/posts">
-                      Посты и новости
-                    </Link>
-                  </li>
-                  <li>
-                    <Link className="kjar-footer__link" href="/discussions">
-                      Важное
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-
-              <div className="kjar-footer__column">
-                <h2 className="kjar-footer__column-title">Участие</h2>
-                <ul className="kjar-footer__list">
-                  <li>
-                    <Link className="kjar-footer__link" href="/discussions/new">
-                      Создать тему
-                    </Link>
-                  </li>
-                  <li>
-                    <Link className="kjar-footer__link" href="/contacts">
-                      Заявка на роль
-                    </Link>
-                  </li>
-                  <li>
-                    <Link className="kjar-footer__link" href="/contacts">
-                      Обратная связь
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-            </div>
+            <nav aria-label="Разделы сайта">
+              <ul className="kjar-footer__list">
+                {navigation
+                  .filter((item) => item.href !== "/")
+                  .map((item) => (
+                    <li key={`footer-${item.label}`}>
+                      <Link className="kjar-footer__link" href={item.href}>
+                        {item.label}
+                      </Link>
+                    </li>
+                  ))}
+                <li>
+                  <Link className="kjar-footer__link" href="/discussions/new">
+                    Новый запрос
+                  </Link>
+                </li>
+              </ul>
+            </nav>
           </div>
 
           <div className="kjar-footer__bottom">

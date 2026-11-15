@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import DeleteConfirmModal from "@/components/admin/DeleteConfirmModal";
 import ImageUpload from "@/components/admin/ImageUpload";
 import { adminRequest, useAdminGuard } from "@/lib/useAdminGuard";
+import { useDictionary } from "@/lib/useDictionaries";
+import type { DictionaryGroup } from "@/lib/dictionaries";
 import type { Norman } from "@/lib/types";
 
 interface NormanRow {
@@ -21,9 +23,57 @@ type Draft = {
   summary: string;
   description: string;
   image: string | null;
+  gender: string;
+  occupation: string;
+  normanType: string;
+  // Пустая строка: шкала не заполнена и в анкету не попадёт
+  traits: Record<string, string>;
 };
 
-const EMPTY: Draft = { slug: "", name: "", summary: "", description: "", image: null };
+const EMPTY: Draft = {
+  slug: "",
+  name: "",
+  summary: "",
+  description: "",
+  image: null,
+  gender: "",
+  occupation: "",
+  normanType: "",
+  traits: {}
+};
+
+function DraftSelect({
+  group,
+  id,
+  label,
+  value,
+  onChange
+}: {
+  group: DictionaryGroup;
+  id: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const { entries } = useDictionary(group);
+  const missing = value && !entries.some((entry) => entry.code === value);
+  return (
+    <div className="kjar-field">
+      <label className="kjar-label" htmlFor={id}>
+        {label}
+      </label>
+      <select className="kjar-select" id={id} value={value} onChange={(event) => onChange(event.target.value)}>
+        <option value="">Не указан</option>
+        {missing && <option value={value}>{value} (вне справочника)</option>}
+        {entries.map((entry) => (
+          <option key={entry.code} value={entry.code}>
+            {entry.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
 
 export default function AdminNormansPage() {
   const { requireToken, handleError } = useAdminGuard();
@@ -35,6 +85,7 @@ export default function AdminNormansPage() {
   const [saving, setSaving] = useState(false);
   const [deleteModal, setDeleteModal] = useState<NormanRow | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const { entries: traitScales } = useDictionary("norman_trait");
 
   const load = useCallback(async () => {
     if (!requireToken()) return;
@@ -43,7 +94,7 @@ export default function AdminNormansPage() {
       setNormans(response.data || []);
       setError(null);
     } catch (loadError) {
-      setError(handleError(loadError, "Не удалось загрузить тьорнов"));
+      setError(handleError(loadError, "Не удалось загрузить норманнов"));
     } finally {
       setLoading(false);
     }
@@ -68,10 +119,16 @@ export default function AdminNormansPage() {
         name: norman.name,
         summary: norman.summary || "",
         description: norman.description || "",
-        image: norman.image || null
+        image: norman.image || null,
+        gender: norman.gender || "",
+        occupation: norman.occupation || "",
+        normanType: norman.normanType || "",
+        traits: Object.fromEntries(
+          Object.entries(norman.traitsJson || {}).map(([key, value]) => [key, String(value)])
+        )
       });
     } catch (loadError) {
-      setError(handleError(loadError, "Не удалось открыть тьорна"));
+      setError(handleError(loadError, "Не удалось открыть норманна"));
     }
   };
 
@@ -86,7 +143,15 @@ export default function AdminNormansPage() {
         slug: draft.slug.trim() || undefined,
         summary: draft.summary || null,
         description: draft.description || null,
-        image: draft.image
+        image: draft.image,
+        gender: draft.gender || null,
+        occupation: draft.occupation || null,
+        normanType: draft.normanType || null,
+        traitsJson: Object.fromEntries(
+          Object.entries(draft.traits)
+            .filter(([, value]) => value !== "")
+            .map(([key, value]) => [key, Number(value)])
+        )
       });
       await adminRequest(editing ? `/normans/${editing}` : "/normans", {
         method: editing ? "PUT" : "POST",
@@ -96,7 +161,7 @@ export default function AdminNormansPage() {
       setEditing(null);
       await load();
     } catch (saveError) {
-      setError(handleError(saveError, "Не удалось сохранить тьорна"));
+      setError(handleError(saveError, "Не удалось сохранить норманна"));
     } finally {
       setSaving(false);
     }
@@ -111,7 +176,7 @@ export default function AdminNormansPage() {
       setNormans((prev) => prev.filter((item) => item.id !== deleteModal.id));
       setDeleteModal(null);
     } catch (deleteError) {
-      setError(handleError(deleteError, "Не удалось удалить тьорна"));
+      setError(handleError(deleteError, "Не удалось удалить норманна"));
     } finally {
       setDeleting(false);
     }
@@ -126,7 +191,7 @@ export default function AdminNormansPage() {
         <div className="kjar-admin__header-actions">
           {!draft && (
             <button type="button" className="kjar-button kjar-button--primary" onClick={startCreate}>
-              Добавить тьорна
+              Добавить норманна
             </button>
           )}
         </div>
@@ -137,7 +202,7 @@ export default function AdminNormansPage() {
 
         {draft && (
           <form className="kjar-form-card" onSubmit={save}>
-            <h2 className="kjar-sheet__title">{editing ? "Правка тьорна" : "Новый тьорн"}</h2>
+            <h2 className="kjar-sheet__title">{editing ? "Правка норманна" : "Новый норманн"}</h2>
 
             <div className="kjar-field">
               <label className="kjar-label" htmlFor="norman-name">
@@ -181,7 +246,7 @@ export default function AdminNormansPage() {
 
             <div className="kjar-field">
               <label className="kjar-label" htmlFor="norman-description">
-                О тьорне
+                О норманне
               </label>
               <textarea
                 className="kjar-textarea"
@@ -198,7 +263,63 @@ export default function AdminNormansPage() {
               onChange={(url) => set({ image: url })}
               folder="normans"
               label="Портрет"
+              crop={false}
             />
+            <p className="kjar-admin__note">
+              В списке картинка обрезается в квадрат, на странице норманна видна целиком.
+            </p>
+
+            <div className="kjar-sheet__passport">
+              <DraftSelect
+                group="norman_type"
+                id="norman-type"
+                label="Тип"
+                value={draft.normanType}
+                onChange={(normanType) => set({ normanType })}
+              />
+              <DraftSelect
+                group="norman_gender"
+                id="norman-gender"
+                label="Пол"
+                value={draft.gender}
+                onChange={(gender) => set({ gender })}
+              />
+              <DraftSelect
+                group="norman_occupation"
+                id="norman-occupation"
+                label="Род деятельности"
+                value={draft.occupation}
+                onChange={(occupation) => set({ occupation })}
+              />
+            </div>
+
+            {traitScales.length > 0 && (
+              <div className="kjar-sheet__block">
+                <h3 className="kjar-sheet__title">Мини-анкета</h3>
+                <p className="kjar-sheet__note">От 0 до 10. Пустая шкала на сайт не выводится.</p>
+                <div className="kjar-sheet__passport">
+                  {traitScales.map((scale) => (
+                    <div className="kjar-field" key={scale.code}>
+                      <label className="kjar-label" htmlFor={`trait-${scale.id}`}>
+                        {scale.label}
+                      </label>
+                      <input
+                        className="kjar-input"
+                        id={`trait-${scale.id}`}
+                        type="number"
+                        min={0}
+                        max={10}
+                        step={1}
+                        value={draft.traits[scale.code] ?? ""}
+                        onChange={(event) =>
+                          set({ traits: { ...draft.traits, [scale.code]: event.target.value } })
+                        }
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="kjar-form-actions">
               <button type="submit" className="kjar-button kjar-button--primary" disabled={saving}>
@@ -222,7 +343,7 @@ export default function AdminNormansPage() {
           <div className="kjar-admin__loading">Загрузка...</div>
         ) : normans.length === 0 ? (
           <div className="kjar-admin__empty">
-            <p>Тьорнов пока нет</p>
+            <p>Норманнов пока нет</p>
           </div>
         ) : (
           <div className="kjar-admin__table-wrap">
@@ -271,8 +392,8 @@ export default function AdminNormansPage() {
         isOpen={Boolean(deleteModal)}
         onClose={() => setDeleteModal(null)}
         onConfirm={confirmDelete}
-        title="Удалить тьорна?"
-        message="У его кьяров пропадёт ссылка на тьорна. Сами кьяры останутся."
+        title="Удалить норманна?"
+        message="У его кьяров пропадёт ссылка на норманна. Сами кьяры останутся."
         itemName={deleteModal?.name}
         loading={deleting}
       />

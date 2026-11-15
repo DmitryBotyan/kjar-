@@ -8,7 +8,7 @@ import { useDictionary } from "@/lib/useDictionaries";
 // они играют разные роли: пол и номер идут в плашку, числа в шкалы.
 
 const PASSPORT: Array<{ key: string; label: string; placeholder: string }> = [
-  { key: "пол", label: "Пол", placeholder: "Самец, самка" },
+  { key: "пол", label: "Пол", placeholder: "" },
   { key: "номер", label: "Номер", placeholder: "12" }
 ];
 
@@ -47,6 +47,8 @@ export default function CharacterSheetEditor({
   // Базовый набор шкал задаётся справочником character_meter, а не списком
   // в коде: он же определяет порядок шкал на карточке кьяра.
   const { entries: baseMeters } = useDictionary("character_meter");
+  // Пол выбирается из справочника: по этим же значениям фильтрует колода
+  const { entries: genders } = useDictionary("character_gender");
   const [passport, setPassport] = useState<Record<string, string>>(initial.passport);
   const [rows, setRows] = useState<Row[]>(initial.rows);
 
@@ -111,7 +113,7 @@ export default function CharacterSheetEditor({
       <div className="kjar-sheet__block">
         <h2 className="kjar-sheet__title">Паспорт карты</h2>
         <p className="kjar-sheet__note">
-          Пол и номер выводятся на плашке карты.
+          Номер выводится на плашке карты, пол работает в фильтре колоды.
         </p>
         <div className="kjar-sheet__passport">
           {PASSPORT.map((field) => (
@@ -119,14 +121,35 @@ export default function CharacterSheetEditor({
               <label className="kjar-label" htmlFor={`sheet-${field.key}`}>
                 {field.label}
               </label>
-              <input
-                className="kjar-input"
-                id={`sheet-${field.key}`}
-                type="text"
-                value={passport[field.key] || ""}
-                placeholder={field.placeholder}
-                onChange={(event) => updatePassport(field.key, event.target.value)}
-              />
+              {field.key === "пол" ? (
+                <select
+                  className="kjar-select"
+                  id={`sheet-${field.key}`}
+                  value={passport[field.key] || ""}
+                  onChange={(event) => updatePassport(field.key, event.target.value)}
+                >
+                  <option value="">Не указан</option>
+                  {/* Старое значение вне справочника не теряется при правке */}
+                  {passport[field.key] &&
+                    !genders.some((entry) => entry.code === passport[field.key]) && (
+                      <option value={passport[field.key]}>{passport[field.key]}</option>
+                    )}
+                  {genders.map((entry) => (
+                    <option key={entry.code} value={entry.code}>
+                      {entry.label}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  className="kjar-input"
+                  id={`sheet-${field.key}`}
+                  type="text"
+                  value={passport[field.key] || ""}
+                  placeholder={field.placeholder}
+                  onChange={(event) => updatePassport(field.key, event.target.value)}
+                />
+              )}
             </div>
           ))}
         </div>

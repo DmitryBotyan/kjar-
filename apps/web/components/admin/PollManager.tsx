@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { fetchFromAdminApi } from "@/lib/admin-api";
+import { plural } from "@/lib/plural";
 
 interface PollManagerProps {
   postId: number;
@@ -138,59 +139,67 @@ export default function PollManager({ postId, eventFormat }: PollManagerProps) {
   }
 
   if (loading) {
-    return <div>Загрузка опроса...</div>;
+    return <p className="kjar-sheet__note">Загружаем опрос…</p>;
   }
 
-  return (
-    <div className="kjar-field" style={{ marginTop: "24px", padding: "20px", border: "1px solid var(--line)", borderRadius: "6px" }}>
-      <h3 style={{ marginTop: 0, marginBottom: "16px" }}>Управление опросом</h3>
+  const flag = (key: "showPercentages" | "isEnded" | "allowMultiple", label: string) =>
+    poll && (
+      <label className="kjar-check">
+        <input
+          type="checkbox"
+          checked={poll[key]}
+          onChange={(event) => setPoll({ ...poll, [key]: event.target.checked })}
+        />
+        {label}
+      </label>
+    );
 
-      {error && (
-        <div className="kjar-admin__error">
-          {error}
-        </div>
-      )}
+  return (
+    <section className="kjar-sheet">
+      <h3 className="kjar-sheet__title">Опрос</h3>
+
+      {error && <div className="kjar-admin__error">{error}</div>}
 
       {!poll ? (
-        <div>
-          <div className="kjar-field">
-            <label className="kjar-label">Варианты ответов</label>
+        <div className="kjar-sheet__block">
+          <span className="kjar-label">Варианты ответов</span>
+          <ul className="kjar-sheet__rows">
             {options.map((option, index) => (
-              <div key={index} style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
+              <li className="kjar-sheet__row kjar-sheet__row--option" key={index}>
                 <input
                   type="text"
                   className="kjar-input"
+                  aria-label={`Вариант ${index + 1}`}
                   value={option}
-                  onChange={(e) => {
-                    const newOptions = [...options];
-                    newOptions[index] = e.target.value;
-                    setOptions(newOptions);
+                  onChange={(event) => {
+                    const next = [...options];
+                    next[index] = event.target.value;
+                    setOptions(next);
                   }}
-                  style={{ flex: 1 }}
                 />
                 <button
                   type="button"
                   onClick={() => removeOption(index)}
                   className="kjar-button kjar-button--danger"
                 >
-                  Удалить
+                  Убрать
                 </button>
-              </div>
+              </li>
             ))}
-            <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+            <li className="kjar-sheet__row kjar-sheet__row--option">
               <input
                 type="text"
                 className="kjar-input"
+                aria-label="Новый вариант"
                 value={newOption}
-                onChange={(e) => setNewOption(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
+                onChange={(event) => setNewOption(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
                     addOption();
                   }
                 }}
-                placeholder="Добавить вариант ответа"
-                style={{ flex: 1 }}
+                placeholder="Новый вариант ответа"
               />
               <button
                 type="button"
@@ -198,99 +207,55 @@ export default function PollManager({ postId, eventFormat }: PollManagerProps) {
                 className="kjar-button kjar-button--ghost"
                 disabled={!newOption.trim()}
               >
-                Добавить
+                Добавить вариант
               </button>
-            </div>
-          </div>
+            </li>
+          </ul>
 
-          <button
-            type="button"
-            onClick={handleCreatePoll}
-            disabled={saving || options.length < 2}
-            className="kjar-button"
-           
-          >
-            {saving ? "Создание..." : "Создать опрос"}
-          </button>
+          <div className="kjar-form-actions">
+            <button
+              type="button"
+              onClick={handleCreatePoll}
+              disabled={saving || options.length < 2}
+              className="kjar-button kjar-button--primary"
+            >
+              {saving ? "Создаём…" : "Создать опрос"}
+            </button>
+          </div>
         </div>
       ) : (
-        <div>
-          <div className="kjar-field">
-            <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <input
-                type="checkbox"
-                checked={poll.showPercentages}
-                onChange={(e) =>
-                  setPoll({ ...poll, showPercentages: e.target.checked })
-                }
-              />
-              <span>Показывать проценты</span>
-            </label>
-          </div>
+        <div className="kjar-sheet__block">
+          {flag("showPercentages", "Показывать проценты до голосования")}
+          {flag("isEnded", "Опрос завершён")}
+          {flag("allowMultiple", "Можно выбрать несколько вариантов")}
 
-          <div className="kjar-field">
-            <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <input
-                type="checkbox"
-                checked={poll.isEnded}
-                onChange={(e) => setPoll({ ...poll, isEnded: e.target.checked })}
-              />
-              <span>Опрос завершен</span>
-            </label>
-          </div>
-
-          <div className="kjar-field">
-            <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <input
-                type="checkbox"
-                checked={poll.allowMultiple}
-                onChange={(e) =>
-                  setPoll({ ...poll, allowMultiple: e.target.checked })
-                }
-              />
-              <span>Разрешить выбор нескольких вариантов</span>
-            </label>
-          </div>
-
-          <div className="kjar-field">
-            <label className="kjar-label">Варианты ответов</label>
+          <span className="kjar-label">Варианты ответов</span>
+          <ul className="kjar-sheet__rows">
             {poll.options.map((option, index) => (
-              <div
-                key={option.id || index}
-                style={{
-                  padding: "12px",
-                  marginBottom: "8px",
-                  border: "1px solid var(--line)",
-                  borderRadius: "4px",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
+              <li className="kjar-poll-admin__option" key={option.id || index}>
                 <span>{option.text}</span>
                 {poll.totalVotes !== undefined && (
-                  <span style={{ color: "var(--muted)", fontSize: "14px" }}>
-                    {option.votes || 0} голосов
-                    {poll.showPercentages && option.percentage !== null && (
-                      <span> ({option.percentage}%)</span>
-                    )}
+                  <span className="kjar-poll-admin__votes">
+                    {option.votes || 0} {plural(option.votes || 0, ["голос", "голоса", "голосов"])}
+                    {poll.showPercentages && option.percentage != null && ` (${option.percentage}%)`}
                   </span>
                 )}
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
 
-          <button
-            type="button"
-            onClick={handleUpdatePoll}
-            disabled={saving}
-            className="kjar-button"
-           
-          >
-            {saving ? "Сохранение..." : "Сохранить изменения"}
-          </button>
+          <div className="kjar-form-actions">
+            <button
+              type="button"
+              onClick={handleUpdatePoll}
+              disabled={saving}
+              className="kjar-button kjar-button--primary"
+            >
+              {saving ? "Сохраняем…" : "Сохранить опрос"}
+            </button>
+          </div>
         </div>
       )}
-    </div>
+    </section>
   );
 }

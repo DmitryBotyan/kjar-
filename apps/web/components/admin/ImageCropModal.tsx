@@ -20,17 +20,10 @@ export default function ImageCropModal({
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const onCropChange = useCallback((crop: { x: number; y: number }) => {
-    setCrop(crop);
-  }, []);
-
-  const onZoomChange = useCallback((zoom: number) => {
-    setZoom(zoom);
-  }, []);
-
-  const onCropAreaChange = useCallback((croppedArea: Area, croppedAreaPixels: Area) => {
-    setCroppedAreaPixels(croppedAreaPixels);
+  const onCropAreaChange = useCallback((_area: Area, pixels: Area) => {
+    setCroppedAreaPixels(pixels);
   }, []);
 
   const createImage = (url: string): Promise<HTMLImageElement> =>
@@ -50,7 +43,7 @@ export default function ImageCropModal({
     const ctx = canvas.getContext("2d");
 
     if (!ctx) {
-      throw new Error("No 2d context");
+      throw new Error("Браузер не дал нарисовать картинку");
     }
 
     canvas.width = pixelCrop.width;
@@ -72,7 +65,7 @@ export default function ImageCropModal({
       canvas.toBlob(
         (blob) => {
           if (!blob) {
-            reject(new Error("Canvas is empty"));
+            reject(new Error("Не получилось сохранить кадр"));
             return;
           }
           resolve(blob);
@@ -92,139 +85,54 @@ export default function ImageCropModal({
       const croppedImage = await getCroppedImg(imageSrc, croppedAreaPixels);
       onCropComplete(croppedImage);
       onClose();
-    } catch (error) {
-      console.error("Error cropping image:", error);
+    } catch (cropError) {
+      setError(cropError instanceof Error ? cropError.message : "Не получилось обрезать картинку");
     }
   };
 
   return (
     <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: "rgba(0, 0, 0, 0.85)",
-        zIndex: 1000,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          onClose();
-        }
+      className="kjar-modal-overlay"
+      role="presentation"
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div
-        style={{
-          position: "relative",
-          width: "90%",
-          maxWidth: "800px",
-          height: "80vh",
-          maxHeight: "600px",
-          backgroundColor: "var(--peat)",
-          borderRadius: "8px",
-          padding: "20px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "16px",
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div
-          style={{
-            position: "relative",
-            width: "100%",
-            height: "100%",
-            minHeight: "400px",
-            flex: 1,
-          }}
-        >
+      <div className="kjar-modal kjar-crop" role="dialog" aria-modal="true" aria-label="Кадрирование">
+        <div className="kjar-crop__area">
           <Cropper
             image={imageSrc}
             crop={crop}
             zoom={zoom}
             aspect={aspectRatio}
-            onCropChange={onCropChange}
-            onZoomChange={onZoomChange}
+            onCropChange={setCrop}
+            onZoomChange={setZoom}
             onCropComplete={onCropAreaChange}
-            style={{
-              containerStyle: {
-                width: "100%",
-                height: "100%",
-                position: "relative",
-              },
-            }}
           />
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            gap: "12px",
-            alignItems: "center",
-            justifyContent: "space-between",
-            paddingTop: "16px",
-            borderTop: "1px solid var(--line, #333)",
-          }}
-        >
-          <div style={{ display: "flex", gap: "12px", alignItems: "center", flex: 1 }}>
-            <label
-              style={{
-                fontSize: "14px",
-                color: "var(--text, #fff)",
-                minWidth: "60px",
-              }}
-            >
-              Масштаб:
-            </label>
+        {error && <div className="kjar-admin__error">{error}</div>}
+
+        <div className="kjar-crop__controls">
+          <label className="kjar-crop__zoom">
+            Масштаб
             <input
               type="range"
               min={1}
               max={3}
               step={0.1}
               value={zoom}
-              onChange={(e) => setZoom(Number(e.target.value))}
-              style={{
-                flex: 1,
-                maxWidth: "200px",
-              }}
+              onChange={(event) => setZoom(Number(event.target.value))}
             />
-            <span
-              style={{
-                fontSize: "14px",
-                color: "var(--muted, #999)",
-                minWidth: "40px",
-                textAlign: "right",
-              }}
-            >
-              {zoom.toFixed(1)}x
-            </span>
-          </div>
+            <span className="kjar-crop__value">{zoom.toFixed(1)}×</span>
+          </label>
 
-          <div style={{ display: "flex", gap: "8px" }}>
-            <button
-              type="button"
-              onClick={onClose}
-              className="kjar-button kjar-button--ghost"
-              style={{
-                padding: "8px 16px",
-              }}
-            >
+          <div className="kjar-modal__actions">
+            <button type="button" onClick={onClose} className="kjar-button kjar-button--ghost">
               Отмена
             </button>
-            <button
-              type="button"
-              onClick={handleSave}
-              className="kjar-button"
-              style={{
-                padding: "8px 16px",
-              }}
-            >
-              Применить
+            <button type="button" onClick={handleSave} className="kjar-button kjar-button--primary">
+              Обрезать и загрузить
             </button>
           </div>
         </div>

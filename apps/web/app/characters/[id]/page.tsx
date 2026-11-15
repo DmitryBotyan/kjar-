@@ -4,9 +4,9 @@ import { getCharacterBySlug } from "@/lib/api";
 import {
   characterFacts,
   characterGender,
-  characterMeters,
-  characterNumber
+  characterMeters
 } from "@/lib/character";
+import { DeckPlate } from "@/components/CharacterCard";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import CharacterHero from "@/components/CharacterHero";
 import CharacterWorks from "@/components/CharacterWorks";
@@ -54,7 +54,6 @@ export default async function CharacterPage({ params }: CharacterPageProps) {
 
   const meters = characterMeters(character, dictionaries?.character_meter);
   const gender = characterGender(character);
-  const number = characterNumber(character);
   const kin: Kin[] = Array.isArray(character.kin) ? character.kin : [];
   const offspring = kin.filter((row) => row.kind === OFFSPRING);
   const relatives = kin.filter((row) => row.kind !== OFFSPRING);
@@ -113,28 +112,9 @@ export default async function CharacterPage({ params }: CharacterPageProps) {
 
           <CharacterHero
             name={character.name}
-            image={character.image || null}
-            plate={
-              <>
-                <span className="kjar-deck-card__cell">{character.name}</span>
-                {gender && (
-                  <>
-                    <span className="kjar-deck-card__sep" aria-hidden="true">
-                      |
-                    </span>
-                    <span className="kjar-deck-card__cell">{gender}</span>
-                  </>
-                )}
-                {number && (
-                  <>
-                    <span className="kjar-deck-card__sep" aria-hidden="true">
-                      |
-                    </span>
-                    <span className="kjar-deck-card__num">{number}</span>
-                  </>
-                )}
-              </>
-            }
+            card={character.portrait || character.image || null}
+            image={character.image || character.portrait || null}
+            plate={<DeckPlate character={character} />}
           >
             <h1 className="kjar-character__title">{character.name}</h1>
 
@@ -154,6 +134,7 @@ export default async function CharacterPage({ params }: CharacterPageProps) {
                   {labelFor(dictionaries?.character_species, character.species)}
                 </span>
               )}
+              {gender && <span className="kjar-chip">{gender}</span>}
             </div>
 
             {character.summary && (
