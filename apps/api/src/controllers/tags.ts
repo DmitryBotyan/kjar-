@@ -5,6 +5,7 @@ import { tags } from "@kjar/db";
 import { createError } from "../middlewares/errorHandler.js";
 import type { AuthRequest } from "../middlewares/auth.js";
 import { slugify } from "../utils/slug.js";
+import { capitalizeFirst } from "../utils/capitalize.js";
 
 export async function getTags(_req: Request, res: Response) {
   try {
@@ -66,7 +67,7 @@ export async function createTag(req: AuthRequest, res: Response) {
       .insert(tags)
       .values({
         slug,
-        name: data.name,
+        name: capitalizeFirst(data.name),
       })
       .returning();
 
@@ -155,7 +156,7 @@ export async function updateTag(req: AuthRequest, res: Response) {
     const [updated] = await db
       .update(tags)
       .set({
-        ...(data.name && { name: data.name }),
+        ...(data.name && { name: capitalizeFirst(data.name) }),
         ...(newSlug !== existing.slug && { slug: newSlug }),
       })
       .where(eq(tags.id, existing.id))

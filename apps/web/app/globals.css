@@ -768,13 +768,29 @@ input[type="radio"] {
   display: grid;
   gap: var(--s2);
   width: 100%;
-  max-width: 620px;
+  max-width: 760px;
 }
 
+/* С 640px поля встают в строку и переносятся, когда фильтров много.
+   Кнопка не сжимается уже своей подписи */
 @media (min-width: 640px) {
   .kjar-searchbar {
-    grid-template-columns: minmax(0, 1fr) auto auto;
+    display: flex;
+    flex-wrap: wrap;
     align-items: end;
+  }
+
+  .kjar-searchbar > * {
+    flex: 1 1 160px;
+  }
+
+  .kjar-searchbar > .kjar-input {
+    flex: 2 1 240px;
+  }
+
+  .kjar-searchbar > .kjar-button {
+    flex: 0 0 auto;
+    min-width: 140px;
   }
 }
 

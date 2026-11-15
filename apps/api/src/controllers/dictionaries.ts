@@ -4,6 +4,7 @@ import { db } from "../db/index.js";
 import { dictionaries } from "@kjar/db";
 import { createError } from "../middlewares/errorHandler.js";
 import type { AuthRequest } from "../middlewares/auth.js";
+import { capitalizeFirst } from "../utils/capitalize.js";
 
 // Наборы, которые сайт и админка обязаны знать. Группа за пределами списка
 // означает опечатку, а не новый справочник: добавление идёт через код,
@@ -145,7 +146,7 @@ export async function createDictionaryEntry(req: AuthRequest, res: Response) {
       .values({
         group: data.group,
         code: data.code,
-        label: data.label,
+        label: capitalizeFirst(data.label),
         sortOrder: data.sortOrder ?? 0,
         isActive: data.isActive ?? true
       })
@@ -186,7 +187,7 @@ export async function updateDictionaryEntry(req: AuthRequest, res: Response) {
     const [updated] = await db
       .update(dictionaries)
       .set({
-        ...(data.label !== undefined && { label: data.label }),
+        ...(data.label !== undefined && { label: capitalizeFirst(data.label) }),
         ...(data.sortOrder !== undefined && { sortOrder: data.sortOrder }),
         ...(data.isActive !== undefined && { isActive: data.isActive }),
         updatedAt: new Date()
