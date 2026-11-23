@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useDictionary } from "@/lib/useDictionaries";
+import { speciesMeters } from "@/lib/character";
 
 // Лист кьяра целиком лежит в stats_json: схему БД для этого трогать не нужно.
 // Паспортные поля отделены от характеристик, потому что на карте и в профиле
@@ -18,6 +19,7 @@ type Row = { id: number; label: string; value: string };
 
 type CharacterSheetEditorProps = {
   value: Record<string, unknown> | null | undefined;
+  species?: string | null;
   onChange: (next: Record<string, unknown>) => void;
 };
 
@@ -41,6 +43,7 @@ function splitStats(source: Record<string, unknown> | null | undefined) {
 
 export default function CharacterSheetEditor({
   value,
+  species,
   onChange
 }: CharacterSheetEditorProps) {
   const initial = useMemo(() => splitStats(value), []);
@@ -51,6 +54,10 @@ export default function CharacterSheetEditor({
   const { entries: genders } = useDictionary("character_gender");
   const [passport, setPassport] = useState<Record<string, string>>(initial.passport);
   const [rows, setRows] = useState<Row[]>(initial.rows);
+
+  const rules = speciesMeters(species);
+  const maxFor = (label: string) =>
+    rules.find((rule) => rule.label.toLowerCase() === label.trim().toLowerCase())?.max;
 
   // Наружу уходит один объект: пустые поля в него не попадают
   const emit = (nextPassport: Record<string, string>, nextRows: Row[]) => {
@@ -72,6 +79,23 @@ export default function CharacterSheetEditor({
 
     onChange(result);
   };
+
+  // При выборе Древних у новой карты сразу появляются три родовые шкалы
+  const lastSpecies = useRef(species || "");
+  useEffect(() => {
+    if (!species || species === lastSpecies.current) return;
+    lastSpecies.current = species;
+    if (rows.length > 0) return;
+
+    const added = speciesMeters(species).map((rule) => ({
+      id: nextRowId++,
+      label: rule.label,
+      value: "0"
+    }));
+    if (added.length === 0) return;
+    setRows(added);
+    emit(passport, added);
+  }, [species]);
 
   const updatePassport = (key: string, raw: string) => {
     const next = { ...passport, [key]: raw };
@@ -99,10 +123,13 @@ export default function CharacterSheetEditor({
 
   const addBaseMeters = () => {
     const known = rows.map((row) => row.label.trim().toLowerCase());
-    const added = baseMeters
-      .map((meter) => meter.label)
-      .filter((label) => !known.includes(label.toLowerCase()))
-      .map((label) => ({ id: nextRowId++, label, value: "5" }));
+    const source =
+      rules.length > 0
+        ? rules.map((rule) => ({ label: rule.label, value: "0" }))
+        : baseMeters.map((meter) => ({ label: meter.label, value: "5" }));
+    const added = source
+      .filter((meter) => !known.includes(meter.label.toLowerCase()))
+      .map((meter) => ({ id: nextRowId++, label: meter.label, value: meter.value }));
     const next = [...rows, ...added];
     setRows(next);
     emit(passport, next);
@@ -158,8 +185,9 @@ export default function CharacterSheetEditor({
       <div className="kjar-sheet__block">
         <h2 className="kjar-sheet__title">Характеристики</h2>
         <p className="kjar-sheet__note">
-          Числа от 1 до 10 рисуются шкалами под именем кьяра. Текстовое значение
-          показывается отдельной парой «подпись и значение».
+          {rules.length > 0
+            ? "У Древних родовые шкалы: Первородная Власть и Господство до 500, Накопленная Власть до 300."
+            : "Числа от 1 до 10 рисуются шкалами под именем кьяра. Текстовое значение показывается отдельной парой «подпись и значение»."}
         </p>
 
         {rows.length > 0 && (
@@ -178,7 +206,9 @@ export default function CharacterSheetEditor({
                   className="kjar-input"
                   type="text"
                   value={row.value}
-                  placeholder="1–10"
+                  placeholder={
+                    maxFor(row.label) ? `0–${maxFor(row.label)}` : "1–10"
+                  }
                   aria-label={`Значение: ${row.label || "характеристика"}`}
                   onChange={(event) => updateRow(row.id, { value: event.target.value })}
                 />
@@ -199,7 +229,7 @@ export default function CharacterSheetEditor({
             Добавить характеристику
           </button>
           <button className="kjar-button kjar-button--ghost" type="button" onClick={addBaseMeters}>
-            Взять базовый набор
+            {rules.length > 0 ? "Взять шкалы рода" : "Взять базовый набор"}
           </button>
         </div>
       </div>

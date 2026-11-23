@@ -17,6 +17,27 @@ export type Meter = {
   max: number;
 };
 
+export type SpeciesMeter = {
+  label: string;
+  max: number;
+};
+
+/**
+ * У Древних своя шкала власти, не десятки. Пределы взяты из статьи:
+ * Первородная Власть и Господство до 500, Накопленная Власть до 300.
+ */
+export const SPECIES_METERS: Record<string, SpeciesMeter[]> = {
+  Древние: [
+    { label: "Первородная Власть", max: 500 },
+    { label: "Господство", max: 500 },
+    { label: "Накопленная Власть", max: 300 }
+  ]
+};
+
+export function speciesMeters(species?: string | null): SpeciesMeter[] {
+  return species ? SPECIES_METERS[species] || [] : [];
+}
+
 export function statsObject(raw: unknown): Record<string, unknown> | null {
   return raw && typeof raw === "object" && !Array.isArray(raw)
     ? (raw as Record<string, unknown>)
@@ -79,13 +100,40 @@ function meterRank(label: string, order: string[]): number {
 // Числовые характеристики рисуются шкалами, всё остальное парами ключ-значение
 export function characterMeters(
   character: CardSource,
-  baseMeters?: Array<{ code: string }>
+  baseMeters?: Array<{ code: string }>,
+  species?: string | null
 ): Meter[] {
-  const order = (baseMeters || []).map((meter) => meter.code.trim().toLowerCase());
+  // Родовые шкалы не должны протекать на карты других родов
+  const foreignRules = Object.entries(SPECIES_METERS)
+    .filter(([code]) => code !== species)
+    .flatMap(([, meters]) => meters.map((meter) => meter.label.toLowerCase()));
 
   const entries = Object.entries(stats(character)).filter(
-    ([key, value]) => !isServiceKey(key) && asNumber(value) !== null
+    ([key, value]) =>
+      !isServiceKey(key) &&
+      asNumber(value) !== null &&
+      !foreignRules.includes(key.trim().toLowerCase())
   );
+
+  // У Древних показываем только три родовые шкалы с их пределами
+  const rules = speciesMeters(species);
+  if (rules.length > 0) {
+    return rules
+      .map((rule) => {
+        const entry = entries.find(
+          ([key]) => key.trim().toLowerCase() === rule.label.toLowerCase()
+        );
+        if (!entry) return null;
+        return {
+          label: rule.label,
+          value: Math.min(asNumber(entry[1]) as number, rule.max),
+          max: rule.max
+        };
+      })
+      .filter((meter): meter is Meter => meter !== null);
+  }
+
+  const order = (baseMeters || []).map((meter) => meter.code.trim().toLowerCase());
 
   // Шкала сайта от 1 до 10. Старые карты хранили 0–100: такие числа
   // переводим в десятки, чтобы полоски не упирались в край.

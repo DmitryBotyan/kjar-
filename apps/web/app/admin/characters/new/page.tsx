@@ -16,6 +16,7 @@ export default function NewCharacterPage() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [portraitUrl, setPortraitUrl] = useState<string | null>(null);
   const [stats, setStats] = useState<Record<string, unknown>>({});
+  const [species, setSpecies] = useState("");
   const [card, setCard] = useState<CharacterCardValue | null>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -118,7 +119,7 @@ export default function NewCharacterPage() {
             />
           </div>
 
-          <CharacterSpeciesFields />
+          <CharacterSpeciesFields onSpeciesChange={setSpecies} />
 
           <div className="kjar-field">
             <label className="kjar-label" htmlFor="field">
@@ -181,7 +182,7 @@ export default function NewCharacterPage() {
 
           <CharacterCardEditor onChange={setCard} />
 
-          <CharacterSheetEditor value={null} onChange={setStats} />
+          <CharacterSheetEditor value={null} species={species} onChange={setStats} />
 
           <div className="kjar-form-actions">
             <button

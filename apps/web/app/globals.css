@@ -832,12 +832,14 @@ input[type="radio"] {
 }
 
 .kjar-brand {
+  display: flex;
+  align-items: center;
   margin-right: auto;
   min-width: 0;
 }
 
 .kjar-brand__link {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: var(--s2);
   text-decoration: none;

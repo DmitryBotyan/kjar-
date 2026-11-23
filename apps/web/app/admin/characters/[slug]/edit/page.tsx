@@ -24,6 +24,7 @@ export default function EditCharacterPage() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [portraitUrl, setPortraitUrl] = useState<string | null>(null);
   const [stats, setStats] = useState<Record<string, unknown> | null>(null);
+  const [species, setSpecies] = useState("");
   const [card, setCard] = useState<CharacterCardValue | null>(null);
 
   useEffect(() => {
@@ -36,6 +37,7 @@ export default function EditCharacterPage() {
     fetchFromAdminApi<Character>(`/characters/${slug}`)
       .then((response) => {
         setCharacter(response.data);
+        setSpecies(response.data.species || "");
         setImageUrl(response.data.image || null);
         setPortraitUrl(response.data.portrait || null);
         setStats(
@@ -183,6 +185,7 @@ export default function EditCharacterPage() {
             defaultSpecies={character.species}
             defaultType={character.role}
             defaultSubtype={character.subtype}
+            onSpeciesChange={setSpecies}
           />
 
           <div className="kjar-field">
@@ -259,7 +262,11 @@ export default function EditCharacterPage() {
 
           <CharacterCardEditor initial={character} onChange={setCard} />
 
-          <CharacterSheetEditor value={statsObject(character.statsJson)} onChange={setStats} />
+          <CharacterSheetEditor
+            value={statsObject(character.statsJson)}
+            species={species}
+            onChange={setStats}
+          />
 
           <div className="kjar-form-actions">
             <button

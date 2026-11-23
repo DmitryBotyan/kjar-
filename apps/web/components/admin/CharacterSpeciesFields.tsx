@@ -22,6 +22,7 @@ type CharacterSpeciesFieldsProps = {
   defaultSpecies?: string | null;
   defaultType?: string | null;
   defaultSubtype?: string | null;
+  onSpeciesChange?: (species: string) => void;
 };
 
 /**
@@ -32,7 +33,8 @@ type CharacterSpeciesFieldsProps = {
 export default function CharacterSpeciesFields({
   defaultSpecies,
   defaultType,
-  defaultSubtype
+  defaultSubtype,
+  onSpeciesChange
 }: CharacterSpeciesFieldsProps) {
   const { entries: species } = useDictionary("character_species");
   const { entries: drevnieSubtypes } = useDictionary("character_subtype_drevnie");
@@ -90,6 +92,7 @@ export default function CharacterSpeciesFields({
 
   const changeSpecies = (value: string) => {
     setSpeciesCode(value);
+    onSpeciesChange?.(value);
 
     const allowedTypes = value ? entriesFor(value) : allTypes;
     if (type && !allowedTypes.some((entry) => entry.code === type)) {

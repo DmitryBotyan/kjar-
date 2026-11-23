@@ -52,7 +52,11 @@ export default async function CharacterPage({ params }: CharacterPageProps) {
     )
   );
 
-  const meters = characterMeters(character, dictionaries?.character_meter);
+  const meters = characterMeters(
+    character,
+    dictionaries?.character_meter,
+    character.species
+  );
   const gender = characterGender(character);
   const kin: Kin[] = Array.isArray(character.kin) ? character.kin : [];
   const offspring = kin.filter((row) => row.kind === OFFSPRING);
