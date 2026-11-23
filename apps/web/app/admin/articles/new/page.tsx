@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { fetchFromAdminApi } from "@/lib/admin-api";
 import DictionarySelect from "@/components/admin/DictionarySelect";
+import MarkdownField from "@/components/admin/MarkdownField";
 import type { Category } from "@/lib/types";
 
 export default function NewArticlePage() {
@@ -153,7 +154,7 @@ export default function NewArticlePage() {
 
           <div className="kjar-field">
             <label className="kjar-label" htmlFor="lead">
-              Лид
+              Краткое вступление
             </label>
             <textarea
               className="kjar-textarea"
@@ -163,17 +164,13 @@ export default function NewArticlePage() {
             />
           </div>
 
-          <div className="kjar-field">
-            <label className="kjar-label" htmlFor="contentMd">
-              Содержание (Markdown)
-            </label>
-            <textarea
-              className="kjar-textarea"
-              id="contentMd"
-              name="contentMd"
-              rows={10}
-            />
-          </div>
+          <MarkdownField
+            id="contentMd"
+            name="contentMd"
+            label="Содержание статьи"
+            folder="articles"
+            rows={16}
+          />
 
           <div className="kjar-field">
             <label className="kjar-label" htmlFor="categoryId">

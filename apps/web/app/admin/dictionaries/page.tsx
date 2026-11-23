@@ -11,18 +11,38 @@ import type { DictionaryEntry, DictionaryGroup } from "@/lib/dictionaries";
 const GROUPS: Array<{ key: DictionaryGroup; title: string; note: string }> = [
   {
     key: "character_role",
-    title: "Типы кьяров",
-    note: "Фильтр «Тип» и сводка на странице колоды"
+    title: "Типы дюнгаров",
+    note: "Фильтр «Тип» для рода Дюнгары"
+  },
+  {
+    key: "character_type_drevnie",
+    title: "Типы древних",
+    note: "Вельд, Колосс, Ас"
+  },
+  {
+    key: "character_type_drevnerogie",
+    title: "Типы древнерогих",
+    note: "Глас Корней, Хвойный Хранитель, Старейшина"
+  },
+  {
+    key: "character_type_bjorngviny",
+    title: "Типы бьёрнгвинов",
+    note: "Жесткое, Мягкое"
+  },
+  {
+    key: "character_type_kompanony",
+    title: "Типы компаньонов",
+    note: "Харг, Отам, Кветан, Особый"
+  },
+  {
+    key: "character_subtype",
+    title: "Подтипы кьяров",
+    note: "Сокровенный, Миражный"
   },
   {
     key: "character_gender",
     title: "Пол кьяров",
     note: "Фильтр «Пол» в колоде и выбор в листе персонажа"
-  },
-  {
-    key: "character_status",
-    title: "Статусы кьяров",
-    note: "Чип в карточке и фильтр колоды"
   },
   {
     key: "character_species",

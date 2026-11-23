@@ -3,6 +3,15 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+// В Markdown нет подчёркивания и выделения. Пишем их короткими метками
+// ++текст++ и ==текст==, а перед разбором превращаем в ссылки с особым
+// адресом: так внутри работает любой другой Markdown, включая курсив.
+function withRichMarks(content: string) {
+  return content
+    .replace(/\+\+([^\n]+?)\+\+/g, "[$1](kjar-underline)")
+    .replace(/==([^\n]+?)==/g, "[$1](kjar-highlight)");
+}
+
 interface MarkdownRendererProps {
   content: string;
   className?: string;
@@ -47,9 +56,19 @@ export default function MarkdownRenderer({
           li: ({ node, ...props }) => (
             <li className="kjar-markdown__li" {...props} />
           ),
-          a: ({ node, ...props }) => (
-            <a className="kjar-markdown__a" {...props} />
-          ),
+          a: ({ node, href, children, ...props }) => {
+            if (href === "kjar-underline") {
+              return <u className="kjar-markdown__u">{children}</u>;
+            }
+            if (href === "kjar-highlight") {
+              return <mark className="kjar-markdown__mark">{children}</mark>;
+            }
+            return (
+              <a className="kjar-markdown__a" href={href} {...props}>
+                {children}
+              </a>
+            );
+          },
           img: ({ node, ...props }) => (
             <img className="kjar-markdown__img" {...props} />
           ),
@@ -93,7 +112,7 @@ export default function MarkdownRenderer({
           ),
         }}
       >
-        {content}
+        {withRichMarks(content)}
       </ReactMarkdown>
     </div>
   );

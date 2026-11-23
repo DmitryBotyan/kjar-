@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { createHmac, timingSafeEqual } from "node:crypto";
 
 // В Docker используем имя сервиса 'api', на хосте - localhost
 const getApiBaseUrl = () => {
@@ -51,12 +52,78 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   return proxyRequest(request, context.params.path, "PATCH");
 }
 
+// Сайт закрыт общим паролем, поэтому и API не отвечает посторонним.
+// Серверные компоненты ходят на 127.0.0.1 и проходят без окна пароля,
+// админка присылает Bearer, остальным нужен Basic с тем же паролем.
+function validBearer(token: string): boolean {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) return false;
+
+  const [header, payload, signature] = token.split(".");
+  if (!header || !payload || !signature) return false;
+
+  const expected = createHmac("sha256", secret)
+    .update(`${header}.${payload}`)
+    .digest("base64url");
+  const left = Buffer.from(signature);
+  const right = Buffer.from(expected);
+  if (left.length !== right.length || !timingSafeEqual(left, right)) return false;
+
+  try {
+    const body = JSON.parse(
+      Buffer.from(payload.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString()
+    ) as { exp?: number };
+    return !body.exp || body.exp * 1000 > Date.now();
+  } catch {
+    return false;
+  }
+}
+
+function isAllowedRequest(request: NextRequest): boolean {
+  const password = process.env.SITE_PASSWORD;
+  if (!password) return true;
+
+  if (request.headers.get("x-kjar-internal") === password) return true;
+
+  const auth = request.headers.get("authorization") || "";
+  if (auth.startsWith("Bearer ") && validBearer(auth.slice(7))) return true;
+
+  if (auth.startsWith("Basic ")) {
+    try {
+      const decoded = atob(auth.slice(6));
+      return decoded.slice(decoded.indexOf(":") + 1) === password;
+    } catch {
+      return false;
+    }
+  }
+
+  return false;
+}
+
 async function proxyRequest(
   request: NextRequest,
   pathSegments: string[],
   method: string
 ) {
   try {
+    if (!isAllowedRequest(request)) {
+      return NextResponse.json(
+        {
+          error: {
+            code: "SITE_LOCKED",
+            message: "Сайт закрыт паролем",
+            details: {},
+          },
+        },
+        {
+          status: 401,
+          headers: {
+            "WWW-Authenticate": 'Basic realm="KJAR", charset="UTF-8"',
+          },
+        }
+      );
+    }
+
     let apiPath = pathSegments.join("/");
     if (apiPath.startsWith("api/v1/")) {
       apiPath = apiPath.substring(7);

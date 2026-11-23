@@ -5,12 +5,15 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import ImageUpload from "@/components/admin/ImageUpload";
 import DictionarySelect from "@/components/admin/DictionarySelect";
+import MarkdownField from "@/components/admin/MarkdownField";
+import StagesEditor, { type StageDraft } from "@/components/admin/StagesEditor";
 
 export default function NewEventPage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [stages, setStages] = useState<StageDraft[]>([]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -37,6 +40,15 @@ export default function NewEventPage() {
       eventFormat: formData.get("eventFormat") || null,
       participationType: formData.get("participationType") || null,
       eventAudience: formData.get("eventAudience") || null,
+      eventStages: stages.map((stage) => ({
+        stage: stage.stage,
+        title: stage.title,
+        content: stage.content,
+        tasks: stage.tasks
+          .split("\n")
+          .map((line) => line.trim())
+          .filter(Boolean)
+      })),
     };
 
     const token = localStorage.getItem("authToken");
@@ -130,21 +142,19 @@ export default function NewEventPage() {
           <ImageUpload
             value={imageUrl || undefined}
             onChange={setImageUrl}
-            folder="posts"
+            folder="events"
             label="Изображение события"
           />
 
-          <div className="kjar-field">
-            <label className="kjar-label" htmlFor="content">
-              Содержание (Markdown)
-            </label>
-            <textarea
-              className="kjar-textarea"
-              id="content"
-              name="content"
-              rows={10}
-            />
-          </div>
+          <MarkdownField
+            id="content"
+            name="content"
+            label="Начало ивента"
+            folder="events"
+            rows={12}
+          />
+
+          <StagesEditor value={stages} onChange={setStages} />
 
           <div className="kjar-field">
             <label className="kjar-label" htmlFor="publishedAt">

@@ -102,7 +102,7 @@ export default function CharacterSheetEditor({
     const added = baseMeters
       .map((meter) => meter.label)
       .filter((label) => !known.includes(label.toLowerCase()))
-      .map((label) => ({ id: nextRowId++, label, value: "50" }));
+      .map((label) => ({ id: nextRowId++, label, value: "5" }));
     const next = [...rows, ...added];
     setRows(next);
     emit(passport, next);
@@ -158,8 +158,8 @@ export default function CharacterSheetEditor({
       <div className="kjar-sheet__block">
         <h2 className="kjar-sheet__title">Характеристики</h2>
         <p className="kjar-sheet__note">
-          Числа от 0 до 100 рисуются шкалами под референсом. Текстовое значение
-          показывается строкой рядом с полем деятельности.
+          Числа от 1 до 10 рисуются шкалами под именем кьяра. Текстовое значение
+          показывается отдельной парой «подпись и значение».
         </p>
 
         {rows.length > 0 && (
@@ -178,7 +178,7 @@ export default function CharacterSheetEditor({
                   className="kjar-input"
                   type="text"
                   value={row.value}
-                  placeholder="0–100"
+                  placeholder="1–10"
                   aria-label={`Значение: ${row.label || "характеристика"}`}
                   onChange={(event) => updateRow(row.id, { value: event.target.value })}
                 />

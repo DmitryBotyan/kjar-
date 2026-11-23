@@ -7,7 +7,8 @@ import { fetchFromAdminApi } from "@/lib/admin-api";
 import ImageUpload from "@/components/admin/ImageUpload";
 import CharacterSheetEditor from "@/components/admin/CharacterSheetEditor";
 import CharacterCardEditor, { type CharacterCardValue } from "@/components/admin/CharacterCardEditor";
-import DictionarySelect from "@/components/admin/DictionarySelect";
+import CharacterSpeciesFields from "@/components/admin/CharacterSpeciesFields";
+import MarkdownField from "@/components/admin/MarkdownField";
 import { statsObject } from "@/lib/character";
 import type { Character } from "@/lib/types";
 
@@ -64,11 +65,14 @@ export default function EditCharacterPage() {
       name: formData.get("name"),
       slug: formData.get("slug"),
       role: formData.get("role"),
-      status: formData.get("status"),
+      subtype: formData.get("subtype") || null,
       field: formData.get("field") || null,
       species: formData.get("species") || null,
       summary: formData.get("summary") || null,
       description: formData.get("description") || null,
+      startedAt: formData.get("startedAt")
+        ? new Date(String(formData.get("startedAt"))).toISOString()
+        : null,
       image: imageUrl,
       portrait: portraitUrl,
       statsJson: stats && Object.keys(stats).length > 0 ? stats : null,
@@ -175,44 +179,11 @@ export default function EditCharacterPage() {
             />
           </div>
 
-          <div className="kjar-field">
-            <label className="kjar-label" htmlFor="role">
-              Роль *
-            </label>
-            <DictionarySelect
-              group="character_role"
-              id="role"
-              name="role"
-              required
-              defaultValue={character.role}
-            />
-          </div>
-
-          <div className="kjar-field">
-            <label className="kjar-label" htmlFor="status">
-              Статус *
-            </label>
-            <DictionarySelect
-              group="character_status"
-              id="status"
-              name="status"
-              required
-              defaultValue={character.status}
-            />
-          </div>
-
-          <div className="kjar-field">
-            <label className="kjar-label" htmlFor="species">
-              Род
-            </label>
-            <DictionarySelect
-              group="character_species"
-              id="species"
-              name="species"
-              emptyLabel="Не указан"
-              defaultValue={character.species}
-            />
-          </div>
+          <CharacterSpeciesFields
+            defaultSpecies={character.species}
+            defaultType={character.role}
+            defaultSubtype={character.subtype}
+          />
 
           <div className="kjar-field">
             <label className="kjar-label" htmlFor="field">
@@ -228,6 +199,27 @@ export default function EditCharacterPage() {
           </div>
 
           <div className="kjar-field">
+            <label className="kjar-label" htmlFor="startedAt">
+              В игре с
+            </label>
+            <input
+              className="kjar-input"
+              id="startedAt"
+              name="startedAt"
+              type="date"
+              defaultValue={
+                character.startedAt
+                  ? new Date(character.startedAt).toISOString().slice(0, 10)
+                  : ""
+              }
+            />
+            <p className="kjar-admin__note">
+              Пусто: дата берётся из дня создания карточки. Дата обновления
+              проставляется сама при сохранении.
+            </p>
+          </div>
+
+          <div className="kjar-field">
             <label className="kjar-label" htmlFor="summary">
               Краткое описание
             </label>
@@ -240,18 +232,14 @@ export default function EditCharacterPage() {
             />
           </div>
 
-          <div className="kjar-field">
-            <label className="kjar-label" htmlFor="description">
-              Описание
-            </label>
-            <textarea
-              className="kjar-textarea"
-              id="description"
-              name="description"
-              rows={10}
-              defaultValue={character.description || ""}
-            />
-          </div>
+          <MarkdownField
+            id="description"
+            name="description"
+            label="Описание"
+            folder="characters"
+            rows={12}
+            defaultValue={character.description}
+          />
 
           <ImageUpload
             value={imageUrl || undefined}

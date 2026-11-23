@@ -5,7 +5,7 @@ import { characters, characterTags, characterWorks, normans, tags } from "@kjar/
 import { createError } from "../middlewares/errorHandler.js";
 import type { AuthRequest } from "../middlewares/auth.js";
 import { slugify } from "../utils/slug.js";
-import { assertDictionaryValue } from "./dictionaries.js";
+import { assertCharacterTypeValue, assertDictionaryValue } from "./dictionaries.js";
 
 type Kin = { kind: string; name: string; slug: string | null };
 type Achievement = { title: string; note: string | null };
@@ -56,6 +56,7 @@ type CharacterInput = {
   slug?: string;
   role?: string;
   status?: string;
+  subtype?: string | null;
   field?: string | null;
   species?: string | null;
   summary?: string | null;
@@ -68,6 +69,7 @@ type CharacterInput = {
   favorite?: string | null;
   features?: string | null;
   achievementsJson?: unknown;
+  startedAt?: string | null;
 };
 
 // Поля карточки, которые пишутся одинаково при создании и правке
@@ -121,7 +123,7 @@ export async function getCharactersSummary(_req: Request, res: Response) {
 
 export async function getCharacters(req: Request, res: Response) {
   try {
-    const { role, status, species, gender, tag, search, tjorn, limit = "50", offset = "0" } = req.query;
+    const { role, status, species, subtype, gender, tag, search, tjorn, limit = "50", offset = "0" } = req.query;
 
     const conditions = [];
 
@@ -135,6 +137,10 @@ export async function getCharacters(req: Request, res: Response) {
 
     if (species) {
       conditions.push(eq(characters.species, species as string));
+    }
+
+    if (subtype) {
+      conditions.push(eq(characters.subtype, subtype as string));
     }
 
     // Пол лежит в листе персонажа под ключом «пол» в любом регистре, как и
@@ -156,6 +162,7 @@ export async function getCharacters(req: Request, res: Response) {
           ilike(characters.name, `%${search}%`),
           ilike(characters.summary, `%${search}%`),
           ilike(characters.role, `%${search}%`),
+          ilike(characters.subtype, `%${search}%`),
           // Пол ищется по листу персонажа целиком
           sql`${characters.statsJson}::text ilike ${`%${search}%`}`
         )!
@@ -194,6 +201,7 @@ export async function getCharacters(req: Request, res: Response) {
         name: characters.name,
         role: characters.role,
         status: characters.status,
+        subtype: characters.subtype,
         field: characters.field,
         species: characters.species,
         summary: characters.summary,
@@ -201,6 +209,7 @@ export async function getCharacters(req: Request, res: Response) {
         statsJson: characters.statsJson,
         image: characters.image,
         portrait: characters.portrait,
+        startedAt: characters.startedAt,
         createdAt: characters.createdAt,
         updatedAt: characters.updatedAt
       })
@@ -325,11 +334,12 @@ export async function createCharacter(req: AuthRequest, res: Response) {
 
     const data = req.body as CharacterInput & { name: string; role: string; status: string };
 
-    // Роль, статус и род берутся из справочников: иначе на сайте появляются
+    // Тип, статус и род берутся из справочников: иначе на сайте появляются
     // фильтры-двойники вроде «Активна» и «Активен» из разных форм.
-    await assertDictionaryValue("character_role", data.role, "Роль кьяра");
+    await assertCharacterTypeValue(data.role, "Тип кьяра");
     await assertDictionaryValue("character_status", data.status, "Статус кьяра");
     await assertDictionaryValue("character_species", data.species, "Род кьяра");
+    await assertDictionaryValue("character_subtype", data.subtype, "Подтип кьяра");
     await assertNorman(data.tjornId);
 
     let slug = data.slug || slugify(data.name);
@@ -364,7 +374,8 @@ export async function createCharacter(req: AuthRequest, res: Response) {
         slug,
         name: data.name,
         role: data.role,
-        status: data.status,
+        status: data.status || "",
+        subtype: data.subtype || null,
         field: data.field || null,
         species: data.species || null,
         summary: data.summary || null,
@@ -372,6 +383,7 @@ export async function createCharacter(req: AuthRequest, res: Response) {
         image: data.image || null,
         portrait: data.portrait || null,
         statsJson: data.statsJson || null,
+        startedAt: data.startedAt ? new Date(data.startedAt) : null,
         ...cardFields(data),
         createdBy: req.user.id,
       })
@@ -404,9 +416,10 @@ export async function updateCharacter(req: AuthRequest, res: Response) {
     const { slug } = req.params as { slug: string };
     const data = req.body as CharacterInput;
 
-    await assertDictionaryValue("character_role", data.role, "Роль кьяра");
+    await assertCharacterTypeValue(data.role, "Тип кьяра");
     await assertDictionaryValue("character_status", data.status, "Статус кьяра");
     await assertDictionaryValue("character_species", data.species, "Род кьяра");
+    await assertDictionaryValue("character_subtype", data.subtype, "Подтип кьяра");
     await assertNorman(data.tjornId);
 
     const [existing] = await db
@@ -468,6 +481,7 @@ export async function updateCharacter(req: AuthRequest, res: Response) {
         ...(newSlug !== existing.slug && { slug: newSlug }),
         ...(data.role !== undefined && { role: data.role }),
         ...(data.status !== undefined && { status: data.status }),
+        ...(data.subtype !== undefined && { subtype: data.subtype || null }),
         ...(data.field !== undefined && { field: data.field }),
         ...(data.species !== undefined && { species: data.species }),
         ...(data.summary !== undefined && { summary: data.summary }),
@@ -475,6 +489,9 @@ export async function updateCharacter(req: AuthRequest, res: Response) {
         ...(data.image !== undefined && { image: data.image }),
         ...(data.portrait !== undefined && { portrait: data.portrait }),
         ...(data.statsJson !== undefined && { statsJson: data.statsJson }),
+        ...(data.startedAt !== undefined && {
+          startedAt: data.startedAt ? new Date(data.startedAt) : null
+        }),
         ...cardFields(data),
         updatedAt: new Date(),
       })

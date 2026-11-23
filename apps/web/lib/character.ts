@@ -87,13 +87,16 @@ export function characterMeters(
     ([key, value]) => !isServiceKey(key) && asNumber(value) !== null
   );
 
-  const values = entries.map(([, value]) => asNumber(value) as number);
-  const max = Math.max(100, ...values, 1);
+  // Шкала сайта от 1 до 10. Старые карты хранили 0–100: такие числа
+  // переводим в десятки, чтобы полоски не упирались в край.
+  const max = 10;
+  const toTen = (value: number) =>
+    value > max ? Math.max(1, Math.min(max, Math.round(value / 10))) : value;
 
   return entries
     .map(([key, value]) => ({
       label: humanize(key),
-      value: asNumber(value) as number,
+      value: toTen(asNumber(value) as number),
       max
     }))
     .sort((a, b) => {

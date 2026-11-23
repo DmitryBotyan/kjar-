@@ -21,6 +21,8 @@ const createPostSchema = z.object({
   participationType: z.string().optional().nullable(),
   eventAudience: z.string().max(100).optional().nullable(),
   section: z.string().max(100).optional().nullable(),
+  eventStages: z.any().optional().nullable(),
+  eventConfig: z.any().optional().nullable(),
 });
 
 const updatePostSchema = z.object({
@@ -36,6 +38,8 @@ const updatePostSchema = z.object({
   participationType: z.string().optional().nullable(),
   eventAudience: z.string().max(100).optional().nullable(),
   section: z.string().max(100).optional().nullable(),
+  eventStages: z.any().optional().nullable(),
+  eventConfig: z.any().optional().nullable(),
 });
 
 router.get("/", asyncHandler(getPosts));

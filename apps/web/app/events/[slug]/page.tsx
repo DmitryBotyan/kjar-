@@ -62,8 +62,24 @@ export default async function EventPage({ params }: EventPageProps) {
     return (
       <div className="kjar-event__stages">
         <h2 className="kjar-event__stages-title">Этапы ивента</h2>
+        <nav className="kjar-event__stage-nav" aria-label="Этапы">
+          <ol>
+            {stages.map((stage, index) => (
+              <li key={`nav-${index}`}>
+                <a href={`#stage-${stage.stage || index + 1}`}>
+                  {stage.stage || index + 1}
+                  {stage.title ? `. ${stage.title}` : ""}
+                </a>
+              </li>
+            ))}
+          </ol>
+        </nav>
         {stages.map((stage, index) => (
-          <div key={index} className="kjar-event__stage">
+          <div
+            key={index}
+            className="kjar-event__stage"
+            id={`stage-${stage.stage || index + 1}`}
+          >
             <h3 className="kjar-event__stage-title">
               Этап {stage.stage || index + 1}
               {stage.title ? `: ${stage.title}` : ""}

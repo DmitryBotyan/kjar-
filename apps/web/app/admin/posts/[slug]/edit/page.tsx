@@ -7,6 +7,7 @@ import { fetchFromAdminApi } from "@/lib/admin-api";
 import ImageUpload from "@/components/admin/ImageUpload";
 import PollManager from "@/components/admin/PollManager";
 import DictionarySelect from "@/components/admin/DictionarySelect";
+import MarkdownField from "@/components/admin/MarkdownField";
 import type { Post } from "@/lib/types";
 
 export default function EditPostPage() {
@@ -194,18 +195,14 @@ export default function EditPostPage() {
             label="Изображение поста"
           />
 
-          <div className="kjar-field">
-            <label className="kjar-label" htmlFor="content">
-              Содержание (Markdown)
-            </label>
-            <textarea
-              className="kjar-textarea"
-              id="content"
-              name="content"
-              rows={10}
-              defaultValue={post.content || ""}
-            />
-          </div>
+          <MarkdownField
+            id="content"
+            name="content"
+            label="Содержание поста"
+            folder="posts"
+            rows={14}
+            defaultValue={post.content}
+          />
 
           <div className="kjar-field">
             <label className="kjar-label" htmlFor="publishedAt">

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import CharacterCard from "@/components/CharacterCard";
 import { getCharacters, getDeckSummary, getTags } from "@/lib/api";
-import { getDictionarySet } from "@/lib/dictionaries";
+import { CHARACTER_TYPE_GROUPS, getDictionarySet } from "@/lib/dictionaries";
 import type { DictionaryEntry } from "@/lib/dictionaries";
 import type { Character, DeckSummary, Tag } from "@/lib/types";
 
@@ -10,20 +10,13 @@ interface CharactersPageProps {
     role?: string;
     gender?: string;
     species?: string;
+    subtype?: string;
     tag?: string;
     search?: string;
     limit?: string;
     offset?: string;
   };
 }
-
-// Сводка называет типы во множественном числе, справочник хранит единственное
-const PLURAL: Record<string, string> = {
-  Обычный: "Обычные",
-  Особый: "Особые",
-  Лорный: "Лорные",
-  Ас: "Асы"
-};
 
 function deckHref(params: Record<string, string | undefined>) {
   const query = new URLSearchParams();
@@ -37,42 +30,63 @@ function deckHref(params: Record<string, string | undefined>) {
 export default async function CharactersPage({ searchParams }: CharactersPageProps) {
   let characters: Character[] = [];
   let tags: Tag[] = [];
-  let roles: DictionaryEntry[] = [];
   let genders: DictionaryEntry[] = [];
   let species: DictionaryEntry[] = [];
+  let subtypes: DictionaryEntry[] = [];
   let summary: DeckSummary = { total: 0, byRole: [], bySpecies: [] };
   let total = 0;
+  let dictionariesSet: Awaited<ReturnType<typeof getDictionarySet>> | null = null;
+  let summaryLoaded = false;
+  let loadError = false;
 
-  try {
-    const [charactersRes, tagsRes, dictionaries, summaryRes] = await Promise.all([
+  // Запросы независимы: если один endpoint не ответил, колода и альбомы
+  // должны остаться, а не превращаться в пустую страницу.
+  const [charactersResult, tagsResult, dictionariesResult, summaryResult] =
+    await Promise.allSettled([
       getCharacters({
         role: searchParams.role,
         gender: searchParams.gender,
         species: searchParams.species,
+        subtype: searchParams.subtype,
         tag: searchParams.tag,
         search: searchParams.search,
         limit: searchParams.limit ? parseInt(searchParams.limit) : 50,
         offset: searchParams.offset ? parseInt(searchParams.offset) : 0
       }),
-      getTags().catch(() => ({ data: [] })),
+      getTags(),
       getDictionarySet(),
-      getDeckSummary().catch(() => null)
+      getDeckSummary()
     ]);
 
-    characters = charactersRes.data || [];
-    total = charactersRes.total || characters.length;
-    tags = tagsRes.data || [];
-    if (summaryRes?.data) summary = summaryRes.data;
-
-    roles = dictionaries.character_role;
-    genders = dictionaries.character_gender;
-    species = dictionaries.character_species;
-  } catch (error) {
-    console.error("Error loading characters:", error);
+  if (charactersResult.status === "fulfilled") {
+    characters = charactersResult.value.data || [];
+    total = charactersResult.value.total || characters.length;
+  } else {
+    loadError = true;
+    console.error("Error loading characters:", charactersResult.reason);
   }
 
-  const countFor = (code: string) =>
-    summary.byRole.find((row) => row.code === code)?.count || 0;
+  if (tagsResult.status === "fulfilled") {
+    tags = tagsResult.value.data || [];
+  } else {
+    console.error("Error loading tags:", tagsResult.reason);
+  }
+
+  if (dictionariesResult.status === "fulfilled") {
+    dictionariesSet = dictionariesResult.value;
+    genders = dictionariesSet.character_gender;
+    species = dictionariesSet.character_species;
+    subtypes = dictionariesSet.character_subtype;
+  } else {
+    console.error("Error loading dictionaries:", dictionariesResult.reason);
+  }
+
+  if (summaryResult.status === "fulfilled") {
+    summary = summaryResult.value.data;
+    summaryLoaded = true;
+  } else {
+    console.error("Error loading deck summary:", summaryResult.reason);
+  }
 
   // Альбомы по родам: пустой род тоже показан, чтобы было видно, что он есть
   const albums = species.map((item) => {
@@ -88,24 +102,10 @@ export default async function CharactersPage({ searchParams }: CharactersPagePro
           <header className="kjar-characters__header">
             <h1 className="kjar-characters__title">Колода кьяров</h1>
             <p className="kjar-characters__lead">
-              Перечень кьяров — место, где вы можете узнать и познакомиться
+              Перечень кьяров: место, где вы можете узнать и познакомиться
               с каждым зверем, обретшим свое место в Хеймсвальде.
             </p>
-            {roles.length > 0 && (
-              <div className="kjar-characters__chips">
-                {roles.map((role) => (
-                  <Link
-                    className={`kjar-chip${
-                      searchParams.role === role.code ? " kjar-chip--accent" : ""
-                    }`}
-                    key={role.code}
-                    href={deckHref({ role: role.code })}
-                  >
-                    {role.label}
-                  </Link>
-                ))}
-              </div>
-            )}
+
           </header>
 
           <div className="kjar-characters__summary" aria-label="Сводка колоды">
@@ -113,12 +113,16 @@ export default async function CharactersPage({ searchParams }: CharactersPagePro
             <ul className="kjar-characters__summary-list">
               <li className="kjar-characters__summary-item">
                 <span>Всего кьяров</span>
-                <span className="kjar-characters__summary-value">{summary.total}</span>
+                <span className="kjar-characters__summary-value">
+                  {summaryLoaded ? summary.total : "нет данных"}
+                </span>
               </li>
-              {roles.map((role) => (
-                <li className="kjar-characters__summary-item" key={role.code}>
-                  <span>{PLURAL[role.code] || role.label}</span>
-                  <span className="kjar-characters__summary-value">{countFor(role.code)}</span>
+              {species.map((item) => (
+                <li className="kjar-characters__summary-item" key={item.code}>
+                  <span>{item.label}</span>
+                  <span className="kjar-characters__summary-value">
+                    {summary.bySpecies.find((row) => row.code === item.code)?.count || 0}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -175,7 +179,7 @@ export default async function CharactersPage({ searchParams }: CharactersPagePro
                   name="search"
                   type="search"
                   defaultValue={searchParams.search || ""}
-                  placeholder="Имя, пол, тип"
+                  placeholder="Имя, тип, подтип"
                 />
               </div>
 
@@ -195,9 +199,37 @@ export default async function CharactersPage({ searchParams }: CharactersPagePro
                   defaultValue={searchParams.role || ""}
                 >
                   <option value="">Все типы</option>
-                  {roles.map((role) => (
-                    <option key={role.code} value={role.code}>
-                      {role.label}
+                  {species.map((item) => {
+                    const group = CHARACTER_TYPE_GROUPS[item.code];
+                    const types = group && dictionariesSet ? dictionariesSet[group] : [];
+                    if (!types || types.length === 0) return null;
+                    return (
+                      <optgroup label={item.label} key={item.code}>
+                        {types.map((entry) => (
+                          <option key={`${item.code}-${entry.code}`} value={entry.code}>
+                            {entry.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                    );
+                  })}
+                </select>
+              </div>
+
+              <div className="kjar-field">
+                <label className="kjar-label" htmlFor="character-subtype">
+                  Подтип
+                </label>
+                <select
+                  className="kjar-select"
+                  id="character-subtype"
+                  name="subtype"
+                  defaultValue={searchParams.subtype || ""}
+                >
+                  <option value="">Любой</option>
+                  {subtypes.map((item) => (
+                    <option key={item.code} value={item.code}>
+                      {item.label}
                     </option>
                   ))}
                 </select>
@@ -266,7 +298,17 @@ export default async function CharactersPage({ searchParams }: CharactersPagePro
               </div>
             </div>
 
-            {characters.length === 0 ? (
+            {loadError ? (
+              <div className="kjar-empty">
+                <p>
+                  Колода не загрузилась: сервер не ответил. Обновите страницу
+                  через минуту, карты не потеряны.
+                </p>
+                <Link className="kjar-button kjar-button--ghost" href="/characters">
+                  Попробовать снова
+                </Link>
+              </div>
+            ) : characters.length === 0 ? (
               <div className="kjar-empty">
                 <p>По этим фильтрам карт нет. Попробуйте снять часть условий.</p>
               </div>

@@ -22,9 +22,11 @@ export default async function LoreIndexPage({ searchParams }: LoreIndexPageProps
   let tags: Tag[] = [];
   let eras: DictionaryEntry[] = [];
   let total = 0;
+  let loadError = false;
 
-  try {
-    const [articlesRes, categoriesRes, tagsRes, erasRes] = await Promise.all([
+  // Категории и теги не должны исчезать из-за сбоя списка статей, и наоборот.
+  const [articlesResult, categoriesResult, tagsResult, erasResult] =
+    await Promise.allSettled([
       getArticles({
         category: searchParams.category,
         tag: searchParams.tag,
@@ -33,19 +35,36 @@ export default async function LoreIndexPage({ searchParams }: LoreIndexPageProps
         offset: searchParams.offset ? parseInt(searchParams.offset) : 0,
         status: "published"
       }),
-      getCategories().catch(() => ({ data: [] })),
-      getTags().catch(() => ({ data: [] })),
+      getCategories(),
+      getTags(),
       // Эпоха больше не фильтр, но у старых статей она ещё подписана в карточке
-      getDictionary("article_era").catch(() => [])
+      getDictionary("article_era")
     ]);
 
-    articles = articlesRes.data || [];
-    total = articlesRes.total || articles.length;
-    categories = categoriesRes.data || [];
-    tags = tagsRes.data || [];
-    eras = erasRes;
-  } catch (error) {
-    console.error("[Lore Page] Error loading articles:", error);
+  if (articlesResult.status === "fulfilled") {
+    articles = articlesResult.value.data || [];
+    total = articlesResult.value.total || articles.length;
+  } else {
+    loadError = true;
+    console.error("[Lore Page] Error loading articles:", articlesResult.reason);
+  }
+
+  if (categoriesResult.status === "fulfilled") {
+    categories = categoriesResult.value.data || [];
+  } else {
+    console.error("[Lore Page] Error loading categories:", categoriesResult.reason);
+  }
+
+  if (tagsResult.status === "fulfilled") {
+    tags = tagsResult.value.data || [];
+  } else {
+    console.error("[Lore Page] Error loading tags:", tagsResult.reason);
+  }
+
+  if (erasResult.status === "fulfilled") {
+    eras = erasResult.value;
+  } else {
+    console.error("[Lore Page] Error loading eras:", erasResult.reason);
   }
 
   return (
@@ -156,7 +175,17 @@ export default async function LoreIndexPage({ searchParams }: LoreIndexPageProps
               </div>
             </div>
 
-            {articles.length === 0 ? (
+            {loadError ? (
+              <div className="kjar-lore__empty">
+                <p>
+                  Статьи не загрузились: сервер не ответил. Обновите страницу
+                  через минуту, материалы не потеряны.
+                </p>
+                <Link className="kjar-button kjar-button--ghost" href="/lore">
+                  Попробовать снова
+                </Link>
+              </div>
+            ) : articles.length === 0 ? (
               <div className="kjar-lore__empty">
                 <p>
                   Ничего не нашлось. Смените фильтры или проверьте, что статьи

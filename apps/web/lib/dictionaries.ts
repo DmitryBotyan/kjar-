@@ -9,9 +9,14 @@ export const DICTIONARY_GROUPS = [
   "character_role",
   "character_status",
   "character_species",
+  "character_subtype",
   "character_meter",
   "character_kinship",
   "character_gender",
+  "character_type_drevnie",
+  "character_type_drevnerogie",
+  "character_type_bjorngviny",
+  "character_type_kompanony",
   "event_type",
   "event_format",
   "participation_type",
@@ -86,4 +91,30 @@ export function labelFor(
 
 export function codes(entries: DictionaryEntry[] | undefined): string[] {
   return (entries || []).map((entry) => entry.code);
+}
+
+/**
+ * У каждого рода свой набор типов. Дюнгары пользуются группой character_role:
+ * она была единственной до разделения, и на ней лежат уже заведённые карты.
+ */
+export const CHARACTER_TYPE_GROUPS: Record<string, DictionaryGroup> = {
+  Древние: "character_type_drevnie",
+  Древнерогие: "character_type_drevnerogie",
+  Бьёрнгвины: "character_type_bjorngviny",
+  Дюнгары: "character_role",
+  Компаньоны: "character_type_kompanony"
+};
+
+/** Подпись типа: код может лежать в любой группе типов, а не только в role. */
+export function typeLabel(
+  set: DictionarySet | null | undefined,
+  code?: string | null
+): string | null {
+  if (!code) return null;
+  if (!set) return code;
+  for (const group of Object.values(CHARACTER_TYPE_GROUPS)) {
+    const match = set[group].find((entry) => entry.code === code);
+    if (match) return match.label;
+  }
+  return code;
 }

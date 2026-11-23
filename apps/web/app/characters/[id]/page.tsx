@@ -10,7 +10,7 @@ import { DeckPlate } from "@/components/CharacterCard";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import CharacterHero from "@/components/CharacterHero";
 import CharacterWorks from "@/components/CharacterWorks";
-import { getDictionarySet, labelFor } from "@/lib/dictionaries";
+import { getDictionarySet, labelFor, typeLabel } from "@/lib/dictionaries";
 import type { Character } from "@/lib/types";
 
 type CharacterPageProps = {
@@ -121,12 +121,12 @@ export default async function CharacterPage({ params }: CharacterPageProps) {
             <div className="kjar-chips">
               {character.role && (
                 <span className="kjar-chip kjar-chip--accent">
-                  {labelFor(dictionaries?.character_role, character.role)}
+                  {typeLabel(dictionaries, character.role)}
                 </span>
               )}
-              {character.status && (
+              {character.subtype && (
                 <span className="kjar-chip">
-                  {labelFor(dictionaries?.character_status, character.status)}
+                  {labelFor(dictionaries?.character_subtype, character.subtype)}
                 </span>
               )}
               {character.species && (
@@ -163,6 +163,43 @@ export default async function CharacterPage({ params }: CharacterPageProps) {
               </ul>
             )}
 
+            {meters.length > 0 && (
+              <section className="kjar-character__sheet" aria-label="Характеристики">
+                <h2 className="kjar-section__title">Характеристики</h2>
+                <ul className="kjar-character__meters">
+                  {meters.map((meter) => (
+                    <li className="kjar-meter" key={meter.label}>
+                      <div className="kjar-meter__head">
+                        <span className="kjar-meter__label">{meter.label}</span>
+                        <span className="kjar-meter__value">
+                          {meter.value}
+                          <span className="kjar-meter__max"> / {meter.max}</span>
+                        </span>
+                      </div>
+                      <div
+                        className="kjar-meter__track"
+                        role="meter"
+                        aria-label={meter.label}
+                        aria-valuenow={meter.value}
+                        aria-valuemin={0}
+                        aria-valuemax={meter.max}
+                      >
+                        <span
+                          className="kjar-meter__fill"
+                          style={{
+                            width: `${Math.max(
+                              2,
+                              Math.min(100, (meter.value / meter.max) * 100)
+                            )}%`
+                          }}
+                        />
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
             {character.tags && character.tags.length > 0 && (
               <div className="kjar-chips">
                 {character.tags.map((tag) => (
@@ -178,42 +215,6 @@ export default async function CharacterPage({ params }: CharacterPageProps) {
             )}
           </CharacterHero>
 
-          {meters.length > 0 && (
-            <section className="kjar-character__sheet" aria-label="Характеристики">
-              <h2 className="kjar-section__title">Характеристики</h2>
-              <ul className="kjar-character__meters">
-                {meters.map((meter) => (
-                  <li className="kjar-meter" key={meter.label}>
-                    <div className="kjar-meter__head">
-                      <span className="kjar-meter__label">{meter.label}</span>
-                      <span className="kjar-meter__value">
-                        {meter.value}
-                        <span className="kjar-meter__max"> / {meter.max}</span>
-                      </span>
-                    </div>
-                    <div
-                      className="kjar-meter__track"
-                      role="meter"
-                      aria-label={meter.label}
-                      aria-valuenow={meter.value}
-                      aria-valuemin={0}
-                      aria-valuemax={meter.max}
-                    >
-                      <span
-                        className="kjar-meter__fill"
-                        style={{
-                          width: `${Math.max(
-                            2,
-                            Math.min(100, (meter.value / meter.max) * 100)
-                          )}%`
-                        }}
-                      />
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
         </div>
       </section>
 
@@ -281,10 +282,14 @@ export default async function CharacterPage({ params }: CharacterPageProps) {
             <div className="kjar-article__card">
               <h2 className="kjar-article__card-title">Карточка</h2>
               <dl className="kjar-article__facts">
-                {character.createdAt && (
+                {(character.startedAt || character.createdAt) && (
                   <div>
                     <dt>В игре с</dt>
-                    <dd>{new Date(character.createdAt).toLocaleDateString("ru-RU")}</dd>
+                    <dd>
+                      {new Date(
+                        character.startedAt || character.createdAt
+                      ).toLocaleDateString("ru-RU")}
+                    </dd>
                   </div>
                 )}
                 {character.updatedAt && (

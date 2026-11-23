@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Plus, Trash2 } from "lucide-react";
 import { useDictionary } from "@/lib/useDictionaries";
+import MarkdownField from "./MarkdownField";
 
 type Kin = { kind: string; name: string; slug: string | null };
 type Achievement = { title: string; note: string | null };
@@ -132,18 +133,15 @@ export default function CharacterCardEditor({ initial, onChange }: CharacterCard
         />
       </div>
 
-      <div className="kjar-field">
-        <label className="kjar-label" htmlFor="features">
-          Особенности и примечания
-        </label>
-        <textarea
-          className="kjar-textarea"
-          id="features"
-          rows={5}
-          value={features}
-          onChange={(event) => setFeatures(event.target.value)}
-        />
-      </div>
+      <MarkdownField
+        id="features"
+        name="features"
+        label="Особенности и примечания"
+        folder="characters"
+        rows={6}
+        value={features}
+        onChange={setFeatures}
+      />
 
       <div className="kjar-sheet">
         <div className="kjar-sheet__block">

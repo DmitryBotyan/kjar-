@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { dictionaries } from "@kjar/db";
 import { createError } from "../middlewares/errorHandler.js";
@@ -13,9 +13,14 @@ export const DICTIONARY_GROUPS = [
   "character_role",
   "character_status",
   "character_species",
+  "character_subtype",
   "character_meter",
   "character_kinship",
   "character_gender",
+  "character_type_drevnie",
+  "character_type_drevnerogie",
+  "character_type_bjorngviny",
+  "character_type_kompanony",
   "event_type",
   "event_format",
   "participation_type",
@@ -34,6 +39,43 @@ export type DictionaryGroup = (typeof DICTIONARY_GROUPS)[number];
 
 export function isDictionaryGroup(value: string): value is DictionaryGroup {
   return (DICTIONARY_GROUPS as readonly string[]).includes(value);
+}
+
+// Типы кьяра разложены по родам. При проверке смотрим все группы сразу:
+// карту можно перенести в другой род, не потеряв уже выбранный тип.
+const CHARACTER_TYPE_GROUPS = [
+  "character_role",
+  "character_type_drevnie",
+  "character_type_drevnerogie",
+  "character_type_bjorngviny",
+  "character_type_kompanony"
+] as const;
+
+export async function assertCharacterTypeValue(
+  value: string | null | undefined,
+  fieldLabel: string
+): Promise<void> {
+  if (value === undefined || value === null || value === "") return;
+
+  const [row] = await db
+    .select({ id: dictionaries.id })
+    .from(dictionaries)
+    .where(
+      and(
+        inArray(dictionaries.group, [...CHARACTER_TYPE_GROUPS]),
+        eq(dictionaries.code, value)
+      )
+    )
+    .limit(1);
+
+  if (!row) {
+    throw createError(
+      `Значение «${value}» отсутствует в справочнике «${fieldLabel}»`,
+      400,
+      "DICTIONARY_VALUE_UNKNOWN",
+      { value }
+    );
+  }
 }
 
 /**

@@ -80,6 +80,9 @@ services:
       NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
       # Адрес редакции на странице контактов
       CONTACT_EMAIL: ${CONTACT_EMAIL:-hello@kjar.ru}
+      SITE_PASSWORD: ${SITE_PASSWORD:-}
+      # Тот же секрет, что у api: прокси проверяет Bearer админки
+      JWT_SECRET: ${JWT_SECRET}
     depends_on:
       api:
         condition: service_healthy

@@ -127,8 +127,10 @@ export const characters = pgTable(
     id: serial("id").primaryKey(),
     slug: varchar("slug", { length: 255 }).notNull().unique(),
     name: varchar("name", { length: 200 }).notNull(),
-    role: varchar("role", { length: 50 }).notNull(), // Игрок, НПС
+    role: varchar("role", { length: 50 }).notNull(), // Тип из справочника character_role и типов родов
     status: varchar("status", { length: 50 }).notNull(), // Активна, На посту, В пути, В тени, Активен
+    // Уточнение типа: Сокровенный, Миражный
+    subtype: varchar("subtype", { length: 100 }),
     field: varchar("field", { length: 200 }),
     species: varchar("species", { length: 100 }), // Человек, Страж, Полукровка, Северный род
     summary: text("summary"),
@@ -144,6 +146,8 @@ export const characters = pgTable(
     image: varchar("image", { length: 500 }),
     // Вертикальная картинка для колоды, image остаётся картинкой страницы
     portrait: varchar("portrait", { length: 500 }),
+    // Пусто: «в игре с» берётся из created_at
+    startedAt: timestamp("started_at"),
     createdBy: integer("created_by").references(() => users.id),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow()

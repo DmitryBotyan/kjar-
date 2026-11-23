@@ -88,6 +88,7 @@ export interface Character {
   name: string;
   role: string;
   status: string;
+  subtype: string | null;
   field: string | null;
   species: string | null;
   summary: string | null;
@@ -97,6 +98,7 @@ export interface Character {
   portrait: string | null;
   createdAt: string;
   updatedAt: string;
+  startedAt?: string | null;
   // Только в ответе на одного кьяра
   description?: string | null;
   relationsJson?: Kin[];

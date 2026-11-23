@@ -169,6 +169,8 @@ export async function createPost(req: AuthRequest, res: Response) {
       participationType?: string | null;
       eventAudience?: string | null;
       section?: string | null;
+      eventStages?: unknown;
+      eventConfig?: unknown;
     };
 
     // Тип, формат и участие ивента берутся из справочников, чтобы подписи в админке
@@ -224,6 +226,8 @@ export async function createPost(req: AuthRequest, res: Response) {
         participationType: data.participationType || null,
         eventAudience: data.eventAudience || null,
         section: data.section || null,
+        eventStages: data.eventStages || null,
+        eventConfig: data.eventConfig || null,
         createdBy: req.user.id,
       })
       .returning();
@@ -266,6 +270,8 @@ export async function updatePost(req: AuthRequest, res: Response) {
       participationType?: string | null;
       eventAudience?: string | null;
       section?: string | null;
+      eventStages?: unknown;
+      eventConfig?: unknown;
     };
 
     await assertDictionaryValue("event_type", data.eventType, "Тип ивента");
@@ -345,6 +351,8 @@ export async function updatePost(req: AuthRequest, res: Response) {
         ...(data.participationType !== undefined && { participationType: data.participationType }),
         ...(data.eventAudience !== undefined && { eventAudience: data.eventAudience || null }),
         ...(data.section !== undefined && { section: data.section || null }),
+        ...(data.eventStages !== undefined && { eventStages: data.eventStages }),
+        ...(data.eventConfig !== undefined && { eventConfig: data.eventConfig }),
         updatedAt: new Date(),
       })
       .where(eq(posts.id, existing.id))

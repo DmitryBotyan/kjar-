@@ -121,10 +121,10 @@ export default function AdminCharactersPage() {
                 <th>ID</th>
                 <th>Имя</th>
                 <th>Slug</th>
-                <th>Роль</th>
-                <th>Вид</th>
-                <th>Статус</th>
-                <th>Создано</th>
+                <th>Тип</th>
+                <th>Род</th>
+                <th>Подтип</th>
+                <th>В игре с</th>
                 <th>Действия</th>
               </tr>
             </thead>
@@ -136,8 +136,12 @@ export default function AdminCharactersPage() {
                   <td>{character.slug}</td>
                   <td>{character.role || "-"}</td>
                   <td>{character.species || "-"}</td>
-                  <td>{character.status || "-"}</td>
-                  <td>{new Date(character.createdAt).toLocaleDateString("ru-RU")}</td>
+                  <td>{character.subtype || "-"}</td>
+                  <td>
+                    {new Date(character.startedAt || character.createdAt).toLocaleDateString(
+                      "ru-RU"
+                    )}
+                  </td>
                   <td>
                     <div className="kjar-admin__actions">
                       <Link href={`/admin/characters/${character.slug}/edit`} className="kjar-admin__action-link">

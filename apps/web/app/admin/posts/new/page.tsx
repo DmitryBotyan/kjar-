@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import ImageUpload from "@/components/admin/ImageUpload";
 import DictionarySelect from "@/components/admin/DictionarySelect";
+import MarkdownField from "@/components/admin/MarkdownField";
 
 export default function NewPostPage() {
   const router = useRouter();
@@ -136,17 +137,13 @@ export default function NewPostPage() {
             label="Изображение поста"
           />
 
-          <div className="kjar-field">
-            <label className="kjar-label" htmlFor="content">
-              Содержание (Markdown)
-            </label>
-            <textarea
-              className="kjar-textarea"
-              id="content"
-              name="content"
-              rows={10}
-            />
-          </div>
+          <MarkdownField
+            id="content"
+            name="content"
+            label="Содержание поста"
+            folder="posts"
+            rows={14}
+          />
 
           <div className="kjar-field">
             <label className="kjar-label" htmlFor="publishedAt">

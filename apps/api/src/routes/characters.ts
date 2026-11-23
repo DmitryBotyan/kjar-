@@ -16,7 +16,8 @@ const createCharacterSchema = z.object({
   name: z.string().min(1),
   slug: z.string().min(1).optional(),
   role: z.string().min(1),
-  status: z.string().min(1),
+  status: z.string().optional(),
+  subtype: z.string().max(100).optional().nullable(),
   field: z.string().optional().nullable(),
   species: z.string().optional().nullable(),
   summary: z.string().optional().nullable(),
@@ -29,6 +30,7 @@ const createCharacterSchema = z.object({
   favorite: z.string().max(300).optional().nullable(),
   features: z.string().optional().nullable(),
   achievementsJson: z.any().optional(),
+  startedAt: z.string().datetime().optional().nullable(),
 });
 
 const updateCharacterSchema = z.object({
@@ -36,6 +38,7 @@ const updateCharacterSchema = z.object({
   slug: z.string().min(1).optional(),
   role: z.string().optional(),
   status: z.string().optional(),
+  subtype: z.string().max(100).optional().nullable(),
   field: z.string().optional().nullable(),
   species: z.string().optional().nullable(),
   summary: z.string().optional().nullable(),
@@ -48,6 +51,7 @@ const updateCharacterSchema = z.object({
   favorite: z.string().max(300).optional().nullable(),
   features: z.string().optional().nullable(),
   achievementsJson: z.any().optional(),
+  startedAt: z.string().datetime().optional().nullable(),
 });
 
 router.get("/", asyncHandler(getCharacters));

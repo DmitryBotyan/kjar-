@@ -7,6 +7,8 @@ import { fetchFromAdminApi } from "@/lib/admin-api";
 import ImageUpload from "@/components/admin/ImageUpload";
 import PollManager from "@/components/admin/PollManager";
 import DictionarySelect from "@/components/admin/DictionarySelect";
+import MarkdownField from "@/components/admin/MarkdownField";
+import StagesEditor, { type StageDraft } from "@/components/admin/StagesEditor";
 import type { Post } from "@/lib/types";
 
 export default function EditEventPage() {
@@ -19,6 +21,7 @@ export default function EditEventPage() {
   const [error, setError] = useState<string | null>(null);
   const [event, setEvent] = useState<Post | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [stages, setStages] = useState<StageDraft[]>([]);
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
@@ -31,6 +34,14 @@ export default function EditEventPage() {
       .then((response) => {
         setEvent(response.data);
         setImageUrl(response.data.image || null);
+        setStages(
+          (response.data.eventStages || []).map((stage, index) => ({
+            stage: stage.stage || index + 1,
+            title: stage.title || "",
+            content: stage.content || "",
+            tasks: Array.isArray(stage.tasks) ? stage.tasks.join("\n") : ""
+          }))
+        );
       })
       .catch((e) => {
         if (e.message.includes("401") || e.message.includes("UNAUTHORIZED")) {
@@ -71,6 +82,15 @@ export default function EditEventPage() {
       eventFormat: formData.get("eventFormat") || null,
       participationType: formData.get("participationType") || null,
       eventAudience: formData.get("eventAudience") || null,
+      eventStages: stages.map((stage) => ({
+        stage: stage.stage,
+        title: stage.title,
+        content: stage.content,
+        tasks: stage.tasks
+          .split("\n")
+          .map((line) => line.trim())
+          .filter(Boolean)
+      })),
     };
 
     const token = localStorage.getItem("authToken");
@@ -193,18 +213,16 @@ export default function EditEventPage() {
             label="Изображение ивента"
           />
 
-          <div className="kjar-field">
-            <label className="kjar-label" htmlFor="content">
-              Содержание (Markdown)
-            </label>
-            <textarea
-              className="kjar-textarea"
-              id="content"
-              name="content"
-              rows={10}
-              defaultValue={event.content || ""}
-            />
-          </div>
+          <MarkdownField
+            id="content"
+            name="content"
+            label="Начало ивента"
+            folder="events"
+            rows={12}
+            defaultValue={event.content}
+          />
+
+          <StagesEditor value={stages} onChange={setStages} />
 
           <div className="kjar-field">
             <label className="kjar-label" htmlFor="publishedAt">

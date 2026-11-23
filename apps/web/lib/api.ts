@@ -37,6 +37,11 @@ export async function fetchFromApi<T>(
     ...options,
     headers: {
       "Content-Type": "application/json",
+      // Серверные компоненты не проходят окно пароля браузера. Отдельный
+      // заголовок говорит прокси, что запрос внутренний.
+      ...(process.env.SITE_PASSWORD
+        ? { "x-kjar-internal": process.env.SITE_PASSWORD }
+        : {}),
       ...options.headers,
     },
     cache: options.cache || "no-store",
@@ -97,6 +102,7 @@ export async function getCharacters(params?: {
   role?: string;
   status?: string;
   species?: string;
+  subtype?: string;
   gender?: string;
   tag?: string;
   search?: string;

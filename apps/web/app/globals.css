@@ -22,8 +22,8 @@
   --body: var(--font-crimson), var(--font-alegreya), Georgia, serif;
   --ui: var(--font-typewriter), var(--font-alegreya), "Courier New", monospace;
 
-  /* Кегль: 14 / 18 / 22 / 30 / 46 / 72 */
-  --t-xs: 0.875rem;
+  /* Кегль: 16 / 18 / 22 / 30 / 46 / 72 */
+  --t-xs: 1rem;
   --t-s: 1.125rem;
   --t-m: 1.375rem;
   --t-l: 1.875rem;
@@ -1766,7 +1766,7 @@ input[type="radio"] {
 
 .kjar-deck-card__num {
   color: var(--ash);
-  font-size: var(--t-xs);
+  font-size: var(--t-s);
   letter-spacing: 0.06em;
   line-height: 1.2;
 }
@@ -2235,7 +2235,7 @@ input[type="radio"] {
 .kjar-contacts__list dt,
 .kjar-event__info-list dt {
   color: var(--ash);
-  font-size: var(--t-xs);
+  font-size: var(--t-s);
 }
 
 .kjar-article__facts dd,
@@ -2243,7 +2243,7 @@ input[type="radio"] {
 .kjar-event__info-list dd {
   margin: 0;
   color: var(--ink);
-  font-size: var(--t-xs);
+  font-size: var(--t-s);
   line-height: 1.5;
 }
 
@@ -2995,11 +2995,27 @@ button.kjar-character__reference[disabled] {
   font-size: var(--t-m);
 }
 
+/* Перенос строки в тексте статьи сохраняется как есть, а первый абзац
+   начинается с красной строки: так заказчице удобнее набирать длинные сказы. */
 .kjar-markdown__p,
 .kjar-article__content-md p,
 .kjar-event__content-md p,
 .kjar-event__stage-content p {
   margin: 0 0 var(--s3);
+  text-indent: 1.5em;
+  white-space: pre-line;
+}
+
+.kjar-markdown__u {
+  text-decoration: underline;
+  text-decoration-color: var(--moss);
+  text-underline-offset: 3px;
+}
+
+.kjar-markdown__mark {
+  background: var(--moss);
+  color: var(--ink);
+  padding: 0 var(--s1);
 }
 
 .kjar-markdown__ul,
@@ -3940,4 +3956,90 @@ button.kjar-character__reference[disabled] {
   color: var(--ash);
   line-height: 1.7;
   max-width: 60ch;
+}
+
+/* Панель разметки над полем статьи: действия вставки, не отдельные кнопки */
+.kjar-md-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s1);
+  margin-bottom: var(--s1);
+}
+
+.kjar-md-toolbar button {
+  min-height: 36px;
+  padding: var(--s1) var(--s2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-field);
+  background: var(--peat);
+  color: var(--ink);
+  font-family: var(--ui);
+  font-size: var(--t-xs);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.kjar-md-toolbar button:hover,
+.kjar-md-toolbar button:focus-visible {
+  border-color: var(--gold);
+  color: var(--gold);
+  outline: none;
+}
+
+.kjar-md-toolbar button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.kjar-textarea--prose {
+  min-height: 240px;
+  line-height: 1.6;
+}
+
+.kjar-stage-editor {
+  display: grid;
+  gap: var(--s3);
+  padding: var(--s3) 0;
+  border-top: 1px solid var(--line);
+}
+
+.kjar-stage-editor__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s2);
+}
+
+.kjar-admin__actions .kjar-admin__action-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s1);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.kjar-admin__actions .kjar-admin__action-link:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.kjar-event__stage-nav ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--s1);
+}
+
+.kjar-event__stage-nav a {
+  color: var(--gold);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.kjar-event__stage {
+  scroll-margin-top: var(--s5);
 }
