@@ -10,6 +10,7 @@ export const DICTIONARY_GROUPS = [
   "character_status",
   "character_species",
   "character_subtype",
+  "character_subtype_drevnie",
   "character_meter",
   "character_kinship",
   "character_gender",
@@ -26,7 +27,6 @@ export const DICTIONARY_GROUPS = [
   "norman_occupation",
   "norman_type",
   "norman_trait",
-  "article_era",
   "thread_category",
   "contact_request_type"
 ] as const;
@@ -104,6 +104,28 @@ export const CHARACTER_TYPE_GROUPS: Record<string, DictionaryGroup> = {
   Дюнгары: "character_role",
   Компаньоны: "character_type_kompanony"
 };
+
+/**
+ * Подтипы тоже разложены по родам: у Древних три ступени, у Дюнгаров две.
+ * Остальные роды подтипов не имеют.
+ */
+export const CHARACTER_SUBTYPE_GROUPS: Record<string, DictionaryGroup> = {
+  Древние: "character_subtype_drevnie",
+  Дюнгары: "character_subtype"
+};
+
+export function subtypeLabel(
+  set: DictionarySet | null | undefined,
+  code?: string | null
+): string | null {
+  if (!code) return null;
+  if (!set) return code;
+  for (const group of Object.values(CHARACTER_SUBTYPE_GROUPS)) {
+    const match = set[group].find((entry) => entry.code === code);
+    if (match) return match.label;
+  }
+  return code;
+}
 
 /** Подпись типа: код может лежать в любой группе типов, а не только в role. */
 export function typeLabel(

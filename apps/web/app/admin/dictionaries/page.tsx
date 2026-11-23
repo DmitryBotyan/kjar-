@@ -36,8 +36,13 @@ const GROUPS: Array<{ key: DictionaryGroup; title: string; note: string }> = [
   },
   {
     key: "character_subtype",
-    title: "Подтипы кьяров",
+    title: "Подтипы дюнгаров",
     note: "Сокровенный, Миражный"
+  },
+  {
+    key: "character_subtype_drevnie",
+    title: "Подтипы древних",
+    note: "Исконный, Сокровенный, Заповедный"
   },
   {
     key: "character_gender",
@@ -80,7 +85,6 @@ const GROUPS: Array<{ key: DictionaryGroup; title: string; note: string }> = [
   { key: "norman_occupation", title: "Род деятельности", note: "Фильтр и карточка норманна" },
   { key: "norman_type", title: "Типы норманнов", note: "Фильтр и карточка норманна" },
   { key: "norman_trait", title: "Шкалы анкеты норманна", note: "Мини-анкета, от 0 до 10" },
-  { key: "article_era", title: "Эпохи", note: "Чипы и фильтр энциклопедии" },
   {
     key: "thread_category",
     title: "Разделы обсуждений",

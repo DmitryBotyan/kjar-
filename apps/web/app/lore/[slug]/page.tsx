@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getArticleBySlug } from "@/lib/api";
-import { getDictionary, labelFor } from "@/lib/dictionaries";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import Comments from "@/components/Comments";
 import type { Article } from "@/lib/types";
@@ -12,7 +11,6 @@ type LoreArticlePageProps = {
 
 export default async function LoreArticlePage({ params }: LoreArticlePageProps) {
   let article: Article | null = null;
-  const eras = await getDictionary("article_era").catch(() => []);
 
   try {
     const response = await getArticleBySlug(params.slug);
@@ -30,8 +28,6 @@ export default async function LoreArticlePage({ params }: LoreArticlePageProps) 
     typeof article.category === "object" && article.category !== null
       ? article.category.name
       : article.category;
-
-  const eraLabel = labelFor(eras, article.era);
 
   return (
     <div className="kjar-article">
@@ -52,11 +48,6 @@ export default async function LoreArticlePage({ params }: LoreArticlePageProps) 
 
           <div className="kjar-article__meta">
             {categoryName && <span className="kjar-chip">{categoryName}</span>}
-            {eraLabel && (
-              <span className="kjar-chip kjar-chip--accent">
-                {/\bэпох/i.test(eraLabel) ? eraLabel : `${eraLabel} эпоха`}
-              </span>
-            )}
             {article.updatedAt && (
               <span className="kjar-chip">
                 обновлено {new Date(article.updatedAt).toLocaleDateString("ru-RU")}

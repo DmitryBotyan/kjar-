@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { fetchFromAdminApi } from "@/lib/admin-api";
-import DictionarySelect from "@/components/admin/DictionarySelect";
 import MarkdownField from "@/components/admin/MarkdownField";
 import type { Category } from "@/lib/types";
 
@@ -52,7 +51,6 @@ export default function NewArticlePage() {
       lead: formData.get("lead") || null,
       contentMd: formData.get("contentMd") || null,
       categoryId: formData.get("categoryId") ? Number(formData.get("categoryId")) : null,
-      era: formData.get("era") || null,
       status: formData.get("status") || "draft",
     };
 
@@ -197,17 +195,6 @@ export default function NewArticlePage() {
             </select>
           </div>
 
-          <div className="kjar-field">
-            <label className="kjar-label" htmlFor="era">
-              Эпоха
-            </label>
-            <DictionarySelect
-              group="article_era"
-              id="era"
-              name="era"
-              emptyLabel="Не указано"
-            />
-          </div>
 
           <div className="kjar-form-actions">
             <button

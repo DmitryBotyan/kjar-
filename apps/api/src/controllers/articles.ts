@@ -7,7 +7,6 @@ import type { AuthRequest } from "../middlewares/auth.js";
 import { validateQuery, paginationSchema, slugSchema } from "../middlewares/validate.js";
 import { z } from "zod";
 import { slugify } from "../utils/slug.js";
-import { assertDictionaryValue } from "./dictionaries.js";
 
 const articlesQuerySchema = paginationSchema.extend({
   category: z.string().optional(),
@@ -225,10 +224,6 @@ export async function createArticle(req: AuthRequest, res: Response) {
       status?: "draft" | "published" | "archived";
     };
     
-    // Эпоха берётся из справочника article_era. Раньше админка писала латиницей
-    // ("first"), а сид кириллицей, и на /lore одна эпоха давала два фильтра.
-    await assertDictionaryValue("article_era", data.era, "Эпоха");
-
     let slug = data.slug || slugify(data.title);
     
     const existing = await db
@@ -305,10 +300,6 @@ export async function updateArticle(req: AuthRequest, res: Response) {
       era?: string | null;
       status?: "draft" | "published" | "archived";
     };
-
-    // Эпоха берётся из справочника article_era. Раньше админка писала латиницей
-    // ("first"), а сид кириллицей, и на /lore одна эпоха давала два фильтра.
-    await assertDictionaryValue("article_era", data.era, "Эпоха");
 
     const [existing] = await db
       .select()

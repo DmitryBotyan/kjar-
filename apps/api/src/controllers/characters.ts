@@ -5,7 +5,11 @@ import { characters, characterTags, characterWorks, normans, tags } from "@kjar/
 import { createError } from "../middlewares/errorHandler.js";
 import type { AuthRequest } from "../middlewares/auth.js";
 import { slugify } from "../utils/slug.js";
-import { assertCharacterTypeValue, assertDictionaryValue } from "./dictionaries.js";
+import {
+  assertCharacterSubtypeValue,
+  assertCharacterTypeValue,
+  assertDictionaryValue
+} from "./dictionaries.js";
 
 type Kin = { kind: string; name: string; slug: string | null };
 type Achievement = { title: string; note: string | null };
@@ -339,7 +343,7 @@ export async function createCharacter(req: AuthRequest, res: Response) {
     await assertCharacterTypeValue(data.role, "Тип кьяра");
     await assertDictionaryValue("character_status", data.status, "Статус кьяра");
     await assertDictionaryValue("character_species", data.species, "Род кьяра");
-    await assertDictionaryValue("character_subtype", data.subtype, "Подтип кьяра");
+    await assertCharacterSubtypeValue(data.subtype, "Подтип кьяра");
     await assertNorman(data.tjornId);
 
     let slug = data.slug || slugify(data.name);
@@ -419,7 +423,7 @@ export async function updateCharacter(req: AuthRequest, res: Response) {
     await assertCharacterTypeValue(data.role, "Тип кьяра");
     await assertDictionaryValue("character_status", data.status, "Статус кьяра");
     await assertDictionaryValue("character_species", data.species, "Род кьяра");
-    await assertDictionaryValue("character_subtype", data.subtype, "Подтип кьяра");
+    await assertCharacterSubtypeValue(data.subtype, "Подтип кьяра");
     await assertNorman(data.tjornId);
 
     const [existing] = await db

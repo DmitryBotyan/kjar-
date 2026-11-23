@@ -1,7 +1,5 @@
 import Link from "next/link";
 import { getArticles, getCategories, getTags } from "@/lib/api";
-import { getDictionary, labelFor } from "@/lib/dictionaries";
-import type { DictionaryEntry } from "@/lib/dictionaries";
 import type { Article, Category, Tag } from "@/lib/types";
 
 interface LoreIndexPageProps {
@@ -20,12 +18,11 @@ export default async function LoreIndexPage({ searchParams }: LoreIndexPageProps
   let articles: Article[] = [];
   let categories: Category[] = [];
   let tags: Tag[] = [];
-  let eras: DictionaryEntry[] = [];
   let total = 0;
   let loadError = false;
 
   // Категории и теги не должны исчезать из-за сбоя списка статей, и наоборот.
-  const [articlesResult, categoriesResult, tagsResult, erasResult] =
+  const [articlesResult, categoriesResult, tagsResult] =
     await Promise.allSettled([
       getArticles({
         category: searchParams.category,
@@ -36,9 +33,7 @@ export default async function LoreIndexPage({ searchParams }: LoreIndexPageProps
         status: "published"
       }),
       getCategories(),
-      getTags(),
-      // Эпоха больше не фильтр, но у старых статей она ещё подписана в карточке
-      getDictionary("article_era")
+      getTags()
     ]);
 
   if (articlesResult.status === "fulfilled") {
@@ -59,12 +54,6 @@ export default async function LoreIndexPage({ searchParams }: LoreIndexPageProps
     tags = tagsResult.value.data || [];
   } else {
     console.error("[Lore Page] Error loading tags:", tagsResult.reason);
-  }
-
-  if (erasResult.status === "fulfilled") {
-    eras = erasResult.value;
-  } else {
-    console.error("[Lore Page] Error loading eras:", erasResult.reason);
   }
 
   return (
@@ -222,12 +211,6 @@ export default async function LoreIndexPage({ searchParams }: LoreIndexPageProps
                           <div>
                             <dt>Категория</dt>
                             <dd>{article.category.name}</dd>
-                          </div>
-                        )}
-                        {article.era && (
-                          <div>
-                            <dt>Эпоха</dt>
-                            <dd>{labelFor(eras, article.era)}</dd>
                           </div>
                         )}
                       </dl>

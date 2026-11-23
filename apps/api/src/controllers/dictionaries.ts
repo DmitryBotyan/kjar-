@@ -14,6 +14,7 @@ export const DICTIONARY_GROUPS = [
   "character_status",
   "character_species",
   "character_subtype",
+  "character_subtype_drevnie",
   "character_meter",
   "character_kinship",
   "character_gender",
@@ -30,7 +31,6 @@ export const DICTIONARY_GROUPS = [
   "norman_occupation",
   "norman_type",
   "norman_trait",
-  "article_era",
   "thread_category",
   "contact_request_type"
 ] as const;
@@ -50,6 +50,38 @@ const CHARACTER_TYPE_GROUPS = [
   "character_type_bjorngviny",
   "character_type_kompanony"
 ] as const;
+
+const CHARACTER_SUBTYPE_GROUPS = [
+  "character_subtype",
+  "character_subtype_drevnie"
+] as const;
+
+export async function assertCharacterSubtypeValue(
+  value: string | null | undefined,
+  fieldLabel: string
+): Promise<void> {
+  if (value === undefined || value === null || value === "") return;
+
+  const [row] = await db
+    .select({ id: dictionaries.id })
+    .from(dictionaries)
+    .where(
+      and(
+        inArray(dictionaries.group, [...CHARACTER_SUBTYPE_GROUPS]),
+        eq(dictionaries.code, value)
+      )
+    )
+    .limit(1);
+
+  if (!row) {
+    throw createError(
+      `Значение «${value}» отсутствует в справочнике «${fieldLabel}»`,
+      400,
+      "DICTIONARY_VALUE_UNKNOWN",
+      { value }
+    );
+  }
+}
 
 export async function assertCharacterTypeValue(
   value: string | null | undefined,

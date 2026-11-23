@@ -264,11 +264,6 @@ export default async function HomePage() {
                         href={`/lore/${article.slug || article.id}`}
                       >
                         <span className="kjar-row-link__title">{article.title}</span>
-                        {article.era && (
-                          <span className="kjar-row-link__meta">
-                            {labelFor(dictionaries?.article_era, article.era)}
-                          </span>
-                        )}
                       </Link>
                     </li>
                   ))}

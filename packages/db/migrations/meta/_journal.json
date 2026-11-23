@@ -99,6 +99,13 @@
       "when": 1795461344197,
       "tag": "0013_character_types_and_stages",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1795467301877,
+      "tag": "0014_subtypes_by_species",
+      "breakpoints": true
     }
   ]
 }

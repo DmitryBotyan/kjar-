@@ -10,7 +10,7 @@ import { DeckPlate } from "@/components/CharacterCard";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import CharacterHero from "@/components/CharacterHero";
 import CharacterWorks from "@/components/CharacterWorks";
-import { getDictionarySet, labelFor, typeLabel } from "@/lib/dictionaries";
+import { getDictionarySet, labelFor, subtypeLabel, typeLabel } from "@/lib/dictionaries";
 import type { Character } from "@/lib/types";
 
 type CharacterPageProps = {
@@ -126,7 +126,7 @@ export default async function CharacterPage({ params }: CharacterPageProps) {
               )}
               {character.subtype && (
                 <span className="kjar-chip">
-                  {labelFor(dictionaries?.character_subtype, character.subtype)}
+                  {subtypeLabel(dictionaries, character.subtype)}
                 </span>
               )}
               {character.species && (

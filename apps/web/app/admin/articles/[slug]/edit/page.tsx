@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { fetchFromAdminApi } from "@/lib/admin-api";
-import DictionarySelect from "@/components/admin/DictionarySelect";
 import MarkdownField from "@/components/admin/MarkdownField";
 import type { Article, Category } from "@/lib/types";
 
@@ -60,7 +59,6 @@ export default function EditArticlePage() {
       lead: formData.get("lead") || null,
       contentMd: formData.get("contentMd") || null,
       categoryId: formData.get("categoryId") ? Number(formData.get("categoryId")) : null,
-      era: formData.get("era") || null,
       status: formData.get("status") || "draft",
     };
 
@@ -224,18 +222,6 @@ export default function EditArticlePage() {
             </select>
           </div>
 
-          <div className="kjar-field">
-            <label className="kjar-label" htmlFor="era">
-              Эпоха
-            </label>
-            <DictionarySelect
-              group="article_era"
-              id="era"
-              name="era"
-              emptyLabel="Не указано"
-              defaultValue={article.era}
-            />
-          </div>
 
           <div className="kjar-form-actions">
             <button

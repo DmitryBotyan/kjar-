@@ -1,7 +1,11 @@
 import Link from "next/link";
 import CharacterCard from "@/components/CharacterCard";
 import { getCharacters, getDeckSummary, getTags } from "@/lib/api";
-import { CHARACTER_TYPE_GROUPS, getDictionarySet } from "@/lib/dictionaries";
+import {
+  CHARACTER_SUBTYPE_GROUPS,
+  CHARACTER_TYPE_GROUPS,
+  getDictionarySet
+} from "@/lib/dictionaries";
 import type { DictionaryEntry } from "@/lib/dictionaries";
 import type { Character, DeckSummary, Tag } from "@/lib/types";
 
@@ -32,7 +36,6 @@ export default async function CharactersPage({ searchParams }: CharactersPagePro
   let tags: Tag[] = [];
   let genders: DictionaryEntry[] = [];
   let species: DictionaryEntry[] = [];
-  let subtypes: DictionaryEntry[] = [];
   let summary: DeckSummary = { total: 0, byRole: [], bySpecies: [] };
   let total = 0;
   let dictionariesSet: Awaited<ReturnType<typeof getDictionarySet>> | null = null;
@@ -76,7 +79,6 @@ export default async function CharactersPage({ searchParams }: CharactersPagePro
     dictionariesSet = dictionariesResult.value;
     genders = dictionariesSet.character_gender;
     species = dictionariesSet.character_species;
-    subtypes = dictionariesSet.character_subtype;
   } else {
     console.error("Error loading dictionaries:", dictionariesResult.reason);
   }
@@ -94,6 +96,11 @@ export default async function CharactersPage({ searchParams }: CharactersPagePro
     return { ...item, count: row?.count || 0, cover: row?.cover || null };
   });
   const activeAlbum = species.find((item) => item.code === searchParams.species);
+  const subtypeGroup = searchParams.species
+    ? CHARACTER_SUBTYPE_GROUPS[searchParams.species]
+    : undefined;
+  const activeSubtypes =
+    subtypeGroup && dictionariesSet ? dictionariesSet[subtypeGroup] : [];
 
   return (
     <div className="kjar-characters">
@@ -216,24 +223,26 @@ export default async function CharactersPage({ searchParams }: CharactersPagePro
                 </select>
               </div>
 
-              <div className="kjar-field">
-                <label className="kjar-label" htmlFor="character-subtype">
-                  Подтип
-                </label>
-                <select
-                  className="kjar-select"
-                  id="character-subtype"
-                  name="subtype"
-                  defaultValue={searchParams.subtype || ""}
-                >
-                  <option value="">Любой</option>
-                  {subtypes.map((item) => (
-                    <option key={item.code} value={item.code}>
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {activeSubtypes.length > 0 && (
+                <div className="kjar-field">
+                  <label className="kjar-label" htmlFor="character-subtype">
+                    Подтип
+                  </label>
+                  <select
+                    className="kjar-select"
+                    id="character-subtype"
+                    name="subtype"
+                    defaultValue={searchParams.subtype || ""}
+                  >
+                    <option value="">Любой</option>
+                    {activeSubtypes.map((item) => (
+                      <option key={item.code} value={item.code}>
+                        {item.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div className="kjar-field">
                 <label className="kjar-label" htmlFor="character-gender">
