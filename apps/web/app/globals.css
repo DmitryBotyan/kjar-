@@ -2710,12 +2710,15 @@ button.kjar-character__reference[disabled] {
 
 .kjar-works__item {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
   gap: var(--s2);
   min-width: 0;
 }
 
 .kjar-works__image {
   display: block;
+  width: 100%;
   aspect-ratio: 1;
   overflow: hidden;
   border: 1px solid var(--line);
@@ -2737,8 +2740,11 @@ button.kjar-character__reference[disabled] {
 
 .kjar-works__caption {
   display: grid;
+  gap: var(--s1);
+  min-width: 0;
   margin: 0;
   font-size: var(--t-xs);
+  overflow-wrap: anywhere;
 }
 
 .kjar-works__title {
@@ -2747,6 +2753,17 @@ button.kjar-character__reference[disabled] {
 
 .kjar-works__author {
   color: var(--ash);
+  overflow-wrap: anywhere;
+}
+
+.kjar-works__author a {
+  color: var(--ash);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.kjar-works__author a:hover {
+  color: var(--gold);
 }
 
 .kjar-works__form {

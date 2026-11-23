@@ -17,6 +17,16 @@ type CharacterWorksProps = {
   works: Work[];
 };
 
+// Автор часто оставляет ссылку на профиль. Показываем её без протокола,
+// чтобы длинный адрес не занимал всю карточку.
+function authorLabel(value: string) {
+  return value.replace(/^https?:\/\//i, "").replace(/\/+$/, "");
+}
+
+function isLink(value: string) {
+  return /^https?:\/\//i.test(value);
+}
+
 export default function CharacterWorks({ slug, name, works }: CharacterWorksProps) {
   const [formOpen, setFormOpen] = useState(false);
   const [authorName, setAuthorName] = useState("");
@@ -126,14 +136,22 @@ export default function CharacterWorks({ slug, name, works }: CharacterWorksProp
               </a>
               <p className="kjar-works__caption">
                 {work.title && <span className="kjar-works__title">{work.title}</span>}
-                <span className="kjar-works__author">{work.authorName}</span>
+                <span className="kjar-works__author">
+                  {isLink(work.authorName) ? (
+                    <a href={work.authorName} target="_blank" rel="noreferrer">
+                      {authorLabel(work.authorName)}
+                    </a>
+                  ) : (
+                    work.authorName
+                  )}
+                </span>
               </p>
             </li>
           ))}
         </ul>
       ) : (
         <p className="kjar-section__note">
-          Здесь появятся работы, посвященные кьяру {name}. Нарисовали или написали — выкладывайте!
+          Здесь появятся работы, посвященные кьяру {name}. Рисуйте, пишите и присылайте.
         </p>
       )}
 
