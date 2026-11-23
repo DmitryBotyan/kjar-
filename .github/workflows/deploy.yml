@@ -174,10 +174,12 @@ jobs:
           ssh target "cd ${REMOTE_DIR} && ${COMPOSE} exec -T nginx nginx -s reload"
 
           echo "=== проверка ==="
+          # 401 значит, что сайт поднялся и закрыт общим паролем. Ждём
+          # именно ответ, а не 200: иначе защита валит проверку после деплоя.
           ssh target "for i in \$(seq 1 30); do
               code=\$(curl -s -o /dev/null -w '%{http_code}' http://localhost/ || true)
               echo \"попытка \$i: \$code\"
-              [ \"\$code\" = '200' ] && exit 0
+              if [ \"\$code\" = '200' ] || [ \"\$code\" = '401' ]; then exit 0; fi
               sleep 5
             done
             cd ${REMOTE_DIR} && ${COMPOSE} logs --tail=60 web api nginx
