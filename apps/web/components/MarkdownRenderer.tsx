@@ -1,5 +1,6 @@
 "use client";
 
+import { Children } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -47,6 +48,30 @@ function withLists(content: string) {
   return result.join("\n");
 }
 
+// Подпункты вида «1.1.» пишут отдельными строками без пустой строки между
+// ними. Если оставить их в одном абзаце, красная строка достаётся только
+// первому номеру, а остальные прижимаются к левому краю. Разделяем каждый
+// подпункт на свой абзац: так у него будет собственный висячий отступ.
+function withSubitems(content: string) {
+  const lines = content.split("\n");
+  const result: string[] = [];
+  let inFence = false;
+
+  for (const line of lines) {
+    if (/^```/.test(line.trim())) inFence = !inFence;
+    const subitem = !inFence && /^\s{0,3}\d+(?:\.\d+)+[.)]\s+\S/.test(line);
+
+    if (subitem) {
+      const previous = result[result.length - 1];
+      if (previous !== undefined && previous.trim() !== "") result.push("");
+    }
+
+    result.push(line);
+  }
+
+  return result.join("\n");
+}
+
 interface MarkdownRendererProps {
   content: string;
   className?: string;
@@ -79,9 +104,36 @@ export default function MarkdownRenderer({
           h6: ({ node, ...props }) => (
             <h6 className="kjar-markdown__h6" {...props} />
           ),
-          p: ({ node, ...props }) => (
-            <p className="kjar-markdown__p" {...props} />
-          ),
+          p: ({ node, children, ...props }) => {
+            const parts = Children.toArray(children);
+            const first = parts[0];
+
+            if (typeof first === "string") {
+              const subitem = first.match(/^(\d+(?:\.\d+)+[.)])\s+/);
+              if (subitem) {
+                return (
+                  <p
+                    className="kjar-markdown__p kjar-markdown__p--subitem"
+                    {...props}
+                  >
+                    <span className="kjar-markdown__subnum">
+                      {subitem[1]}
+                    </span>
+                    <span className="kjar-markdown__subbody">
+                      {first.slice(subitem[0].length)}
+                      {parts.slice(1)}
+                    </span>
+                  </p>
+                );
+              }
+            }
+
+            return (
+              <p className="kjar-markdown__p" {...props}>
+                {children}
+              </p>
+            );
+          },
           ul: ({ node, ...props }) => (
             <ul className="kjar-markdown__ul" {...props} />
           ),
@@ -147,7 +199,7 @@ export default function MarkdownRenderer({
           ),
         }}
       >
-        {withLists(withRichMarks(content))}
+        {withSubitems(withLists(withRichMarks(content)))}
       </ReactMarkdown>
     </div>
   );

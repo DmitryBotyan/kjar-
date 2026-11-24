@@ -85,7 +85,7 @@ export default function MarkdownField({
       .map((line) => {
         if (line.trim() === "") return line;
         counter += 1;
-        const clean = line.replace(/^\s*(?:\d+[.)]|[-*+])\s+/, "");
+        const clean = line.replace(/^\s*(?:\d+(?:\.\d+)*[.)]|[-*+])\s+/, "");
         return `${kind === "number" ? `${counter}. ` : "- "}${clean}`;
       })
       .join("\n");

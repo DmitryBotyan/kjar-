@@ -3066,6 +3066,40 @@ button.kjar-character__reference[disabled] {
   text-indent: 0;
 }
 
+/* Подпункты «1.1.» набраны текстом, а не списком. Держим номер и текст
+   в двух колонках, чтобы перенос строки оставался под текстом, а не под
+   номером. Это заменяет красную строку висячим отступом. */
+.kjar-markdown__p--subitem {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: 0.4em;
+  margin: var(--s1) 0;
+  padding-left: var(--s4);
+  text-indent: 0;
+}
+
+.kjar-markdown__subnum {
+  color: var(--ash);
+  font-variant-numeric: tabular-nums;
+}
+
+.kjar-markdown__subbody {
+  min-width: 0;
+}
+
+/* Внутри пункта списка подпункт уже стоит на нужном отступе */
+.kjar-markdown__li .kjar-markdown__p--subitem {
+  padding-left: 0;
+}
+
+/* После подпунктов следующий список начинается с обычного междустрочья,
+   а не прилипает к последней строке */
+.kjar-markdown__p--subitem + .kjar-markdown__ol,
+.kjar-markdown__p--subitem + .kjar-markdown__ul {
+  margin-top: var(--s3);
+}
+
 .kjar-markdown__li,
 .kjar-article__content-md li,
 .kjar-event__content-md li {
