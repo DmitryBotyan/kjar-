@@ -242,6 +242,7 @@ export default function EditCharacterPage() {
             folder="characters"
             rows={12}
             defaultValue={character.description}
+            note="Новая строка сохраняется как есть. Пустая строка начинает новый абзац."
           />
 
           <ImageUpload

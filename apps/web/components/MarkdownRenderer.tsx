@@ -12,6 +12,41 @@ function withRichMarks(content: string) {
     .replace(/==([^\n]+?)==/g, "[$1](kjar-highlight)");
 }
 
+// Нумерованный список распознаётся, только если перед ним есть пустая строка.
+// Без этого строки вида «2. ...» слипаются с абзацем и публикуются простым
+// текстом. Разделяем список и соседний текст пустыми строками.
+function withLists(content: string) {
+  const lines = content.split("\n");
+  const result: string[] = [];
+  let inNumbered = false;
+  let inFence = false;
+
+  for (const line of lines) {
+    if (/^```/.test(line.trim())) inFence = !inFence;
+    const numbered = !inFence && /^\s{0,3}\d+[.)]\s+\S/.test(line);
+
+    if (numbered && !inNumbered) {
+      const previous = result[result.length - 1];
+      if (previous !== undefined && previous.trim() !== "") result.push("");
+    }
+
+    if (
+      !numbered &&
+      inNumbered &&
+      line.trim() !== "" &&
+      !/^\s/.test(line) &&
+      !inFence
+    ) {
+      result.push("");
+    }
+
+    result.push(line);
+    inNumbered = numbered;
+  }
+
+  return result.join("\n");
+}
+
 interface MarkdownRendererProps {
   content: string;
   className?: string;
@@ -112,7 +147,7 @@ export default function MarkdownRenderer({
           ),
         }}
       >
-        {withRichMarks(content)}
+        {withLists(withRichMarks(content))}
       </ReactMarkdown>
     </div>
   );

@@ -228,7 +228,7 @@ export default async function CharacterPage({ params }: CharacterPageProps) {
             {character.description ? (
               <section className="kjar-character__section">
                 <h2 className="kjar-section__title">Описание</h2>
-                <div className="kjar-markdown">
+                <div className="kjar-markdown kjar-markdown--plain">
                   <MarkdownRenderer content={character.description} />
                 </div>
               </section>
@@ -241,7 +241,7 @@ export default async function CharacterPage({ params }: CharacterPageProps) {
             {character.features && (
               <section className="kjar-character__section">
                 <h2 className="kjar-section__title">Особенности и примечания</h2>
-                <div className="kjar-markdown">
+                <div className="kjar-markdown kjar-markdown--plain">
                   <MarkdownRenderer content={character.features} />
                 </div>
               </section>

@@ -141,6 +141,7 @@ export default function CharacterCardEditor({ initial, onChange }: CharacterCard
         rows={6}
         value={features}
         onChange={setFeatures}
+        note="Новая строка сохраняется как есть. Пустая строка начинает новый абзац."
       />
 
       <div className="kjar-sheet">

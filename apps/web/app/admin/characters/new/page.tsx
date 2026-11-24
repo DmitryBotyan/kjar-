@@ -162,6 +162,7 @@ export default function NewCharacterPage() {
             label="Описание"
             folder="characters"
             rows={12}
+            note="Новая строка сохраняется как есть. Пустая строка начинает новый абзац."
           />
 
           <ImageUpload

@@ -1,12 +1,7 @@
-import { ContactForm } from "./ContactForm";
-import { getDictionary } from "@/lib/dictionaries";
+const VK_COMMUNITY = "https://vk.ru/kjarss";
+const TELEGRAM = "https://t.me/IoannaSaint";
 
-// Адрес редакции задаётся в окружении: в разных установках он разный
-const CONTACT_EMAIL = process.env.CONTACT_EMAIL || "kjarss1@mail.ru";
-
-export default async function ContactsPage() {
-  const requestTypes = await getDictionary("contact_request_type").catch(() => []);
-
+export default function ContactsPage() {
   return (
     <div className="kjar-contacts">
       <section className="kjar-contacts__hero">
@@ -14,58 +9,43 @@ export default async function ContactsPage() {
           <header className="kjar-contacts__header">
             <h1 className="kjar-contacts__title">Связь с Большим Домом</h1>
             <p className="kjar-contacts__lead">
-              Заявки на роли, правки в правила, вопросы по ивентам и доступам. Пишите
-              коротко и по делу, так ответ придет быстрее.
+              Все вопросы задаются в личных сообщениях сообщества или в Telegram.
             </p>
           </header>
         </div>
       </section>
 
       <section className="kjar-contacts__body">
-        <div className="kjar-contacts__inner kjar-contacts__layout">
-          <aside className="kjar-contacts__info" aria-label="Контактная информация">
-            <div className="kjar-contacts__card">
-              <h2 className="kjar-contacts__card-title">Большой Дом</h2>
-              <dl className="kjar-contacts__list">
-                <div>
-                  <dt>Почта</dt>
-                  <dd>
-                    <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
-                  </dd>
-                </div>
-                <div>
-                  <dt>Время ответа</dt>
-                  <dd>1–5 рабочих дней</dd>
-                </div>
-                <div>
-                  <dt>Формат письма</dt>
-                  <dd>Тема, изложение, приложения</dd>
-                </div>
-              </dl>
-            </div>
+        <div className="kjar-contacts__inner kjar-contacts__layout kjar-contacts__layout--single">
+          <div className="kjar-form-card kjar-contacts__card--wide">
+            <p className="kjar-contacts__big">
+              Все вопросы задаются в ЛС сообщества или в Telegram.
+            </p>
+            <p className="kjar-contacts__text">
+              Форм и сбора данных на сайте нет. Напишите туда, где вам удобнее.
+            </p>
 
-            <div className="kjar-contacts__card">
-              <h2 className="kjar-contacts__card-title">С чем приходят чаще всего</h2>
-              <ul className="kjar-contacts__stack">
-                <li>Заявка на вступление в Большой Дом</li>
-                <li>Начисление Рунной Силы и других особенностей</li>
-                <li>Пояснение за определенный пункт правил</li>
-                <li>Какие особенности есть у кьяров?</li>
-              </ul>
+            <div className="kjar-contacts__links">
+              <a
+                className="kjar-contacts__link-card"
+                href={VK_COMMUNITY}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <span className="kjar-contacts__link-label">Сообщество ВКонтакте</span>
+                <span className="kjar-contacts__link-value">vk.ru/kjarss</span>
+              </a>
+              <a
+                className="kjar-contacts__link-card"
+                href={TELEGRAM}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <span className="kjar-contacts__link-label">Telegram</span>
+                <span className="kjar-contacts__link-value">IoannaSaint</span>
+              </a>
             </div>
-
-            <div className="kjar-contacts__card">
-              <h2 className="kjar-contacts__card-title">Техподдержка</h2>
-              <p className="kjar-contacts__text">
-                Если не работает вход или потерялся доступ, укажите ник, роль и ссылку
-                на профиль. Так восстановим быстрее.
-              </p>
-            </div>
-          </aside>
-
-          <section className="kjar-contacts__form" aria-label="Форма обращения">
-            <ContactForm requestTypes={requestTypes} />
-          </section>
+          </div>
         </div>
       </section>
     </div>
