@@ -3075,7 +3075,8 @@ button.kjar-character__reference[disabled] {
 .kjar-markdown__li::marker,
 .kjar-article__content-md li::marker,
 .kjar-event__content-md li::marker {
-  color: var(--line);
+  color: var(--ash);
+  font-family: var(--ui);
 }
 
 .kjar-markdown__a,

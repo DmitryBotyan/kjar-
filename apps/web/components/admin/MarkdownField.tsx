@@ -57,6 +57,47 @@ export default function MarkdownField({
     });
   };
 
+  const applyList = (kind: "number" | "bullet") => {
+    const textarea = ref.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const lineStart = value.lastIndexOf("\n", start - 1) + 1;
+    const lineEndIndex = value.indexOf("\n", end);
+    const lineEnd = lineEndIndex === -1 ? value.length : lineEndIndex;
+    const block = value.slice(lineStart, lineEnd);
+    const lines = block.split("\n");
+
+    if (block.trim() === "") {
+      const marker = kind === "number" ? "1. " : "- ";
+      const next = value.slice(0, start) + marker + value.slice(end);
+      setValue(next);
+      requestAnimationFrame(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + marker.length, start + marker.length);
+      });
+      return;
+    }
+
+    let counter = 0;
+    const nextBlock = lines
+      .map((line) => {
+        if (line.trim() === "") return line;
+        counter += 1;
+        const clean = line.replace(/^\s*(?:\d+[.)]|[-*+])\s+/, "");
+        return `${kind === "number" ? `${counter}. ` : "- "}${clean}`;
+      })
+      .join("\n");
+
+    const next = value.slice(0, lineStart) + nextBlock + value.slice(lineEnd);
+    setValue(next);
+    requestAnimationFrame(() => {
+      textarea.focus();
+      textarea.setSelectionRange(lineStart, lineStart + nextBlock.length);
+    });
+  };
+
   const addHeading = (level: 2 | 3) => {
     const textarea = ref.current;
     if (!textarea) return;
@@ -144,6 +185,22 @@ export default function MarkdownField({
         </button>
         <button type="button" onClick={() => addHeading(3)}>
           H3
+        </button>
+        <button
+          type="button"
+          title="Нумерованный список"
+          aria-label="Нумерованный список"
+          onClick={() => applyList("number")}
+        >
+          1.
+        </button>
+        <button
+          type="button"
+          title="Список с маркерами"
+          aria-label="Список с маркерами"
+          onClick={() => applyList("bullet")}
+        >
+          •
         </button>
         <button
           type="button"
