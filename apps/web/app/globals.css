@@ -3066,10 +3066,11 @@ button.kjar-character__reference[disabled] {
   text-indent: 0;
 }
 
-/* Подпункты «1.1.» набраны текстом, а не списком. Держим номер и текст
-   в двух колонках, чтобы перенос строки оставался под текстом, а не под
-   номером. Это заменяет красную строку висячим отступом. */
-.kjar-markdown__p--subitem {
+/* Ручные маркеры: подпункты «1.1.», маркеры «•» и заметки «!» набраны
+   текстом, а не списком. Держим маркер и текст в двух колонках, чтобы
+   перенос строки оставался под текстом, а не под маркером. Это заменяет
+   красную строку висячим отступом. */
+.kjar-markdown__p--marked {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
   align-items: baseline;
@@ -3079,24 +3080,25 @@ button.kjar-character__reference[disabled] {
   text-indent: 0;
 }
 
-.kjar-markdown__subnum {
+.kjar-markdown__marker {
+  min-width: 1.2em;
   color: var(--ash);
   font-variant-numeric: tabular-nums;
 }
 
-.kjar-markdown__subbody {
+.kjar-markdown__marked-body {
   min-width: 0;
 }
 
 /* Внутри пункта списка подпункт уже стоит на нужном отступе */
-.kjar-markdown__li .kjar-markdown__p--subitem {
+.kjar-markdown__li .kjar-markdown__p--marked {
   padding-left: 0;
 }
 
-/* После подпунктов следующий список начинается с обычного междустрочья,
-   а не прилипает к последней строке */
-.kjar-markdown__p--subitem + .kjar-markdown__ol,
-.kjar-markdown__p--subitem + .kjar-markdown__ul {
+/* После ручных маркеров следующий список начинается с обычного
+   междустрочья, а не прилипает к последней строке */
+.kjar-markdown__p--marked + .kjar-markdown__ol,
+.kjar-markdown__p--marked + .kjar-markdown__ul {
   margin-top: var(--s3);
 }
 

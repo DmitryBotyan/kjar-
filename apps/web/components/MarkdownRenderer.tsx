@@ -48,20 +48,22 @@ function withLists(content: string) {
   return result.join("\n");
 }
 
-// Подпункты вида «1.1.» пишут отдельными строками без пустой строки между
+// В тексте встречаются ручные маркеры: подпункты «1.1.», маркеры «•» и
+// заметки «!». Люди пишут их отдельными строками без пустой строки между
 // ними. Если оставить их в одном абзаце, красная строка достаётся только
-// первому номеру, а остальные прижимаются к левому краю. Разделяем каждый
-// подпункт на свой абзац: так у него будет собственный висячий отступ.
-function withSubitems(content: string) {
+// первому маркеру, а остальные прижимаются к левому краю. Разделяем каждый
+// такой блок на свой абзац: так у него будет собственный висячий отступ.
+function withMarkedLines(content: string) {
   const lines = content.split("\n");
   const result: string[] = [];
   let inFence = false;
 
   for (const line of lines) {
     if (/^```/.test(line.trim())) inFence = !inFence;
-    const subitem = !inFence && /^\s{0,3}\d+(?:\.\d+)+[.)]\s+\S/.test(line);
+    const marked =
+      !inFence && /^\s{0,3}(?:\d+(?:\.\d+)+[.)]|[•·]|!)\s+\S/.test(line);
 
-    if (subitem) {
+    if (marked) {
       const previous = result[result.length - 1];
       if (previous !== undefined && previous.trim() !== "") result.push("");
     }
@@ -109,18 +111,16 @@ export default function MarkdownRenderer({
             const first = parts[0];
 
             if (typeof first === "string") {
-              const subitem = first.match(/^(\d+(?:\.\d+)+[.)])\s+/);
-              if (subitem) {
+              const marker = first.match(/^(\d+(?:\.\d+)+[.)]|[•·]|!)\s+/);
+              if (marker) {
                 return (
                   <p
-                    className="kjar-markdown__p kjar-markdown__p--subitem"
+                    className="kjar-markdown__p kjar-markdown__p--marked"
                     {...props}
                   >
-                    <span className="kjar-markdown__subnum">
-                      {subitem[1]}
-                    </span>
-                    <span className="kjar-markdown__subbody">
-                      {first.slice(subitem[0].length)}
+                    <span className="kjar-markdown__marker">{marker[1]}</span>
+                    <span className="kjar-markdown__marked-body">
+                      {first.slice(marker[0].length)}
                       {parts.slice(1)}
                     </span>
                   </p>
@@ -199,7 +199,7 @@ export default function MarkdownRenderer({
           ),
         }}
       >
-        {withSubitems(withLists(withRichMarks(content)))}
+        {withMarkedLines(withLists(withRichMarks(content)))}
       </ReactMarkdown>
     </div>
   );
