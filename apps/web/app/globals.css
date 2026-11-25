@@ -4171,3 +4171,239 @@ button.kjar-character__reference[disabled] {
   font-family: var(--display);
   font-size: var(--t-m);
 }
+
+/* ============================ Редактор Markdown ============================ */
+
+.kjar-md-editor {
+  border: 1px solid var(--line);
+  border-radius: var(--r-field);
+  background: var(--bark);
+}
+
+.kjar-md-editor__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s2);
+  margin-bottom: var(--s1);
+}
+
+.kjar-md-editor__source-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s1);
+  min-height: 32px;
+  padding: 0 var(--s2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-field);
+  background: var(--peat);
+  color: var(--ash);
+  font-family: var(--ui);
+  font-size: var(--t-xs);
+  cursor: pointer;
+}
+
+.kjar-md-editor__source-toggle:hover,
+.kjar-md-editor__source-toggle:focus-visible {
+  border-color: var(--gold);
+  color: var(--gold);
+  outline: none;
+}
+
+/* Панель держится у верха окна, пока текст прокручивается: иначе на длинной
+   статье кнопки уезжают за экран и форматирование недоступно. */
+.kjar-md-editor__toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s1);
+  padding: var(--s1);
+  border-bottom: 1px solid var(--line);
+  background: var(--peat);
+}
+
+.kjar-md-editor__toolbar button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid transparent;
+  border-radius: var(--r-field);
+  background: transparent;
+  color: var(--ash);
+  cursor: pointer;
+}
+
+.kjar-md-editor__toolbar button:hover,
+.kjar-md-editor__toolbar button:focus-visible {
+  border-color: var(--line);
+  color: var(--ink);
+  outline: none;
+}
+
+.kjar-md-editor__toolbar button[aria-pressed="true"] {
+  border-color: var(--moss);
+  background: var(--moss);
+  color: var(--ink);
+}
+
+.kjar-md-editor__toolbar button:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.kjar-md-editor__divider {
+  width: 1px;
+  align-self: stretch;
+  margin: var(--s1);
+  background: var(--line);
+}
+
+.kjar-md-editor__body {
+  padding: var(--s2);
+}
+
+.kjar-md-editor__content {
+  min-height: 100%;
+  outline: none;
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: var(--t-s);
+  line-height: 1.8;
+  white-space: pre-line;
+}
+
+.kjar-md-editor__content p {
+  margin: 0 0 var(--s3);
+}
+
+.kjar-md-editor--redline .kjar-md-editor__content > p {
+  text-indent: 1.5em;
+}
+
+/* Ручные маркеры «1.1.», «•» и «!» получают висячий отступ, как в статье.
+   Красная строка им не нужна: маркер уже стоит слева. */
+.kjar-md-editor__content > p.kjar-md-editor__marked,
+.kjar-md-editor--redline .kjar-md-editor__content > p.kjar-md-editor__marked {
+  padding-left: 2.4em;
+  text-indent: -2.4em;
+}
+
+.kjar-md-editor__content h2,
+.kjar-md-editor__content h3 {
+  margin: var(--s4) 0 var(--s2);
+  font-family: var(--display);
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.25;
+}
+
+.kjar-md-editor__content h2 {
+  font-size: var(--t-l);
+}
+
+.kjar-md-editor__content h3 {
+  font-size: var(--t-m);
+}
+
+.kjar-md-editor__content ul,
+.kjar-md-editor__content ol {
+  margin: 0 0 var(--s3);
+  padding-left: var(--s4);
+}
+
+.kjar-md-editor__content li {
+  margin: 0 0 var(--s1);
+}
+
+.kjar-md-editor__content blockquote {
+  margin: var(--s3) 0;
+  padding-left: var(--s2);
+  border-left: 2px solid var(--moss);
+  color: var(--ash);
+}
+
+.kjar-md-editor__content a {
+  color: var(--gold);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.kjar-md-editor__content u {
+  text-decoration-color: var(--gold);
+  text-underline-offset: 3px;
+}
+
+.kjar-md-editor__content mark {
+  background: var(--moss);
+  color: var(--ink);
+}
+
+.kjar-md-editor__content img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: var(--s3) 0;
+}
+
+.kjar-md-editor__content hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: var(--s4) 0;
+}
+
+.kjar-md-editor__content p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  color: var(--ash);
+  pointer-events: none;
+}
+
+.kjar-md-editor__source {
+  display: block;
+  width: 100%;
+  min-height: 240px;
+  padding: var(--s2);
+  border: 0;
+  background: var(--bark);
+  color: var(--ink);
+  font-family: var(--ui);
+  font-size: var(--t-xs);
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.kjar-md-editor__hint {
+  margin: 0;
+  padding: 0 var(--s2) var(--s2);
+  color: var(--ash);
+  font-family: var(--ui);
+  font-size: var(--t-xs);
+}
+
+.kjar-md-editor__error {
+  margin: var(--s1) 0 0;
+  color: var(--rust);
+  font-family: var(--ui);
+  font-size: var(--t-xs);
+}
+
+.kjar-field__note {
+  margin: var(--s1) 0 0;
+  color: var(--ash);
+  font-family: var(--ui);
+  font-size: var(--t-xs);
+  line-height: 1.5;
+}
+
+/* Красная строка выключена служебной строкой в начале Markdown */
+.kjar-markdown--no-redline .kjar-markdown__p,
+.kjar-markdown--no-redline .kjar-article__content-md p,
+.kjar-markdown--no-redline .kjar-event__content-md p,
+.kjar-markdown--no-redline .kjar-event__stage-content p {
+  text-indent: 0;
+}

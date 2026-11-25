@@ -3,76 +3,12 @@
 import { Children } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-
-// В Markdown нет подчёркивания и выделения. Пишем их короткими метками
-// ++текст++ и ==текст==, а перед разбором превращаем в ссылки с особым
-// адресом: так внутри работает любой другой Markdown, включая курсив.
-function withRichMarks(content: string) {
-  return content
-    .replace(/\+\+([^\n]+?)\+\+/g, "[$1](kjar-underline)")
-    .replace(/==([^\n]+?)==/g, "[$1](kjar-highlight)");
-}
-
-// Нумерованный список распознаётся, только если перед ним есть пустая строка.
-// Без этого строки вида «2. ...» слипаются с абзацем и публикуются простым
-// текстом. Разделяем список и соседний текст пустыми строками.
-function withLists(content: string) {
-  const lines = content.split("\n");
-  const result: string[] = [];
-  let inNumbered = false;
-  let inFence = false;
-
-  for (const line of lines) {
-    if (/^```/.test(line.trim())) inFence = !inFence;
-    const numbered = !inFence && /^\s{0,3}\d+[.)]\s+\S/.test(line);
-
-    if (numbered && !inNumbered) {
-      const previous = result[result.length - 1];
-      if (previous !== undefined && previous.trim() !== "") result.push("");
-    }
-
-    if (
-      !numbered &&
-      inNumbered &&
-      line.trim() !== "" &&
-      !/^\s/.test(line) &&
-      !inFence
-    ) {
-      result.push("");
-    }
-
-    result.push(line);
-    inNumbered = numbered;
-  }
-
-  return result.join("\n");
-}
-
-// В тексте встречаются ручные маркеры: подпункты «1.1.», маркеры «•» и
-// заметки «!». Люди пишут их отдельными строками без пустой строки между
-// ними. Если оставить их в одном абзаце, красная строка достаётся только
-// первому маркеру, а остальные прижимаются к левому краю. Разделяем каждый
-// такой блок на свой абзац: так у него будет собственный висячий отступ.
-function withMarkedLines(content: string) {
-  const lines = content.split("\n");
-  const result: string[] = [];
-  let inFence = false;
-
-  for (const line of lines) {
-    if (/^```/.test(line.trim())) inFence = !inFence;
-    const marked =
-      !inFence && /^\s{0,3}(?:\d+(?:\.\d+)+[.)]|[•·]|!)\s+\S/.test(line);
-
-    if (marked) {
-      const previous = result[result.length - 1];
-      if (previous !== undefined && previous.trim() !== "") result.push("");
-    }
-
-    result.push(line);
-  }
-
-  return result.join("\n");
-}
+import {
+  splitRedline,
+  withLists,
+  withMarkedLines,
+  withRichMarks,
+} from "@/lib/markdown";
 
 interface MarkdownRendererProps {
   content: string;
@@ -83,8 +19,10 @@ export default function MarkdownRenderer({
   content,
   className = "",
 }: MarkdownRendererProps) {
+  const { redline, body } = splitRedline(content);
+
   return (
-    <div className={`kjar-markdown ${className}`}>
+    <div className={`kjar-markdown${redline ? "" : " kjar-markdown--no-redline"} ${className}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
@@ -199,7 +137,7 @@ export default function MarkdownRenderer({
           ),
         }}
       >
-        {withMarkedLines(withLists(withRichMarks(content)))}
+        {withMarkedLines(withLists(withRichMarks(body)))}
       </ReactMarkdown>
     </div>
   );
