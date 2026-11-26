@@ -5,13 +5,14 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { fetchFromAdminApi } from "@/lib/admin-api";
 import MarkdownField from "@/components/admin/MarkdownField";
-import type { Category } from "@/lib/types";
+import type { Category, Tag } from "@/lib/types";
 
 export default function NewArticlePage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,9 +22,13 @@ export default function NewArticlePage() {
       return;
     }
 
-    fetchFromAdminApi<Category[]>("/categories?limit=100")
-      .then((response) => {
-        setCategories(response.data || []);
+    Promise.all([
+      fetchFromAdminApi<Category[]>("/categories?limit=100"),
+      fetchFromAdminApi<Tag[]>("/tags?limit=200"),
+    ])
+      .then(([categoriesResponse, tagsResponse]) => {
+        setCategories(categoriesResponse.data || []);
+        setTags(tagsResponse.data || []);
       })
       .catch((e) => {
         if (e.message.includes("401") || e.message.includes("UNAUTHORIZED")) {
@@ -51,6 +56,7 @@ export default function NewArticlePage() {
       lead: formData.get("lead") || null,
       contentMd: formData.get("contentMd") || null,
       categoryId: formData.get("categoryId") ? Number(formData.get("categoryId")) : null,
+      tagIds: formData.getAll("tagIds").map((id) => Number(id)),
       status: formData.get("status") || "draft",
     };
 
@@ -182,6 +188,18 @@ export default function NewArticlePage() {
                 </option>
               ))}
             </select>
+          </div>
+
+          <div className="kjar-field">
+            <span className="kjar-label">Теги</span>
+            <div className="kjar-tag-picker">
+              {tags.map((tag) => (
+                <label key={tag.id}>
+                  <input type="checkbox" name="tagIds" value={tag.id} />
+                  {tag.name}
+                </label>
+              ))}
+            </div>
           </div>
 
           <div className="kjar-field">

@@ -65,21 +65,37 @@ export function withMarkedLines(content: string) {
   return result.join("\n");
 }
 
+export const REDLINE_ON = ":::redline:on";
 export const REDLINE_OFF = ":::redline:off";
 
-// Красная строка подходит не всем статьям. Служебная метка в начале
-// Markdown выключает её для конкретной записи.
+// Красная строка нужна референсам персонажей, а статьям, новостям и
+// ивентам только мешает. Метка в начале Markdown переопределяет режим
+// раздела, а её отсутствие оставляет разделу его обычное поведение.
 export function splitRedline(content: string) {
   const trimmed = content.replace(/^\s+/, "");
+  if (trimmed.startsWith(REDLINE_ON)) {
+    return {
+      redline: true,
+      body: trimmed.slice(REDLINE_ON.length).replace(/^\s*\n/, ""),
+    };
+  }
   if (trimmed.startsWith(REDLINE_OFF)) {
     return {
       redline: false,
       body: trimmed.slice(REDLINE_OFF.length).replace(/^\s*\n/, ""),
     };
   }
-  return { redline: true, body: content };
+  return { redline: null, body: content };
 }
 
-export function composeRedline(redline: boolean, body: string) {
-  return redline ? body : `${REDLINE_OFF}\n\n${body}`;
+export function composeRedline(
+  redline: boolean,
+  body: string,
+  variant: "article" | "ref",
+) {
+  const matchesDefault = variant === "ref" ? redline : !redline;
+  if (matchesDefault) return body;
+  return redline
+    ? `${REDLINE_ON}\n\n${body}`
+    : `${REDLINE_OFF}\n\n${body}`;
 }

@@ -221,6 +221,7 @@ export async function createArticle(req: AuthRequest, res: Response) {
       contentMd?: string;
       categoryId?: number | null;
       era?: string | null;
+      tagIds?: number[];
       status?: "draft" | "published" | "archived";
     };
     
@@ -265,6 +266,12 @@ export async function createArticle(req: AuthRequest, res: Response) {
       })
       .returning();
 
+    if (data.tagIds && data.tagIds.length > 0) {
+      await db.insert(articleTags).values(
+        data.tagIds.map((tagId) => ({ articleId: newArticle.id, tagId }))
+      );
+    }
+
     res.status(201).json({ data: newArticle });
   } catch (error) {
     if (error && typeof error === "object" && "statusCode" in error) {
@@ -298,6 +305,7 @@ export async function updateArticle(req: AuthRequest, res: Response) {
       contentMd?: string | null;
       categoryId?: number | null;
       era?: string | null;
+      tagIds?: number[];
       status?: "draft" | "published" | "archived";
     };
 
@@ -368,6 +376,15 @@ export async function updateArticle(req: AuthRequest, res: Response) {
       })
       .where(eq(articles.id, existing.id))
       .returning();
+
+    if (data.tagIds !== undefined) {
+      await db.delete(articleTags).where(eq(articleTags.articleId, existing.id));
+      if (data.tagIds.length > 0) {
+        await db.insert(articleTags).values(
+          data.tagIds.map((tagId) => ({ articleId: existing.id, tagId }))
+        );
+      }
+    }
 
     res.json({ data: updated });
   } catch (error) {

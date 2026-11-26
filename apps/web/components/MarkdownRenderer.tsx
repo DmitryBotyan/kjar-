@@ -1,6 +1,6 @@
 "use client";
 
-import { Children } from "react";
+import { Children, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
@@ -13,16 +13,25 @@ import {
 interface MarkdownRendererProps {
   content: string;
   className?: string;
+  variant?: "article" | "ref";
 }
 
 export default function MarkdownRenderer({
   content,
   className = "",
+  variant = "article",
 }: MarkdownRendererProps) {
   const { redline, body } = splitRedline(content);
+  const [zoomed, setZoomed] = useState<string | null>(null);
+  const showRedline =
+    variant === "ref" ? redline !== false : redline === true;
+  const processed =
+    variant === "ref"
+      ? withMarkedLines(withLists(withRichMarks(body)))
+      : withLists(withRichMarks(body));
 
   return (
-    <div className={`kjar-markdown${redline ? "" : " kjar-markdown--no-redline"} ${className}`}>
+    <div className={`kjar-markdown${showRedline ? "" : " kjar-markdown--no-redline"} ${className}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
@@ -48,7 +57,7 @@ export default function MarkdownRenderer({
             const parts = Children.toArray(children);
             const first = parts[0];
 
-            if (typeof first === "string") {
+            if (variant === "ref" && typeof first === "string") {
               const marker = first.match(/^(\d+(?:\.\d+)+[.)]|[•·]|!)\s+/);
               if (marker) {
                 return (
@@ -94,8 +103,15 @@ export default function MarkdownRenderer({
               </a>
             );
           },
-          img: ({ node, ...props }) => (
-            <img className="kjar-markdown__img" {...props} />
+          img: ({ node, src, alt, ...props }) => (
+            <img
+              className="kjar-markdown__img"
+              src={src}
+              alt={alt}
+              loading="lazy"
+              onClick={() => src && setZoomed(src)}
+              {...props}
+            />
           ),
           // react-markdown 9 не сообщает, строчный ли код: блок узнаётся по
           // обёртке pre, и стили для него заданы через .kjar-markdown__pre code
@@ -137,8 +153,27 @@ export default function MarkdownRenderer({
           ),
         }}
       >
-        {withMarkedLines(withLists(withRichMarks(body)))}
+        {processed}
       </ReactMarkdown>
+      {zoomed ? (
+        <div
+          className="kjar-lightbox"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Просмотр картинки"
+          onClick={() => setZoomed(null)}
+        >
+          <img className="kjar-lightbox__img" src={zoomed} alt="" />
+          <button
+            type="button"
+            className="kjar-lightbox__close"
+            onClick={() => setZoomed(null)}
+            aria-label="Закрыть"
+          >
+            ×
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

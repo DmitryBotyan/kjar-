@@ -115,7 +115,7 @@ export default async function NormanPage({ params }: NormanPageProps) {
             <section className="kjar-character__section">
               <h2 className="kjar-section__title">О норманне</h2>
               <div className="kjar-markdown kjar-markdown--plain">
-                <MarkdownRenderer content={norman.description} />
+                <MarkdownRenderer content={norman.description} variant="ref" />
               </div>
             </section>
           )}

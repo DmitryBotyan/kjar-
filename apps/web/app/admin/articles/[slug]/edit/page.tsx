@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { fetchFromAdminApi } from "@/lib/admin-api";
 import MarkdownField from "@/components/admin/MarkdownField";
-import type { Article, Category } from "@/lib/types";
+import type { Article, Category, Tag } from "@/lib/types";
 
 export default function EditArticlePage() {
   const router = useRouter();
@@ -17,6 +17,7 @@ export default function EditArticlePage() {
   const [error, setError] = useState<string | null>(null);
   const [article, setArticle] = useState<Article | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
@@ -28,10 +29,12 @@ export default function EditArticlePage() {
     Promise.all([
       fetchFromAdminApi<Article>(`/articles/${slug}`),
       fetchFromAdminApi<Category[]>("/categories?limit=100"),
+      fetchFromAdminApi<Tag[]>("/tags?limit=200"),
     ])
-      .then(([articleResponse, categoriesResponse]) => {
+      .then(([articleResponse, categoriesResponse, tagsResponse]) => {
         setArticle(articleResponse.data);
         setCategories(categoriesResponse.data || []);
+        setTags(tagsResponse.data || []);
       })
       .catch((e) => {
         if (e.message.includes("401") || e.message.includes("UNAUTHORIZED")) {
@@ -59,6 +62,7 @@ export default function EditArticlePage() {
       lead: formData.get("lead") || null,
       contentMd: formData.get("contentMd") || null,
       categoryId: formData.get("categoryId") ? Number(formData.get("categoryId")) : null,
+      tagIds: formData.getAll("tagIds").map((id) => Number(id)),
       status: formData.get("status") || "draft",
     };
 
@@ -209,6 +213,23 @@ export default function EditArticlePage() {
                 </option>
               ))}
             </select>
+          </div>
+
+          <div className="kjar-field">
+            <span className="kjar-label">Теги</span>
+            <div className="kjar-tag-picker">
+              {tags.map((tag) => (
+                <label key={tag.id}>
+                  <input
+                    type="checkbox"
+                    name="tagIds"
+                    value={tag.id}
+                    defaultChecked={article.tags?.some((item) => item.id === tag.id)}
+                  />
+                  {tag.name}
+                </label>
+              ))}
+            </div>
           </div>
 
           <div className="kjar-field">

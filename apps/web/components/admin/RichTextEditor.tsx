@@ -62,8 +62,14 @@ export function RichTextEditor({
   note = "Пустая строка начинает новый абзац. Красная строка включается кнопкой с пилкроу.",
 }: RichTextEditorProps) {
   const initial = splitRedline(controlledValue ?? defaultValue ?? "");
-  const preparedBody = withMarkedLines(withLists(initial.body));
-  const [redline, setRedline] = useState(initial.redline);
+  // Красная строка и авторазметка подпунктов нужны референсам персонажей.
+  // Статьям и новостям они ломают вид: там автор сам расставляет абзацы.
+  const variant = folder === "characters" ? "ref" : "article";
+  const defaultRedline = variant === "ref";
+  const prepare = (body: string) =>
+    variant === "ref" ? withMarkedLines(withLists(body)) : withLists(body);
+  const preparedBody = prepare(initial.body);
+  const [redline, setRedline] = useState(initial.redline ?? defaultRedline);
   const [sourceMode, setSourceMode] = useState(false);
   const [sourceValue, setSourceValue] = useState(preparedBody);
   const [uploading, setUploading] = useState(false);
@@ -82,7 +88,7 @@ export function RichTextEditor({
   const flush = useCallback(() => {
     const editor = editorRef.current;
     if (!editor || !sourceRef.current) return;
-    const markdown = composeRedline(redlineRef.current, editor.getMarkdown());
+    const markdown = composeRedline(redlineRef.current, editor.getMarkdown(), variant);
     sourceRef.current.value = markdown;
     lastEmitted.current = markdown;
     onChange?.(markdown);
@@ -113,7 +119,7 @@ export function RichTextEditor({
       Image.configure({ inline: false, allowBase64: false }),
       Placeholder.configure({ placeholder: "Начните писать текст…" }),
       Markdown,
-      MarkedParagraph,
+      ...(variant === "ref" ? [MarkedParagraph] : []),
     ],
     content: preparedBody,
     contentType: "markdown",
@@ -163,8 +169,8 @@ export function RichTextEditor({
     if (!editor || controlledValue === undefined) return;
     if (lastEmitted.current === controlledValue) return;
     const next = splitRedline(controlledValue);
-    const prepared = withMarkedLines(withLists(next.body));
-    setRedline(next.redline);
+    const prepared = prepare(next.body);
+    setRedline(next.redline ?? defaultRedline);
     setSourceValue(prepared);
     syncing.current = true;
     editor.commands.setContent(prepared, { contentType: "markdown" });
@@ -239,15 +245,15 @@ export function RichTextEditor({
   };
 
   const openSource = () => {
-    setSourceValue(composeRedline(redline, editor?.getMarkdown() ?? ""));
+    setSourceValue(composeRedline(redline, editor?.getMarkdown() ?? "", variant));
     setSourceMode(true);
   };
 
   const closeSource = () => {
     const next = splitRedline(sourceValue);
-    const prepared = withMarkedLines(withLists(next.body));
-    setRedline(next.redline);
-    redlineRef.current = next.redline;
+    const prepared = prepare(next.body);
+    setRedline(next.redline ?? defaultRedline);
+    redlineRef.current = next.redline ?? defaultRedline;
     syncing.current = true;
     editor?.commands.setContent(prepared, { contentType: "markdown" });
     syncing.current = false;
@@ -348,7 +354,7 @@ export function RichTextEditor({
         ref={sourceRef}
         id={id}
         name={name}
-        defaultValue={composeRedline(initial.redline, initial.body)}
+        defaultValue={composeRedline(initial.redline ?? defaultRedline, initial.body, variant)}
         hidden
         readOnly
       />

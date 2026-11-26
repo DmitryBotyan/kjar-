@@ -19,11 +19,12 @@ const articlesQuerySchema = paginationSchema.extend({
 const createArticleSchema = z.object({
   title: z.string().min(1),
   slug: z.string().min(1).optional(),
-  summary: z.string().optional(),
-  lead: z.string().optional(),
-  contentMd: z.string().optional(),
+  summary: z.string().optional().nullable(),
+  lead: z.string().optional().nullable(),
+  contentMd: z.string().optional().nullable(),
   categoryId: z.number().int().positive().optional().nullable(),
   era: z.enum(["first", "second", "any"]).optional().nullable(),
+  tagIds: z.array(z.number().int().positive()).optional(),
   status: z.enum(["draft", "published", "archived"]).default("draft"),
 });
 
@@ -35,6 +36,7 @@ const updateArticleSchema = z.object({
   contentMd: z.string().optional().nullable(),
   categoryId: z.number().int().positive().optional().nullable(),
   era: z.enum(["first", "second", "any"]).optional().nullable(),
+  tagIds: z.array(z.number().int().positive()).optional(),
   status: z.enum(["draft", "published", "archived"]).optional(),
 });
 
